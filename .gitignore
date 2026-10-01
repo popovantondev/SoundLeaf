@@ -3,6 +3,7 @@ Recordings/
 Backups/
 logs/
 Verification/
+RecoveryWork/
 .ai-dev/
 # Built executables and external encoder
 *.exe

@@ -66,6 +66,22 @@ namespace Player
         }
         private static int Main(string[] args)
         {
+            if (args.Length == 3 && args[0] == "--recover-existing")
+            {
+                string folder = Path.GetFullPath(args[1]);
+                string installedRoot = Directory.GetParent(Directory.GetParent(folder).FullName).FullName;
+                if (!string.Equals(installedRoot, @"C:\Users\Public\Player", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException("Unexpected installation folder.");
+                var pending = SessionRecovery.Find(folder);
+                foreach (var item in pending)
+                    if (item.Stem == args[2])
+                    {
+                        Console.WriteLine("RECOVERED " + SessionRecovery.Recover(item, installedRoot,
+                            Path.Combine(installedRoot, "tools", "ffmpeg.exe"), Console.WriteLine));
+                        return 0;
+                    }
+                throw new InvalidDataException("Requested session not found.");
+            }
             if (args.Length == 3 && args[0] == "--merge-existing")
             {
                 string folder = Path.GetFullPath(args[1]);
@@ -451,6 +467,94 @@ namespace Player
                         Assert(done.WaitOne(10000) && last.State == RecordState.Faulted, "Output error was not reported.");
                         Assert(Hash(path) == before && fake.Disposed && !fake.WrongThread, "Output failure damaged files or leaked audio.");
                     }
+                });
+                Case("recovery finds finalized and partial WAVs without mixing sessions", delegate
+                {
+                    string folder = Path.Combine(root, "pending-find"); Directory.CreateDirectory(folder);
+                    File.WriteAllText(Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345-001.wav"), "test");
+                    File.WriteAllText(Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345-002.partial.wav"), "test");
+                    File.WriteAllText(Path.Combine(folder, "2026-10-01 08-53-23-abcdef012346-001.wav"), "test");
+                    File.WriteAllText(Path.Combine(folder, "personal.wav"), "test");
+                    var sessions = SessionRecovery.Find(folder);
+                    Assert(sessions.Count == 2 && sessions[0].Parts.Count == 2, "Session grouping lost or mixed parts.");
+                    File.WriteAllText(Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345-001.partial.wav"), "duplicate");
+                    Assert(SessionRecovery.Find(folder)[0].Duplicate, "Duplicate part was not flagged.");
+                });
+                Case("recovery joins seven parts and archives originals byte for byte", delegate
+                {
+                    string home = Path.Combine(root, "recovery-seven");
+                    string folder = Path.Combine(home, "Recordings"); Directory.CreateDirectory(folder);
+                    var original = new System.Collections.Generic.List<string>();
+                    for (int i = 1; i <= 7; i++)
+                    {
+                        string path = Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345-" + i.ToString("D3") + ".partial.wav");
+                        using (var wave = new DurableWave(path, Format(16, false, false)))
+                        { byte[] bytes = Tone(wave.Format, 0.2); wave.Write(bytes, 0, bytes.Length); original.Add(Hash(wave.Complete())); }
+                    }
+                    File.WriteAllText(Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345-001.old.partial.mkv"), "failed encoder");
+                    var phases = new System.Collections.Generic.List<string>();
+                    string final = SessionRecovery.Recover(SessionRecovery.Find(folder)[0], home, ffmpeg, phases.Add);
+                    Assert(File.Exists(final) && Directory.GetFiles(folder).Length == 1, "Recovery did not leave one final MKV.");
+                    Assert(Math.Abs(MediaExport.DecodeDuration(final, ffmpeg, 30000) - 1.4) < 0.25, "Recovered duration is wrong.");
+                    string archive = Directory.GetDirectories(Path.Combine(home, "Backups", "RecoveredSessions"))[0];
+                    string[] wavs = Directory.GetFiles(archive, "*.wav"); Array.Sort(wavs, StringComparer.Ordinal);
+                    Assert(wavs.Length == 7, "Originals were not retained.");
+                    for (int i = 0; i < wavs.Length; i++) Assert(Hash(wavs[i]) == original[i], "Recovery changed original bytes.");
+                    Assert(phases.Contains("Объединение частей") && phases.Contains("Проверка итогового файла"), "Save stages missing.");
+                    Assert(SessionRecovery.Find(folder).Count == 0, "Verified session still pending.");
+                });
+                Case("recovery rejects a missing part before touching source files", delegate
+                {
+                    string folder = Path.Combine(root, "recovery-gap"); Directory.CreateDirectory(folder);
+                    string a = Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345-001.wav");
+                    string b = Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345-003.wav");
+                    File.WriteAllText(a, "first"); File.WriteAllText(b, "third");
+                    Throws(delegate { SessionRecovery.Recover(SessionRecovery.Find(folder)[0], root, ffmpeg, null); });
+                    Assert(File.ReadAllText(a) == "first" && File.ReadAllText(b) == "third", "Gap damaged original files.");
+                });
+                Case("recovery never overwrites an existing final file", delegate
+                {
+                    string folder = Path.Combine(root, "recovery-collision"); Directory.CreateDirectory(folder);
+                    string a = Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345-001.wav");
+                    string final = Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345.mkv");
+                    File.WriteAllText(a, "original"); File.WriteAllText(final, "existing"); string before = Hash(final);
+                    Throws(delegate { SessionRecovery.Recover(SessionRecovery.Find(folder)[0], root, ffmpeg, null); });
+                    Assert(Hash(final) == before && File.Exists(a), "Collision overwrote user data.");
+                });
+                Case("recovery rejects an active writer and retains its WAV", delegate
+                {
+                    string folder = Path.Combine(root, "recovery-locked"); Directory.CreateDirectory(folder);
+                    string a = Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345-001.partial.wav");
+                    using (var wave = new DurableWave(a, Format(16, false, false)))
+                    {
+                        byte[] bytes = Tone(wave.Format, 0.2); wave.Write(bytes, 0, bytes.Length); wave.Checkpoint();
+                        Throws(delegate { SessionRecovery.Recover(SessionRecovery.Find(folder)[0], root, ffmpeg, null); });
+                        Assert(File.Exists(a), "Active WAV removed.");
+                    }
+                });
+                Case("recovery repairs a partial header using a copy", delegate
+                {
+                    string home = Path.Combine(root, "recovery-partial");
+                    string folder = Path.Combine(home, "Recordings"); Directory.CreateDirectory(folder);
+                    string a = Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345-001.partial.wav");
+                    using (var wave = new DurableWave(a, Format(16, false, false)))
+                    { byte[] bytes = Tone(wave.Format, 0.5); wave.Write(bytes, 0, bytes.Length); }
+                    string before = Hash(a);
+                    string final = SessionRecovery.Recover(SessionRecovery.Find(folder)[0], home, ffmpeg, null);
+                    Assert(File.Exists(final), "Recovered partial MKV missing.");
+                    string original = Directory.GetFiles(Path.Combine(home, "Backups", "RecoveredSessions"), "*.wav", SearchOption.AllDirectories)[0];
+                    Assert(Hash(original) == before, "Partial original was modified.");
+                });
+                Case("recovery encoder failure leaves every original in place", delegate
+                {
+                    string folder = Path.Combine(root, "recovery-failed"); Directory.CreateDirectory(folder);
+                    string a = Path.Combine(folder, "2026-10-01 07-53-23-abcdef012345-001.partial.wav");
+                    string saved;
+                    using (var wave = new DurableWave(a, Format(16, false, false)))
+                    { byte[] bytes = Tone(wave.Format, 0.5); wave.Write(bytes, 0, bytes.Length); saved = wave.Complete(); }
+                    string before = Hash(saved);
+                    Throws(delegate { SessionRecovery.Recover(SessionRecovery.Find(folder)[0], root, "missing-encoder.exe", null); });
+                    Assert(Hash(saved) == before && SessionRecovery.Find(folder).Count == 1, "Failed recovery hid/damaged the pending session.");
                 });
                 string resultText = "PASS " + passed + " checks; artifacts: " + root;
                 File.WriteAllText(Path.Combine(root, "result.txt"), resultText);

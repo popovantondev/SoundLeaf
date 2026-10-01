@@ -15,6 +15,7 @@ namespace Player
         internal string Message;
         internal double Seconds;
         internal bool HeardSignal;
+        internal string FinalPath;
         internal SessionUpdate(RecordState state, string message, double seconds, bool signal)
         { State = state; Message = message; Seconds = seconds; HeardSignal = signal; }
     }
@@ -59,10 +60,10 @@ namespace Player
         internal void Pause(bool value) { Interlocked.Exchange(ref pause, value ? 1 : 0); Signal(); }
         internal void Stop() { Interlocked.Exchange(ref stop, 1); Signal(); }
         private void Signal() { try { wake.Set(); } catch (ObjectDisposedException) { } }
-        private void Publish(RecordState state, string text, double duration, bool signal)
+        private void Publish(RecordState state, string text, double duration, bool signal, string finalPath = null)
         {
             log.TryWrite(state + " " + text);
-            update(new SessionUpdate(state, text, duration, signal));
+            update(new SessionUpdate(state, text, duration, signal) { FinalPath = finalPath });
         }
         private void Run()
         {
@@ -71,6 +72,7 @@ namespace Player
             WaveFormat format = null;
             string failure = null;
             double seconds = 0;
+            string finalPath = null;
             try
             {
                 using (var audio = sourceFactory())
@@ -147,14 +149,16 @@ namespace Player
                     {
                         string wav = encoder.Wav;
                         log.TryWrite("WAV saved: " + wav);
-                        encoder.FinishAndVerify();
+                        encoder.FinishAndVerify(delegate(string phase) { Publish(RecordState.Saving, phase, seconds, timeline.HeardSignal); });
                         log.TryWrite("MKV verified: " + Path.ChangeExtension(wav, ".mkv"));
                     }
                     if (sink.Completed.Count > 1)
                     {
-                        string merged = MediaExport.ConcatParts(sink.Completed, ffmpeg);
-                        log.TryWrite("Combined MKV verified: " + merged);
+                        finalPath = MediaExport.ConcatParts(sink.Completed, ffmpeg,
+                            delegate(string phase) { Publish(RecordState.Saving, phase, seconds, timeline.HeardSignal); });
+                        log.TryWrite("Combined MKV verified: " + finalPath);
                     }
+                    else finalPath = Path.ChangeExtension(sink.Completed[0], ".mkv");
                     if (failure == null && !timeline.Discontinuity)
                     {
                         foreach (string wav in sink.Completed)
@@ -195,7 +199,7 @@ namespace Player
                 warning = "Windows сообщила о разрыве аудиопотока; сохранённый звук стоит проверить.";
             Publish(failure == null ? RecordState.Stopped : RecordState.Faulted,
                 failure ?? warning ?? (signal ? "MKV сохранён и проверен" : "Сохранено; за время записи был только тихий сигнал или тишина"),
-                seconds, signal);
+                seconds, signal, finalPath);
         }
     }
 
@@ -298,8 +302,9 @@ namespace Player
                 while (queue.TryTake(out discarded)) { }
             }
         }
-        internal void FinishAndVerify()
+        internal void FinishAndVerify(Action<string> phase = null)
         {
+            if (phase != null) phase("Завершение кодирования");
             CompleteInput();
             if (!worker.Join(60000))
             {
@@ -311,11 +316,12 @@ namespace Player
                 // A live encoder may lose real-time during startup or disk load.
                 // The durable WAV is authoritative; rebuild this part synchronously.
                 try { if (File.Exists(partial)) File.Delete(partial); } catch { }
-                MediaExport.Convert(Wav, ffmpeg);
+                MediaExport.Convert(Wav, ffmpeg, phase);
                 return;
             }
             var source = DurableWave.ReadInfo(Wav, false);
             int timeout = (int)Math.Min(1800000, Math.Max(60000, source.Duration * 4000 + 30000));
+            if (phase != null) phase("Проверка части MKV");
             double actual = MediaExport.DecodeDuration(partial, ffmpeg, timeout);
             if (Math.Abs(actual - source.Duration) > Math.Max(0.05, 2048.0 / source.Format.SampleRate))
                 throw new IOException("Длительность MKV не совпадает с WAV. WAV сохранён.");
@@ -393,7 +399,7 @@ namespace Player
             if (seconds <= 0) throw new IOException("MKV не содержит декодируемого аудио.");
             return seconds;
         }
-        internal static string Convert(string wav, string ffmpeg)
+        internal static string Convert(string wav, string ffmpeg, Action<string> phase = null)
         {
             WaveInfo source = DurableWave.ReadInfo(wav, false);
             if (!File.Exists(ffmpeg)) throw new FileNotFoundException("FFmpeg отсутствует в tools. WAV сохранён.", ffmpeg);
@@ -402,9 +408,11 @@ namespace Player
             string partial = Path.Combine(Path.GetDirectoryName(wav),
                 Path.GetFileNameWithoutExtension(wav) + "-" + Guid.NewGuid().ToString("N") + ".partial.mkv");
             int timeout = (int)Math.Min(1800000, Math.Max(60000, source.Duration * 4000 + 30000));
+            if (phase != null) phase("Кодирование резервного WAV");
             var result = Run(ffmpeg, "-hide_banner -loglevel error -nostdin -n -xerror -i " + Quote(wav) +
                 " -map 0:a:0 -c:a aac -b:a 192k -f matroska " + Quote(partial), timeout);
             if (result.ExitCode != 0) throw new IOException("MKV не создан. WAV сохранён. " + result.Error);
+            if (phase != null) phase("Проверка части MKV");
             double actual = DecodeDuration(partial, ffmpeg, timeout);
             if (Math.Abs(actual - source.Duration) > Math.Max(0.25, source.Duration * 0.001))
                 throw new IOException("Длительности WAV и MKV различаются; временный MKV и исходный WAV сохранены.");
@@ -413,7 +421,7 @@ namespace Player
             File.Move(partial, final);
             return final;
         }
-        internal static string ConcatParts(System.Collections.Generic.IList<string> wavs, string ffmpeg)
+        internal static string ConcatParts(System.Collections.Generic.IList<string> wavs, string ffmpeg, Action<string> phase = null)
         {
             if (wavs == null || wavs.Count < 2) throw new ArgumentException("At least two parts are required.");
             if (!File.Exists(ffmpeg)) throw new FileNotFoundException("FFmpeg отсутствует; части сохранены.", ffmpeg);
@@ -447,6 +455,7 @@ namespace Player
             }
             int timeout = (int)Math.Min(1800000, Math.Max(60000, expected * 250 + 30000));
             ProcessResult joined;
+            if (phase != null) phase("Объединение частей");
             try
             {
                 joined = Run(ffmpeg, "-hide_banner -loglevel error -nostdin -n -xerror -f concat -safe 0 -i " +
@@ -454,6 +463,7 @@ namespace Player
             }
             finally { File.Delete(list); }
             if (joined.ExitCode != 0) throw new IOException("Объединение MKV не удалось; части и WAV сохранены. " + joined.Error);
+            if (phase != null) phase("Проверка итогового файла");
             double actual = DecodeDuration(partial, ffmpeg, Math.Max(timeout, 60000));
             if (Math.Abs(actual - expected) > Math.Max(2.0, wavs.Count * 0.05))
                 throw new IOException("Длительность объединённого MKV неверна; части и WAV сохранены.");
