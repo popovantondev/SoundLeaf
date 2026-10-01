@@ -5,14 +5,15 @@ $folder = Split-Path -Parent $PSCommandPath
 $provider = New-Object Microsoft.CSharp.CSharpCodeProvider
 $parameters = New-Object System.CodeDom.Compiler.CompilerParameters
 $parameters.GenerateExecutable = $true
-$parameters.OutputAssembly = Join-Path $folder 'Player.next.exe'
-$parameters.CompilerOptions = '/target:winexe /platform:x64 /optimize+ /warn:4 /win32icon:"' + (Join-Path $folder 'assets\Player.ico') + '"'
+$parameters.OutputAssembly = Join-Path $folder 'SoundLeaf.next.exe'
+$parameters.CompilerOptions = '/target:winexe /platform:x64 /optimize+ /warn:4 /win32icon:"' + (Join-Path $folder 'assets\SoundLeaf.ico') + '"'
 [void]$parameters.ReferencedAssemblies.Add('System.dll')
+[void]$parameters.ReferencedAssemblies.Add('System.Core.dll')
 [void]$parameters.ReferencedAssemblies.Add('System.Windows.Forms.dll')
 [void]$parameters.ReferencedAssemblies.Add('System.Drawing.dll')
 [void]$parameters.ReferencedAssemblies.Add('System.Runtime.Serialization.dll')
 [void]$parameters.ReferencedAssemblies.Add('System.Xml.dll')
-$sources = @('src/AudioCapture.cs','src/WaveStorage.cs','src/RecordingSession.cs','src/StartupChecks.cs','src/WavReceipt.cs','src/SessionRecovery.cs','src/PlayerIcons.cs','src/PlayerApp.cs') | ForEach-Object {
+$sources = @('src/TextCatalog.cs','src/TrayPanel.cs','src/RecordingCatalog.cs','src/RecordingProfile.cs','src/ProfileExport.cs','src/AudioCapture.cs','src/WaveStorage.cs','src/RecordingSession.cs','src/StartupChecks.cs','src/WavReceipt.cs','src/SessionRecovery.cs','src/SoundLeafIcons.cs','src/SoundLeafApp.cs') | ForEach-Object {
     Get-Content -LiteralPath (Join-Path $folder $_) -Raw -Encoding UTF8
 }
 $result = $provider.CompileAssemblyFromSource($parameters, [string[]]$sources)
@@ -21,4 +22,4 @@ if ($result.Errors.HasErrors) {
     $result.Errors | ForEach-Object { throw $_.ToString() }
 }
 $provider.Dispose()
-Write-Output 'Built Player.next.exe. Verify this candidate before installation.'
+Write-Output 'Built SoundLeaf.next.exe. Verify this candidate before installation.'

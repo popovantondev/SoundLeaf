@@ -6,35 +6,37 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
-[assembly: System.Reflection.AssemblyTitle("Player")]
-[assembly: System.Reflection.AssemblyProduct("Player")]
-[assembly: System.Reflection.AssemblyVersion("2.3.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("2.3.0.0")]
+[assembly: System.Reflection.AssemblyTitle("SoundLeaf")]
+[assembly: System.Reflection.AssemblyProduct("SoundLeaf")]
+[assembly: System.Reflection.AssemblyVersion("3.0.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("3.0.0.0")]
 
-namespace Player
+namespace SoundLeaf
 {
-    internal static class PlayerApp
+    internal static class SoundLeafApp
     {
         [STAThread]
         private static int Main(string[] args)
         {
             bool verifyWav = args.Length == 1 && args[0] == "--verify-wav-fallback";
-            bool verify = verifyWav || (args.Length == 1 && args[0] == "--verify-live");
+            bool verifyOpus = args.Length == 1 && args[0] == "--verify-opus";
+            bool verify = verifyOpus || verifyWav || (args.Length == 1 && args[0] == "--verify-live");
             string root = AppDomain.CurrentDomain.BaseDirectory;
             AppLog log = null;
             try
             {
                 log = new AppLog(Path.Combine(root, "logs"));
-                log.Write("START version=" + typeof(PlayerApp).Assembly.GetName().Version +
+                log.Write("START version=" + typeof(SoundLeafApp).Assembly.GetName().Version +
                     " pid=" + Process.GetCurrentProcess().Id + " verify=" + verify);
                 bool first;
                 using (var mutex = new Mutex(true, verify ? "Local\\PlayerVerificationV2" : "Local\\PlayerCaptureSingle", out first))
                 {
                     if (!first) { log.TryWrite("Already running; second instance exits."); return 0; }
+                    TrayPanel.InitializeDpi();
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
                     Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
-                    using (var context = new PlayerContext(root, log, verify, verifyWav))
+                    using (var context = new SoundLeafContext(root, log, verify, verifyWav, verifyOpus))
                     {
                         Application.Run(context);
                         return context.Failed ? 1 : 0;
@@ -44,12 +46,12 @@ namespace Player
             catch (Exception error)
             {
                 if (log != null) log.TryWrite(error.ToString());
-                if (!verify) MessageBox.Show(error.Message, "Player — ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (!verify) MessageBox.Show(error.Message, TextCatalog.T("message.0"), MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return 1;
             }
         }
     }
-    internal sealed class PlayerContext : ApplicationContext
+    internal sealed class SoundLeafContext : ApplicationContext
     {
         private readonly Control dispatcher = new Control();
         private readonly NotifyIcon tray = new NotifyIcon();
@@ -59,15 +61,21 @@ namespace Player
         private string[] lastPaths = new string[0];
         private FinalResultKind lastKind;
         private RecordingMode activeMode;
-        private string lastResult, lastMessage = "Запись ещё не сохранена";
+        private string lastResult, lastMessage = TextCatalog.T("message.1");
         private int pendingCount;
-        private readonly Icon recordingIcon = PlayerIcons.Create(0, 0), pausedIcon = PlayerIcons.Create(1, 0),
-            stoppedIcon = PlayerIcons.Create(2, 0), errorIcon = PlayerIcons.Create(3, 0);
-        private readonly Icon[] savingIcons = new Icon[PlayerIcons.FrameCount];
+        private readonly Icon recordingIcon = SoundLeafIcons.Create(0, 0), pausedIcon = SoundLeafIcons.Create(1, 0),
+            stoppedIcon = SoundLeafIcons.Create(2, 0), errorIcon = SoundLeafIcons.Create(3, 0);
+        private readonly Icon[] savingIcons = new Icon[SoundLeafIcons.FrameCount];
         private readonly System.Windows.Forms.Timer animationTimer = new System.Windows.Forms.Timer();
         private int animationFrame, animationTicks;
         private readonly AppLog log;
-        private readonly string root, output, ffmpeg;
+        private readonly string root, ffmpeg;
+        private string output;
+        private string StorageRoot { get { return verify ? root : SoundLeafSettings.StorageRoot(root, output); } }
+        private readonly SoundLeafSettings settings;
+        private readonly TrayPanel panel;
+        private SessionUpdate lastUpdate;
+        private bool conversionBusy;
         private readonly bool verify, verifyWav;
         private readonly Stopwatch uptime = Stopwatch.StartNew();
         private readonly System.Windows.Forms.Timer verificationTimer = new System.Windows.Forms.Timer();
@@ -79,10 +87,14 @@ namespace Player
         private long verifyAt;
         internal bool Failed { get; private set; }
 
-        internal PlayerContext(string root, AppLog log, bool verify, bool verifyWav = false)
+        internal SoundLeafContext(string root, AppLog log, bool verify, bool verifyWav = false, bool verifyOpus = false)
         {
             this.root = root; this.log = log; this.verify = verify; this.verifyWav = verifyWav;
-            for (int i = 0; i < savingIcons.Length; i++) savingIcons[i] = PlayerIcons.Create(4, i);
+            bool restored = false;
+            settings = verify ? new SoundLeafSettings { Language = "ru" } : SoundLeafSettings.Load(root, out restored);
+            if (verifyOpus) settings.Format = AudioOutputFormat.Opus;
+            TextCatalog.SetLanguage(settings.Language);
+            for (int i = 0; i < savingIcons.Length; i++) savingIcons[i] = SoundLeafIcons.Create(4, i);
             animationTimer.Interval = 80;
             animationTimer.Tick += delegate
             {
@@ -92,60 +104,69 @@ namespace Player
                 animationTicks++;
             };
             output = verify ? Path.Combine(root, "Verification", DateTime.Now.ToString("yyyyMMdd-HHmmss") +
-                "-" + Guid.NewGuid().ToString("N").Substring(0, 6)) : Path.Combine(root, "Recordings");
+                "-" + Guid.NewGuid().ToString("N").Substring(0, 6)) : settings.RecordingsFolder(root);
             ffmpeg = verifyWav ? Path.Combine(output, "missing-ffmpeg.exe") : Path.Combine(root, "tools", "ffmpeg.exe");
             verificationReport = Path.Combine(output, "live-result.txt");
             // Create the dispatcher on the UI thread before any worker can post a callback.
             IntPtr handle = dispatcher.Handle;
-            startItem = new ToolStripMenuItem("Начать новую запись", null, delegate { Start(); });
-            wavItem = new ToolStripMenuItem("Начать запись только в WAV", null, delegate { Start(RecordingMode.WavOnly); }) { Enabled = false };
-            warningItem = new ToolStripMenuItem("Проверка перед записью") { Enabled = false };
-            pauseItem = new ToolStripMenuItem("Пауза", null, delegate { SetPause(); });
-            stopItem = new ToolStripMenuItem("Остановить и сохранить", null, delegate { Stop(false); });
-            recoverItem = new ToolStripMenuItem("Собрать незавершённые записи", null, delegate { Recover(); });
-            resultItem = new ToolStripMenuItem("Результат записи", null, delegate
+            startItem = new ToolStripMenuItem(TextCatalog.T("message.2"), null, delegate { Start(); });
+            wavItem = new ToolStripMenuItem(TextCatalog.T("message.3"), null, delegate { Start(RecordingMode.WavOnly); }) { Enabled = false };
+            warningItem = new ToolStripMenuItem(TextCatalog.T("message.4")) { Enabled = false };
+            pauseItem = new ToolStripMenuItem(TextCatalog.T("message.5"), null, delegate { SetPause(); });
+            stopItem = new ToolStripMenuItem(TextCatalog.T("message.6"), null, delegate { Stop(false); });
+            recoverItem = new ToolStripMenuItem(TextCatalog.T("message.7"), null, delegate { Recover(); });
+            resultItem = new ToolStripMenuItem(TextCatalog.T("message.8"), null, delegate
             {
                 MessageBox.Show(lastMessage + (lastPaths.Length == 0 ? "" : Environment.NewLine + string.Join(Environment.NewLine, lastPaths)) +
-                    Environment.NewLine + "Незавершённых сессий: " + pendingCount, "Player — результат",
+                    Environment.NewLine + TextCatalog.T("message.9") + pendingCount, TextCatalog.T("message.10"),
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             });
-            openResultItem = new ToolStripMenuItem("Открыть последний итоговый файл", null, delegate
+            openResultItem = new ToolStripMenuItem(TextCatalog.T("message.11"), null, delegate
             {
                 try
                 {
                     if (lastKind == FinalResultKind.WavParts && lastResult != null) OpenFolder(Path.GetDirectoryName(lastResult));
                     else if (lastResult != null) Process.Start(new ProcessStartInfo(lastResult) { UseShellExecute = true });
                 }
-                catch (Exception error) { tray.ShowBalloonTip(5000, "Player", error.Message, ToolTipIcon.Error); }
+                catch (Exception error) { tray.ShowBalloonTip(5000, "SoundLeaf", error.Message, ToolTipIcon.Error); }
             });
-            pendingItem = new ToolStripMenuItem("Незавершённых сессий: 0") { Enabled = false };
-            autoStartItem = new ToolStripMenuItem("Автозапуск с Windows", null, delegate { ToggleAutostart(); });
-            exitItem = new ToolStripMenuItem("Выход", null, delegate { Stop(true); });
+            pendingItem = new ToolStripMenuItem(TextCatalog.T("message.12")) { Enabled = false };
+            autoStartItem = new ToolStripMenuItem(TextCatalog.T("message.13"), null, delegate { ToggleAutostart(); });
+            exitItem = new ToolStripMenuItem(TextCatalog.T("message.14"), null, delegate { Stop(true); });
             menu.Items.Add(startItem); menu.Items.Add(pauseItem); menu.Items.Add(stopItem);
             menu.Items.Add(wavItem); menu.Items.Add(warningItem);
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(resultItem); menu.Items.Add(openResultItem); menu.Items.Add(pendingItem);
-            menu.Items.Add("Открыть папку записей", null, delegate { OpenFolder(output); });
-            menu.Items.Add("Открыть журнал ошибок", null, delegate { OpenFolder(Path.Combine(root, "logs")); });
+            menu.Items.Add(TextCatalog.T("message.15"), null, delegate { OpenFolder(output); });
+            menu.Items.Add(TextCatalog.T("message.16"), null, delegate { OpenFolder(Path.Combine(root, "logs")); });
             menu.Items.Add(recoverItem);
             menu.Items.Add(autoStartItem);
             menu.Items.Add(exitItem);
             tray.Icon = stoppedIcon;
-            tray.Text = "Player — запуск";
+            tray.Text = TextCatalog.T("message.17");
             tray.ContextMenuStrip = menu;
             tray.MouseClick += delegate(object sender, MouseEventArgs args)
             {
-                if (args.Button == MouseButtons.Left) menu.Show(Cursor.Position);
+                if (args.Button == MouseButtons.Left) panel.Toggle(Cursor.Position);
             };
+            panel = new TrayPanel(root, settings, new PanelActions
+            {
+                Start = Start, Pause = SetPause, Stop = delegate { Stop(false); }, Wav = delegate { Start(RecordingMode.WavOnly); },
+                Recover = Recover, Exit = delegate { Stop(true); }, Autostart = ToggleAutostart, OpenLog = delegate { OpenFolder(Path.Combine(root, "logs")); },
+                SaveSettings = SettingsChanged, Convert = ConvertRecording
+            }, delegate { return state == RecordState.Starting || state == RecordState.Recording || state == RecordState.Paused || state == RecordState.Saving || recoveryBusy || conversionBusy; });
             tray.Visible = true;
+            if (restored) tray.ShowBalloonTip(8000, "SoundLeaf", TextCatalog.T("restored"), ToolTipIcon.Warning);
             RefreshPending();
-            if (!verify && pendingCount > 0) tray.ShowBalloonTip(7000, "Player — незавершённые записи",
-                "Найдено сессий: " + pendingCount + ". После остановки текущей записи выберите «Собрать незавершённые записи».", ToolTipIcon.Warning);
+            if (!verify && pendingCount > 0) tray.ShowBalloonTip(7000, TextCatalog.T("message.18"),
+                TextCatalog.T("message.19") + pendingCount + TextCatalog.T("message.20"), ToolTipIcon.Warning);
             RefreshAutostart();
+            if (!verify) MigrateStartup();
             ThreadPool.QueueUserWorkItem(delegate { CleanupOldBackups(); });
             log.TryWrite("TRAY_VISIBLE ms=" + uptime.ElapsedMilliseconds);
             SystemEvents.SessionEnding += OnSessionEnding;
-            Apply(new SessionUpdate(RecordState.Starting, "Запуск", 0, false));
+            SystemEvents.UserPreferenceChanged += OnThemeChanged;
+            Apply(new SessionUpdate(RecordState.Starting, TextCatalog.T("message.21"), 0, false));
             dispatcher.BeginInvoke(new Action(Start));
             verificationTimer.Interval = 100;
             verificationTimer.Tick += VerifyTick;
@@ -154,15 +175,15 @@ namespace Player
         private void Start() { Start(RecordingMode.MkvWithWavBackup); }
         private void Start(RecordingMode mode)
         {
-            if (session != null && session.IsAlive || recoveryBusy) return;
+            if (session != null && session.IsAlive || recoveryBusy || conversionBusy) return;
             Failed = false;
             activeMode = mode;
-            warningItem.Text = "Проверка перед записью";
-            Apply(new SessionUpdate(RecordState.Starting, "Проверка перед записью", 0, false) { Mode = mode });
+            warningItem.Text = TextCatalog.T("message.4");
+            Apply(new SessionUpdate(RecordState.Starting, TextCatalog.T("message.4"), 0, false) { Mode = mode });
             try
             {
                 string day = Path.Combine(output, DateTime.Now.ToString("yyyy-MM-dd"));
-                session = new RecordingSession(day, ffmpeg, log, Post, mode);
+                session = new RecordingSession(day, ffmpeg, log, Post, mode, settings.Profile, StorageRoot);
                 session.Start();
             }
             catch (Exception error) { Apply(new SessionUpdate(RecordState.Faulted, error.Message, 0, false)); }
@@ -173,6 +194,7 @@ namespace Player
         }
         private void Apply(SessionUpdate update)
         {
+            update.Message = TextCatalog.Translate(update.Message); update.Warning = TextCatalog.Translate(update.Warning); lastUpdate = update;
             RecordState previous = state;
             state = update.State;
             lastMessage = update.Message;
@@ -181,24 +203,24 @@ namespace Player
             if (update.FinalPaths.Length > 0) { lastPaths = update.FinalPaths; lastKind = update.ResultKind; }
             else if (update.FinalPath != null) { lastPaths = new[] { update.FinalPath }; lastKind = FinalResultKind.Mkv; }
             if (state == RecordState.Starting) { lastResult = null; lastPaths = new string[0]; lastKind = FinalResultKind.None; }
-            if (!string.IsNullOrEmpty(update.Warning)) warningItem.Text = "Предупреждение: " + update.Warning;
-            else if (state == RecordState.Recording) warningItem.Text = "Проверки пройдены";
+            if (!string.IsNullOrEmpty(update.Warning)) warningItem.Text = TextCatalog.T("message.22") + update.Warning;
+            else if (state == RecordState.Recording) warningItem.Text = TextCatalog.T("message.23");
             if (state == RecordState.Stopped || state == RecordState.Faulted) RefreshPending();
             openResultItem.Enabled = lastResult != null && File.Exists(lastResult);
-            openResultItem.Text = lastKind == FinalResultKind.WavParts ? "Открыть папку итоговых WAV" : "Открыть последний итоговый файл";
+            openResultItem.Text = lastKind == FinalResultKind.WavParts ? TextCatalog.T("message.24") : TextCatalog.T("message.11");
             resultItem.Text = state == RecordState.Saving ? update.Message :
                 state == RecordState.Stopped && lastKind == FinalResultKind.WavParts ? update.Message :
-                state == RecordState.Stopped && lastResult != null ? "Готово: " + Path.GetFileName(lastResult) : update.Message;
+                state == RecordState.Stopped && lastResult != null ? TextCatalog.T("message.25") + Path.GetFileName(lastResult) : update.Message;
             bool active = state == RecordState.Recording || state == RecordState.Paused;
-            if (active && activeMode == RecordingMode.WavOnly) resultItem.Text += " · только WAV";
-            bool busy = active || state == RecordState.Starting || state == RecordState.Saving;
+            if (active && activeMode == RecordingMode.WavOnly) resultItem.Text += TextCatalog.T("message.26");
+            bool busy = active || state == RecordState.Starting || state == RecordState.Saving || conversionBusy;
             startItem.Enabled = !busy && !recoveryBusy;
             wavItem.Enabled = !busy && !recoveryBusy && update.CanRecordWavOnly;
             pauseItem.Enabled = active;
             stopItem.Enabled = active || state == RecordState.Starting;
             recoverItem.Enabled = !busy && !recoveryBusy;
-            exitItem.Enabled = !recoveryBusy;
-            pauseItem.Text = state == RecordState.Paused ? "Продолжить запись" : "Пауза";
+            exitItem.Enabled = !recoveryBusy && !conversionBusy;
+            pauseItem.Text = state == RecordState.Paused ? TextCatalog.T("message.27") : TextCatalog.T("message.5");
             if (state == RecordState.Saving)
             {
                 if (previous != state) animationFrame = 0;
@@ -208,18 +230,19 @@ namespace Player
             tray.Icon = state == RecordState.Saving ? savingIcons[animationFrame] : state == RecordState.Recording ? recordingIcon :
                 state == RecordState.Paused ? pausedIcon :
                 state == RecordState.Faulted || (state == RecordState.Stopped && pendingCount != 0) ? errorIcon : stoppedIcon;
-            string label = state == RecordState.Recording ? "запись" :
-                state == RecordState.Paused ? "пауза" : state == RecordState.Saving ? update.Message :
-                state == RecordState.Starting ? "запуск" : state == RecordState.Faulted ? "ошибка — откройте журнал" :
-                pendingCount < 0 ? "не удалось проверить прошлые записи" :
-                pendingCount > 0 ? "есть незавершённые записи: " + pendingCount :
-                lastKind == FinalResultKind.WavParts ? "WAV сохранён; MKV не создавался" :
-                lastResult != null ? "готово: " + Path.GetFileName(lastResult) : "остановлен; " + update.Message;
-            string text = "Player — " + label;
-            if (active && activeMode == RecordingMode.WavOnly) text += " · только WAV";
+            string label = state == RecordState.Recording ? TextCatalog.T("message.28") :
+                state == RecordState.Paused ? TextCatalog.T("message.29") : state == RecordState.Saving ? update.Message :
+                state == RecordState.Starting ? TextCatalog.T("message.30") : state == RecordState.Faulted ? TextCatalog.T("message.31") :
+                pendingCount < 0 ? TextCatalog.T("message.32") :
+                pendingCount > 0 ? TextCatalog.T("message.33") + pendingCount :
+                lastKind == FinalResultKind.WavParts ? TextCatalog.T("message.34") :
+                lastResult != null ? TextCatalog.T("message.35") + Path.GetFileName(lastResult) : TextCatalog.T("message.36") + update.Message;
+            string text = "SoundLeaf — " + label;
+            if (active && activeMode == RecordingMode.WavOnly) text += TextCatalog.T("message.26");
             if (active) text += " " + TimeSpan.FromSeconds(update.Seconds).ToString(@"hh\:mm\:ss") +
-                (update.HeardSignal ? "" : " · тишина");
+                (update.HeardSignal ? "" : TextCatalog.T("message.37"));
             tray.Text = text.Length > 63 ? text.Substring(0, 63) : text;
+            panel.SetState(update, update.CanRecordWavOnly, autoStartItem.Checked);
             if (verify && previous != state)
             {
                 Directory.CreateDirectory(output);
@@ -229,7 +252,7 @@ namespace Player
             {
                 Failed = true;
                 log.TryWrite("UI ERROR " + update.Message);
-                if (!verify) tray.ShowBalloonTip(8000, "Player — ошибка", update.Message, ToolTipIcon.Error);
+                if (!verify) tray.ShowBalloonTip(8000, TextCatalog.T("message.0"), update.Message, ToolTipIcon.Error);
             }
             if (verify && state == RecordState.Stopped && lastKind == FinalResultKind.WavParts)
             {
@@ -267,19 +290,19 @@ namespace Player
         }
         private void Recover()
         {
-            if (recoveryBusy || (session != null && session.IsAlive)) return;
+            if (recoveryBusy || conversionBusy || (session != null && session.IsAlive)) return;
             System.Collections.Generic.List<PendingSession> pending;
-            try { pending = SessionRecovery.Find(output, root); }
+            try { pending = SessionRecovery.Find(output, StorageRoot); }
             catch (Exception error) { Apply(new SessionUpdate(RecordState.Faulted, error.Message, 0, false)); return; }
             if (pending.Count == 0)
-            { tray.ShowBalloonTip(4000, "Player", "Незавершённых сессий не найдено.", ToolTipIcon.Info); return; }
-            if (!verify && MessageBox.Show("Собрать сессий: " + pending.Count +
-                "? Исходные WAV сохранятся в резервной папке после проверки MKV.", "Player — восстановление",
+            { tray.ShowBalloonTip(4000, "SoundLeaf", TextCatalog.T("message.38"), ToolTipIcon.Info); return; }
+            if (!verify && MessageBox.Show(TextCatalog.T("message.39") + pending.Count +
+                TextCatalog.T("message.40"), TextCatalog.T("message.41"),
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
             lastResult = null;
             lastPaths = new string[0]; lastKind = FinalResultKind.None;
             recoveryBusy = true;
-            Apply(new SessionUpdate(RecordState.Saving, "Восстановление", 0, false));
+            Apply(new SessionUpdate(RecordState.Saving, TextCatalog.T("message.42"), 0, false));
             ThreadPool.QueueUserWorkItem(delegate
             {
                 int recovered = 0, errors = 0;
@@ -290,7 +313,7 @@ namespace Player
                     {
                         try
                         {
-                            string file = SessionRecovery.Recover(pendingSession, root, ffmpeg,
+                            string file = SessionRecovery.Recover(pendingSession, StorageRoot, ffmpeg,
                                 delegate(string phase) { Post(new SessionUpdate(RecordState.Saving, phase, 0, false)); });
                             final = file;
                             recovered++;
@@ -304,22 +327,22 @@ namespace Player
                 {
                     recoveryBusy = false;
                     Apply(new SessionUpdate(errors == 0 ? RecordState.Stopped : RecordState.Faulted,
-                        "Собрано сессий: " + recovered + "; ошибок: " + errors, 0, false) { FinalPath = final });
-                    if (errors == 0) tray.ShowBalloonTip(5000, "Player", "Проверенных итоговых MKV: " + recovered, ToolTipIcon.Info);
+                        TextCatalog.T("message.43") + recovered + TextCatalog.T("message.44") + errors, 0, false) { FinalPath = final });
+                    if (errors == 0) tray.ShowBalloonTip(5000, "SoundLeaf", TextCatalog.T("message.45") + recovered, ToolTipIcon.Info);
                 }));
             });
         }
         private void RefreshPending()
         {
-            try { pendingCount = SessionRecovery.Find(output, root).Count; }
+            try { pendingCount = SessionRecovery.Find(output, StorageRoot).Count; }
             catch (Exception error) { log.TryWrite("Pending scan failed: " + error); pendingCount = -1; }
-            pendingItem.Text = pendingCount < 0 ? "Не удалось проверить незавершённые записи" :
-                "Незавершённых сессий: " + pendingCount;
+            pendingItem.Text = pendingCount < 0 ? TextCatalog.T("message.46") :
+                TextCatalog.T("message.9") + pendingCount;
         }
         private void OpenFolder(string folder)
         {
             try { Directory.CreateDirectory(folder); Process.Start("explorer.exe", MediaExport.Quote(folder)); }
-            catch (Exception error) { log.TryWrite(error.ToString()); tray.ShowBalloonTip(5000, "Player", error.Message, ToolTipIcon.Error); }
+            catch (Exception error) { log.TryWrite(error.ToString()); tray.ShowBalloonTip(5000, "SoundLeaf", error.Message, ToolTipIcon.Error); }
         }
         private void RefreshAutostart()
         {
@@ -327,7 +350,7 @@ namespace Player
             {
                 using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", false))
                 {
-                    string value = key == null ? null : key.GetValue("Player") as string;
+                    string value = key == null ? null : key.GetValue("SoundLeaf") as string;
                     string expected = "\"" + Application.ExecutablePath + "\"";
                     autoStartItem.Checked = string.Equals(value, expected, StringComparison.OrdinalIgnoreCase) ||
                         string.Equals(value, Application.ExecutablePath, StringComparison.OrdinalIgnoreCase);
@@ -341,17 +364,21 @@ namespace Player
             {
                 using (var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run"))
                 {
-                    if (autoStartItem.Checked) key.DeleteValue("Player", false);
-                    else key.SetValue("Player", "\"" + Application.ExecutablePath + "\"", RegistryValueKind.String);
+                    object current = key.GetValue("SoundLeaf");
+                    if (current != null && !StartupOwnership.Matches(current as string, Application.ExecutablePath))
+                        throw new IOException(TextCatalog.T("startupForeign"));
+                    if (autoStartItem.Checked) key.DeleteValue("SoundLeaf", false);
+                    else key.SetValue("SoundLeaf", "\"" + Application.ExecutablePath + "\"", RegistryValueKind.String);
                 }
                 RefreshAutostart();
-                tray.ShowBalloonTip(3000, "Player", autoStartItem.Checked ?
-                    "Player будет запускаться при входе в Windows." : "Автозапуск отключён.", ToolTipIcon.Info);
+                if (lastUpdate != null) panel.SetState(lastUpdate, lastUpdate.CanRecordWavOnly, autoStartItem.Checked);
+                tray.ShowBalloonTip(3000, "SoundLeaf", autoStartItem.Checked ?
+                    TextCatalog.T("message.47") : TextCatalog.T("message.48"), ToolTipIcon.Info);
             }
             catch (Exception error)
             {
                 log.TryWrite("Autostart update failed: " + error);
-                tray.ShowBalloonTip(5000, "Player", "Не удалось изменить автозапуск: " + error.Message, ToolTipIcon.Error);
+                tray.ShowBalloonTip(5000, "SoundLeaf", TextCatalog.T("message.49") + error.Message, ToolTipIcon.Error);
             }
         }
         private void CleanupOldBackups()
@@ -366,6 +393,63 @@ namespace Player
                 foreach (string error in result.Errors) log.TryWrite("Backup cleanup error: " + error);
             }
             catch (Exception error) { log.TryWrite("Backup cleanup failed: " + error); }
+        }
+        private void SettingsChanged()
+        {
+            if (!verify && (state == RecordState.Stopped || state == RecordState.Faulted)) output = settings.RecordingsFolder(root);
+            foreach (ToolStripItem item in menu.Items) item.Text = TextCatalog.Translate(item.Text);
+            if (lastUpdate != null) Apply(lastUpdate);
+        }
+        private void MigrateStartup()
+        {
+            try
+            {
+                using (var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true))
+                {
+                    if (key == null) return;
+                    string old = key.GetValue("Player") as string;
+                    string expected = Path.Combine(root, "Player.exe");
+                    if (StartupOwnership.Matches(old, expected))
+                    {
+                        string target = "\"" + Application.ExecutablePath + "\"";
+                        object existing = key.GetValue("SoundLeaf");
+                        if (existing != null && !StartupOwnership.Matches(existing as string, Application.ExecutablePath)) return;
+                        key.SetValue("SoundLeaf", target); key.DeleteValue("Player", false);
+                    }
+                }
+                RefreshAutostart();
+            }
+            catch (Exception error) { log.TryWrite("Startup migration failed: " + error); }
+        }
+        private void ConvertRecording(RecordingEntry entry, RecordingProfile profile, string final)
+        {
+            if (conversionBusy || recoveryBusy || (session != null && session.IsAlive)) return;
+            lastResult = null; lastPaths = new string[0]; lastKind = FinalResultKind.None;
+            conversionBusy = true; Apply(new SessionUpdate(RecordState.Saving, TextCatalog.T("conversionBusy"), 0, false) { Profile = profile });
+            ThreadPool.QueueUserWorkItem(delegate
+            {
+                Exception failure = null; double seconds = 0;
+                try
+                {
+                    if (entry.Paths.Length > 1 || Path.GetExtension(entry.Paths[0]).Equals(".wav", StringComparison.OrdinalIgnoreCase))
+                    { foreach (string wav in entry.Paths) seconds += DurableWave.ReadInfo(wav, false).Duration; ProfileExport.Rebuild(entry.Paths, final, ffmpeg, profile, null); }
+                    else { ProfileExport.Transcode(entry.Paths[0], final, ffmpeg, profile, null); seconds = MediaExport.DecodeDuration(final, ffmpeg, ProfileExport.Timeout(entry.Seconds ?? 3600)); }
+                    string folder = Path.GetDirectoryName(final); string workspace = SoundLeafSettings.StorageRoot(root, folder);
+                    ResultReceipt.Write(workspace, Path.GetFileNameWithoutExtension(final), profile, seconds, false, new[] { final });
+                }
+                catch (Exception error) { failure = error; log.TryWrite(error.ToString()); }
+                dispatcher.BeginInvoke(new Action(delegate
+                {
+                    conversionBusy = false;
+                    if (failure == null)
+                    {
+                        string folder = Path.GetDirectoryName(final); var folders = new System.Collections.Generic.List<string>(settings.LibraryFolders ?? new string[0]);
+                        if (!folders.Contains(folder)) { folders.Add(folder); settings.LibraryFolders = folders.ToArray(); try { settings.Save(root); } catch (Exception error) { log.TryWrite(error.ToString()); } }
+                    }
+                    Apply(new SessionUpdate(failure == null ? RecordState.Stopped : RecordState.Faulted, failure == null ? TextCatalog.T("conversionDone") : failure.Message, seconds, false)
+                    { Profile = profile, FinalPath = failure == null ? final : null, FinalPaths = failure == null ? new[] { final } : new string[0], ResultKind = FinalResultKind.EncodedFile });
+                }));
+            });
         }
         private void VerifyTick(object sender, EventArgs args)
         {
@@ -404,15 +488,20 @@ namespace Player
             if (uptime.ElapsedMilliseconds > 120000) { log.TryWrite("Live verification timeout"); Stop(true); }
         }
         private void OnSessionEnding(object sender, SessionEndingEventArgs args) { if (session != null) session.Stop(); }
+        private void OnThemeChanged(object sender, UserPreferenceChangedEventArgs args)
+        { if (!exiting) try { dispatcher.BeginInvoke(new Action(delegate { if (!exiting && settings.Theme == "system") panel.ApplyTheme(); })); } catch (InvalidOperationException) { } }
         protected override void ExitThreadCore()
         {
+            if (conversionBusy || recoveryBusy) return;
             if (session != null && session.IsAlive && state != RecordState.Stopped && state != RecordState.Faulted)
             { exitAfterSave = true; session.Stop(); return; }
             exiting = true;
             SystemEvents.SessionEnding -= OnSessionEnding;
+            SystemEvents.UserPreferenceChanged -= OnThemeChanged;
             verificationTimer.Stop(); verificationTimer.Dispose();
             animationTimer.Stop(); animationTimer.Dispose();
             tray.Visible = false; tray.Dispose(); menu.Dispose(); dispatcher.Dispose();
+            panel.Dispose();
             recordingIcon.Dispose(); pausedIcon.Dispose(); stoppedIcon.Dispose(); errorIcon.Dispose();
             foreach (var icon in savingIcons) if (icon != null) icon.Dispose();
             log.TryWrite("EXIT");

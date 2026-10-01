@@ -4,13 +4,28 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 
-namespace Player
+namespace SoundLeaf
 {
     // Vector artwork shared by the executable resource and every tray state.
-    public static class PlayerIcons
+    public static class SoundLeafIcons
     {
         public const int FrameCount = 24;
         private static readonly int[] Sizes = { 16, 20, 24, 32, 48, 64, 128, 256 };
+        public static Bitmap Brand(int size)
+        {
+            var bitmap = new Bitmap(size, size, PixelFormat.Format32bppArgb);
+            using (var g = Graphics.FromImage(bitmap))
+            using (var leaf = new GraphicsPath())
+            using (var fill = new LinearGradientBrush(new Point(0, 0), new Point(64, 64), Color.FromArgb(126, 222, 149), Color.FromArgb(12, 105, 66)))
+            using (var vein = new Pen(Color.FromArgb(237, 255, 239), 2.4f))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias; g.ScaleTransform(size / 64f, size / 64f);
+                leaf.AddBezier(10, 49, 3, 23, 25, 8, 56, 8); leaf.AddBezier(56, 8, 57, 38, 39, 59, 10, 49); leaf.CloseFigure();
+                g.FillPath(fill, leaf); vein.StartCap = vein.EndCap = LineCap.Round;
+                g.DrawLine(vein, 10, 54, 46, 20); g.DrawLine(vein, 24, 40, 24, 27); g.DrawLine(vein, 33, 33, 46, 34);
+            }
+            return bitmap;
+        }
 
         public static Bitmap Render(int state, int size, int frame)
         {
@@ -92,7 +107,7 @@ namespace Player
         {
             var images = new byte[Sizes.Length][];
             for (int i = 0; i < Sizes.Length; i++)
-                using (var bitmap = Render(state, Sizes[i], frame))
+                using (var bitmap = state == 5 ? Brand(Sizes[i]) : Render(state, Sizes[i], frame))
                 using (var png = new MemoryStream())
                 { bitmap.Save(png, ImageFormat.Png); images[i] = png.ToArray(); }
             using (var stream = new MemoryStream())
@@ -122,7 +137,7 @@ namespace Player
         public static void Export(string folder)
         {
             Directory.CreateDirectory(folder);
-            File.WriteAllBytes(Path.Combine(folder, "Player.ico"), IcoBytes(0, 0));
+            File.WriteAllBytes(Path.Combine(folder, "SoundLeaf.ico"), IcoBytes(5, 0));
             using (var sheet = new Bitmap(640, 256))
             using (var g = Graphics.FromImage(sheet))
             using (var font = new Font("Segoe UI", 10))
