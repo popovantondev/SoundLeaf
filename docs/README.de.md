@@ -2,7 +2,7 @@
 
 Deutsch · [Русский](README.ru.md) · [English](../README.md)
 
-**Reines Lernprojekt · Windows 11 · x64 · Vorabversion 3.0.3**
+**Reines Lernprojekt · Windows 11 · x64 · Vorabversion 3.0.4**
 
 SoundLeaf ist ein C#-Lernprojekt zu Windows-Systemaudio, Hintergrundverarbeitung, sicherer Dateispeicherung und Bedienung im Infobereich. Es ist keine professionelle Aufnahmelösung. Oberfläche und Dokumentation sind deutsch, russisch und englisch; die Sprache ändert sich sofort.
 
@@ -30,7 +30,7 @@ Die Wiederherstellung nutzt vollständige und unvollständige WAV-Teile derselbe
 
 Das Panel öffnet sich in 280 ms vom tatsächlichen Tray-Symbol aus und schließt sich in 220 ms. Bei deaktivierten Windows-Animationen sind beide Vorgänge sofortig. Eine geglättete, zwischengespeicherte Bildfläche bewegt sich ohne Größenänderungen des echten Fensters oder erneutes Layout pro Bild. Die übliche Größe ist 430 × 520 logische Pixel. Es bleibt innerhalb der Monitor-Arbeitsfläche und berücksichtigt Per-Monitor-DPI. Bei fehlenden Symbolkoordinaten dient der gespeicherte Klickpunkt als Ersatz. Erneuter Klick, Escape und Fokusverlust verbergen nur das Panel, nicht die Aufnahme.
 
-Über Start/Pause/Stopp zeigt eine dünne ungefüllte Kontur echte PCM-Pegel mit 95% visueller Ausprägung. Pegeldaten kommen alle 50 ms; schnelles Ansprechen und Abklingen verkleinern nach einem Wort die ganze Kontur, ohne alte Spitzen festzuhalten. Nach 150 ms ohne Pakete verfällt der Pegel. Sehr leiser visueller Hintergrund, Stille und Pause zeigen eine ruhende Linie; diese Darstellungsgrenze entfernt keinen aufgenommenen Ton. „Ton erkannt“ bestätigt einen früheren Ton und bleibt bei Sprechpausen erhalten. Geräteverfügbarkeit ist ein eigener Status und beweist keine bestimmte hörbare Anwendung. Die Kontur ist eine Pegelhüllkurve, kein abgetastetes Audiosignal oder Frequenzspektrum. Die laufende Aufnahme zeigt fünf deutlich getrennte Pegelbalken, Dauer und PCM-Größe; unfertige Dateien lassen sich nicht als fertige Ergebnisse öffnen. Lautstärke, PCM, Codecs, Blatt für EXE/Mitteilungen und Tray-Zustandssymbole bleiben unverändert.
+Über Start/Pause/Stopp zeigt ein zentriertes Histogramm aus 21 getrennten abgerundeten Säulen echte PCM-Pegel mit 95% visueller Ausprägung. Die laufende Aufnahme hat fünf kompakte Balken; ihre Ruhelinie ist nur 31 logische Pixel breit. Beide Anzeigen besitzen eigene zeitbasierte Glättung; neue Daten lassen die sichtbaren Höhen nicht springen. Stille blendet kurz und weich zur ruhenden Linie über; Pause/Stopp beenden die Bewegung sofort. Daten kommen alle 50 ms und verfallen nach 150 ms; die restliche Darstellung klingt kurz ab (bis 200 ms modellierte Hüllkurvenzeit, keine Windows-Zeitgarantie). Es sind Pegelanzeigen, keine Wellenform oder Frequenzspektren. Die Darstellungsgrenze entfernt keinen aufgenommenen Ton. „Ton erkannt“ bleibt während Sprechpausen bestätigt; Geräteverfügbarkeit beweist keine bestimmte hörbare Anwendung. Aufnahme, PCM, Codecs, Tray-Zustände und natürliches Blatt bleiben unverändert.
 
 Keine Seiten-Scrollleisten: Unter 450 logischen Pixeln Höhe gliedern sich Einstellungen in Audio / Dateien / Design. Ordnerpfad und Codec-Details stehen vollständig im Tooltip. Aufnahmen werden seitenweise angezeigt. Abgerundete Auswahlfelder unterstützen Tab, Pfeile, Enter, Leertaste und Escape; Escape schließt zuerst die Liste, dann das Panel. Formatnamen werden kleingeschrieben; Audioeinstellungen bleiben unverändert.
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.4 — smooth histogram and compact quiet transition, 2026-10-01
+
+- Replace the main contour with 21 separated rounded level columns, retaining 95% expressiveness and real PCM telemetry. Smooth each column rather than scrolling a jagged path.
+- Give the five-bar compact meter its own pacing and a centered 31-logical-pixel quiet line. Crossfade quiet/sound states rather than switching drawings abruptly.
+- Use elapsed-time envelopes (main 50/50 ms, compact 65/65 ms), limit catch-up after a stalled UI frame, and stop timers after a brief bounded quiet fade. Pause/stop/device loss still stop immediately; capture and codecs are unchanged.
+- Extend deterministic smoothing, no-snap, frame subdivision, separated-column, short-line, expiry and pause checks; retain three-language/theme/DPI/short-screen coverage.
+- Capture old shell icon identity before installation, notify changed artwork, and invalidate shell artwork once to refresh stale executable icons. No Explorer restart, cache-file deletion, registry or association changes. Verify embedded images and fresh-process cache readback after same-path replacement at four shell sizes.
+
 ## 3.0.3 — responsive thin contour and clear compact meter, 2026-10-01
 
 - Replace the large filled-looking level history with a 1.6 logical-pixel unfilled contour; retain 95% expressiveness while reducing visual expansion of faint background levels.

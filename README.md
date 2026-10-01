@@ -4,7 +4,7 @@
 
 [Deutsch](docs/README.de.md) · [Русский](docs/README.ru.md) · English
 
-**Strictly an educational project · Windows 11 · x64 · Preview 3.0.3**
+**Strictly an educational project · Windows 11 · x64 · Preview 3.0.4**
 
 SoundLeaf is a C# learning project exploring Windows system audio, background processing, durable file storage and a system-tray interface. It is not a professional recording solution.
 
@@ -32,7 +32,7 @@ Left click toggles a compact leaf-themed panel: Controls, Recordings and Setting
 
 The panel opens from the actual tray icon in 280 ms and closes in 220 ms; both are immediate when Windows animations are disabled. A cached, antialiased compositor surface moves without resizing the real window or relaying out controls on every frame. Its usual size is 430 × 520 logical pixels; it stays inside the monitor's work area with per-monitor DPI scaling. A missing icon rectangle uses the saved click position. Settings use compact rows, a one-line folder path with a full-path tooltip, and an audio-information tooltip. Below 450 logical pixels of available height, Settings splits into Audio / Files / Appearance. Recordings use height-dependent pages instead of scrollbars. Custom rounded selectors support Tab, arrows, Enter, Space and Escape; Escape closes a dropdown before hiding the panel. Displayed format names are lowercase; codec settings and audio behavior are unchanged.
 
-Controls show a thin, unfilled contour of real PCM levels above play/pause/stop, with 95% visual expressiveness. Level updates arrive every 50 ms; a fast attack/release shrinks the entire contour after a word instead of holding old peaks. Missing packets expire after 150 ms. Very faint visual background, silence and pause show a stationary line; this display floor never mutes recorded audio. “Audio detected” confirms an earlier signal and stays confirmed during breaks. “Capture device available” is separate device health, not proof that a particular intended application is audible. The contour is a level envelope, not a sampled waveform or frequency spectrum. The live recording card uses five clearly separated current-level bars. Volume, PCM and codec settings are unchanged; the EXE/notification leaf and tray state icons remain.
+Controls show a centered histogram of 21 separated rounded PCM-level columns above play/pause/stop, with 95% visual expressiveness. The live card uses a compact group of five bars; its quiet line is only 31 logical pixels wide. Each display has its own elapsed-time smoothing; input updates never snap the visible heights. Quiet input crossfades briefly to a stationary line; pause/stop immediately stop motion. Updates arrive every 50 ms and packets expire after 150 ms; the remaining drawing fades briefly (up to 200 ms of modeled envelope time, not a wall-clock guarantee). These are level indicators, not a waveform or frequency spectrum. The display floor does not remove recorded audio. “Audio detected” retains historical confirmation during breaks; device availability does not prove a particular application is audible. Capture, PCM, codecs, tray states and the natural leaf are unchanged.
 
 Settings can select a writable save folder. Existing files are not moved; previously selected folders remain in the library. The default remains the existing application folder's `Recordings`. Custom destinations store their own `State/Sessions`, backups and recovery work alongside dated recording folders; retain that metadata when moving audio. Settings themselves stay beside the EXE.
 

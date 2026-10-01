@@ -1,6 +1,18 @@
 # Local verification — 2026-10-01
 
-SoundLeaf 3.0.3, Windows x64, Windows PowerShell 5.1.
+SoundLeaf 3.0.4, Windows x64, Windows PowerShell 5.1.
+
+## 3.0.4 — complete verification passed; installation pending
+
+- A first complete MegaProg invocation passed three hash cases, 73 core checks and 114 embedded/state-icon checks, then failed the new shell-cache harness before UI/live scenarios. It is recorded as a failure, not a verified release. The harness now pins the child process handle before waiting, refreshes process metadata and explicitly rejects an unavailable exit code; an emitted image alone is not success.
+- Separate diagnostics passed 654 native UI assertions and then 114 icon checks plus six shell-cache assertions. The main histogram, compact bars and short quiet-line bitmaps were inspected. These diagnostics do not substitute for the complete runner.
+- A second complete invocation passed core/hash/icon/cache checks, then rejected the UI harness's current-signal assertion after an expensive blocking render. Newly injected telemetry is now asserted before the blocking layout/render, and snapshot frames use explicit modeled envelope time. The independent real-time missing-packet test still expires at 150 ms and waits for the bounded quiet fade; production freshness was not relaxed. A third complete invocation is required.
+- The third complete invocation through MegaProg 2.0.18 passed at 21:52 CEST: `ok=true`, exit code 0, no timeout. It passed three hash cases, 73 core checks, 114 icon checks, six shell-cache checks, 42,306 UI assertions, 252 panel renders and three genuine MKV/Opus/WAV loopback lifecycles. Candidate `3.0.4.0`, SHA-256 `BB2E3DED749FE456FC3D0418D2596B59303975C98340933E3FAE8ECC6B44E7A3`.
+- The UI matrix covers three languages, two themes, 100/150/200% modeled scales and short screens; seven isolated meter renders supplement panel snapshots. Both themes' main and current-session panels were visually inspected. Native anchor/motion/notification tests use the present desktop; this is not testing three physical monitor scales. The loopback fixture renders inaudible digital silence, not human speech. Positive meter input and step-response checks are synthetic. No clean-machine or endurance claim is made.
+- New deterministic cases cover no input/history snapping, first-frame limits, elapsed-time/frame-subdivision equivalence, 21/five separated columns, quiet crossfade and timer shutdown, centered 31-pixel compact line at 100/150/200%, missing packets and immediate pause. 50/65/42 ms values are mathematical envelope constants, not physical speech-latency measurements. UI packet freshness remains 150 ms, capture telemetry 50 ms; no audio code or profile is changed.
+- Shell-cache testing atomically replaces an old red-icon fixture with the natural leaf at the same path, captures the old extractor identity, notifies Windows and invalidates shell artwork without deleting cache files or restarting Explorer. Four sizes are compared in a fresh process, because an unregistered client's private image list is not an Explorer view. Existing Explorer windows, arbitrary portable copies, and the path in the user's screenshot are not yet independently verified.
+
+All earlier sections below are historical evidence, not additional 3.0.4 runs.
 
 ## 3.0.3 — complete verification passed
 
