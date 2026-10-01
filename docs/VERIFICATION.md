@@ -13,6 +13,10 @@ SoundLeaf 3.0.3, Windows x64, Windows PowerShell 5.1.
 - Notifications now render distinct small/large native HICONs at shell taskbar DPI instead of reusing one fixed 32-pixel handle. Nine icon cases verify exact native dimensions and transparency, including 40 pixels for 125% DPI. Four UI cases check small/large dimensions at 96/120/144/192 DPI without changing Windows settings. Small artwork has stronger contour/major veins, fewer details and no shadow; all recording/pause/stop/error/saving artwork is unchanged. A separate native-only diagnostic passed 628 assertions after this change, and an actual desktop notification capture was visually inspected. These metric checks are not physical tests of four monitors or DPI switching.
 - `Install-Verified.ps1` rejected the earlier partial result before replacement; refusal and unchanged installed 3.0.2 hash were checked. The installed instance subsequently exited normally at 20:59; no running recorder was terminated. The complete run used the guarded inaudible digital-silence fixture and verified pause/resume/save/restart/exit, intentional WAV completion, final-file readiness, no pending sessions and stopped saving animation. This does not claim human-speech testing of the new contour. Installation remains a separate hash-pinned step.
 
+### Local installation 3.0.3 — completed at 21:10 CEST
+
+The checked executable was atomically installed at `C:\Users\Public\Player\SoundLeaf.exe`. Installed version/hash and all eight embedded leaf images match the verified candidate/ICO; the original 3.0.2 executable is preserved with its original hash in `Backups\BeforeSoundLeaf303-20261001-211011-f93abb`. FFmpeg is unchanged. Before/after `Recordings` and `State` listings match names, sizes and modification times; no recording directory, settings or registry entry was a deployment target. This is not a separate byte audit of every recording. The application was not automatically relaunched because ordinary launch starts recording after preflight. No GitHub upload occurred; existing historical Windows notifications are not retroactively replaced.
+
 All 3.0.2 results below are historical baseline evidence, not additional 3.0.3 test runs.
 
 ## 3.0.2 — complete verification passed
@@ -29,7 +33,7 @@ All 3.0.2 results below are historical baseline evidence, not additional 3.0.3 t
 
 The configured runner uses its complete command (without `-NoLive`). Local installation is a separate guarded step, not inferred from a passing test command. Earlier baseline results below remain historical evidence; private reports preserve unsuccessful and partial attempts as well as the final pass.
 
-## Local installation — completed at 19:49 CEST
+## Local installation 3.0.2 — completed at 19:49 CEST
 
 The checked `3.0.2.0` executable was atomically installed at `C:\Users\Public\Player\SoundLeaf.exe` after the user exited the previous version. Its SHA-256 matches the full-check receipt above, all eight installed icon resources match the installed ICO, and the original 3.0.1 executable is preserved in `Backups\BeforeSoundLeaf302-20261001-194935-595834` with its original hash. FFmpeg is unchanged. Before/after listings of `Recordings` and `State` match in names, sizes and modification times; these directories and startup registry entries were not deployment targets. This comparison is not a separate byte-level audit of every recording. The application was not automatically relaunched, since ordinary launch starts a new recording after preflight. No GitHub upload was performed.
 
