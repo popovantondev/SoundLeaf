@@ -34,6 +34,7 @@ namespace SoundLeaf
             });
             test("Silence flag and no-packet expiry reset current level", delegate
             {
+                Assert(AudioMeter.Freshness100ns == 1500000, "No-packet expiry exceeds 150 ms.");
                 var format = Tests.Format(16, false, false); var meter = new AudioMeter(format); byte[] data = { 0, 64, 0, 64 };
                 meter.Observe(data, 1, 0, 100); Assert(meter.Peak(100) == .5f, "Signal not detected.");
                 Assert(meter.Peak(100 + AudioMeter.Freshness100ns + 1) == 0, "Stale signal shown as live.");

@@ -19,6 +19,53 @@ namespace SoundLeaf
         { var watch = Stopwatch.StartNew(); do { Application.DoEvents(); Thread.Sleep(5); } while (watch.ElapsedMilliseconds < milliseconds); }
         private static void Key(Control target, Keys key)
         { typeof(Control).GetMethod("ProcessCmdKey", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(target, new object[] { new Message(), key }); }
+        private static void MeterPresentation(string root)
+        {
+            var loud = new SessionUpdate(RecordState.Recording, "", 1, true) { DeviceAvailable = true, Peak = 1, Rms = 1 };
+            Assert(RecordingSession.TelemetryInterval100ns == 500000 && AudioMeter.Freshness100ns == 1500000, "Meter latency bounds changed.");
+            using (var meter = new AudioLevelView { Size = new Size(280, 130), Dark = true, BackColor = Color.Black, ForeColor = Color.White })
+            {
+                meter.CreateControl(); meter.SetLevel(loud);
+                var samples = new float[25]; for (int i = 0; i < samples.Length; i++) samples[i] = AudioLevelView.Expressiveness;
+                meter.SeedHistory(samples); meter.AdvanceEnvelope(42);
+                Assert(meter.CurrentEnvelope >= AudioLevelView.Expressiveness * .94f, "Level attack is too slow.");
+                using (var bitmap = new Bitmap(meter.Width, meter.Height))
+                {
+                    meter.DrawToBitmap(bitmap, meter.ClientRectangle);
+                    int ink = 0, area = 0;
+                    for (int y = 5; y < meter.Height - 22; y++) for (int x = 16; x < meter.Width - 16; x++)
+                    { area++; if (bitmap.GetPixel(x, y).G > 80) ink++; }
+                    Assert(ink > 100 && ink < area * .15, "Wave is missing or a filled thick band.");
+                    Assert(Math.Abs(AudioLevelView.StrokeWidth - 1.6f) < .001, "Wave stroke is too thick.");
+                    bitmap.Save(Path.Combine(root, "meter-thin-contour.png"));
+                }
+                float before = meter.CurrentEnvelope;
+                var quiet = new SessionUpdate(RecordState.Recording, "", 1, true) { DeviceAvailable = true, Peak = .01f, Rms = .01f };
+                float target = AudioLevelView.DisplayLevel(quiet); meter.SetLevel(quiet); meter.AdvanceEnvelope(105);
+                Assert(meter.CurrentEnvelope < before && meter.CurrentEnvelope <= target + (before - target) * .055f, "Previous word holds the wave up after a quiet gap.");
+                quiet.Peak = quiet.Rms = .0002f; meter.SetLevel(quiet);
+                Assert(meter.CurrentEnvelope == 0 && !meter.HasCurrentSignal && !meter.TimerRunning && quiet.HeardSignal, "Background display floor changed historical audio detection or kept a thick wave.");
+                meter.SetLevel(loud); meter.AdvanceEnvelope(42); Pump(185);
+                Assert(!meter.HasCurrentSignal && !meter.TimerRunning && meter.CurrentEnvelope == 0, "Missing packets kept the animation alive.");
+                meter.SetLevel(loud); meter.AdvanceEnvelope(42);
+                meter.SetLevel(new SessionUpdate(RecordState.Paused, "", 1, true) { DeviceAvailable = true, Peak = 1, Rms = 1 });
+                Assert(meter.CurrentEnvelope == 0 && !meter.TimerRunning, "Pause did not stop the contour immediately.");
+            }
+            foreach (float scale in new[] { 1f, 1.5f, 2f }) using (var meter = new AudioLevelView { Mini = true, Dark = true, Scale = scale, Size = new Size((int)(74 * scale), (int)(24 * scale)), BackColor = Color.Black })
+            {
+                meter.CreateControl(); meter.SetLevel(loud); meter.AdvanceEnvelope(42);
+                using (var bitmap = new Bitmap(meter.Width, meter.Height))
+                {
+                    meter.DrawToBitmap(bitmap, meter.ClientRectangle); int groups = 0; bool previous = false;
+                    for (int x = 0; x < bitmap.Width; x++)
+                    { bool ink = bitmap.GetPixel(x, bitmap.Height / 2).G > 80; if (ink && !previous) groups++; previous = ink; }
+                    Assert(groups == 5 && AudioLevelView.MiniBarCount == 5, "Compact meter is not five clearly separated bars.");
+                    bitmap.Save(Path.Combine(root, "meter-five-bars-" + (int)(scale * 100) + ".png"));
+                }
+                meter.SetLevel(new SessionUpdate(RecordState.Recording, "", 1, true) { DeviceAvailable = true });
+                Assert(!meter.HasCurrentSignal && meter.CurrentEnvelope == 0 && !meter.TimerRunning, "Compact meter kept fake activity during silence.");
+            }
+        }
         private static void Outside(TrayPanel panel)
         {
             using (var outside = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Bounds = new Rectangle(30, 30, 100, 80), FormBorderStyle = FormBorderStyle.FixedToolWindow, TopMost = true })
@@ -102,6 +149,7 @@ namespace SoundLeaf
             {
                 Assert(AreDpiAwarenessContextsEqual(GetThreadDpiAwarenessContext(), new IntPtr(-4)), "Per-Monitor V2 manifest missing.");
                 string root = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Verification", "ui-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N").Substring(0, 6)); Directory.CreateDirectory(root);
+                MeterPresentation(root);
                 if (args.Length == 0) foreach (string language in new[] { "ru", "de", "en" }) foreach (string theme in new[] { "light", "dark" }) foreach (float scale in new[] { 1f, 1.5f, 2f }) foreach (int height in new[] { 520, 260 })
                 {
                     TextCatalog.SetLanguage(language);
