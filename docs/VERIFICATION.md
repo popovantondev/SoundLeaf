@@ -1,6 +1,17 @@
 # Local verification — 2026-10-01
 
-SoundLeaf 3.0.2, Windows x64, Windows PowerShell 5.1.
+SoundLeaf 3.0.3 candidate, Windows x64, Windows PowerShell 5.1.
+
+## 3.0.3 — partial verification; installation deferred
+
+- One explicit `-NoLive` MegaProg 2.0.18 invocation passed 73 core checks, 105 icon checks and the three hash cases, but UI containment caught a one-pixel overflow of the taller meter in a short recording card. The meter now sizes to the actual card height; the failed attempt remains failure, not a completed verification.
+- The second explicit `-NoLive` invocation passed all three hash cases, 73 core checks, 105 icon checks, 42,240 UI assertions and 252 panel renders: exit code 0, `ok=true`, no timeout. This is intentionally partial: no genuine 3.0.3 capture cycle has run yet. The runner configuration has been restored to its complete command.
+- New deterministic cases verify 50 ms telemetry / 150 ms stale-packet expiry, rapid attack, release after a quiet gap, an unfilled 1.6 logical-pixel contour, five separated compact bars at 100/150/200%, background-to-line, historical signal retention, pause and no-packet timer shutdown. Four additional isolated meter bitmap files accompany the 252 panel renders. A separate native-only diagnostic passed 624 assertions; it is not counted as an additional runner invocation.
+- The 14/35 ms attack/release values are envelope time constants, not a promise about Windows scheduling or physical speech latency. The fall test applies 105 ms of deterministic envelope time and asserts that an old peak has mostly decayed. Positive levels use known PCM/telemetry fixtures; a real conversation with this candidate has not been claimed.
+- Main and recording-page renders in both themes were inspected; the compact-card height fix is covered by the entire three-language/scale/short-screen matrix. Audio writes, profiles, codecs, historical signal detection and one-second device checks/checkpoints are unchanged. The -60 dB visual floor only changes drawing; it never discards captured audio.
+- `Install-Verified.ps1` refuses this partial result before file replacement. The refusal and unchanged installed 3.0.2 SHA-256 were checked. The installed instance is still open; stop/save/exit it before complete capture verification and guarded installation. No running recorder was terminated or updated.
+
+All 3.0.2 results below are historical baseline evidence, not proof that 3.0.3 is installed or fully checked.
 
 ## 3.0.2 — complete verification passed
 
