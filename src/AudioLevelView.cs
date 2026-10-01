@@ -159,7 +159,9 @@ namespace SoundLeaf
         {
             update = value; Meter.Scale = Scale; Meter.SetLevel(value);
             Meter.SeedHistory(history);
-            Meter.Bounds = new Rectangle(Math.Max(0, Width - (int)(88 * Scale)), (int)(42 * Scale), (int)(74 * Scale), (int)(24 * Scale));
+            int top = (int)(42 * Scale);
+            int height = Math.Min((int)(24 * Scale), Math.Max(1, Height - top - (int)(2 * Scale)));
+            Meter.Bounds = new Rectangle(Math.Max(0, Width - (int)(88 * Scale)), top, (int)(74 * Scale), height);
             AccessibleName = TextCatalog.T("currentRecording") + ", " + value.SessionStarted.ToString("yyyy-MM-dd HH:mm") + ", " + TextCatalog.Translate(value.Message);
             Invalidate();
         }
