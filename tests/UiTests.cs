@@ -278,6 +278,11 @@ namespace SoundLeaf
                     }
                     using (var notification = new BrandedNotifications())
                     {
+                        foreach (uint dpi in new[] { 96u, 120u, 144u, 192u })
+                        {
+                            notification.SetArtworkDpi(dpi);
+                            Assert(notification.HeaderPixels == (int)Math.Round(16 * dpi / 96.0) && notification.BalloonPixels == (int)Math.Round(32 * dpi / 96.0), "Notification reuses an incorrectly scaled icon.");
+                        }
                         Icon recording = icon.Icon;
                         notification.Show(2000, "SoundLeaf", "Проверка листа уведомления / notification leaf verification", ToolTipIcon.Info);
                         Assert(notification.LastPublished && icon.Icon == recording, "Branded notification changed real tray state or was rejected.");

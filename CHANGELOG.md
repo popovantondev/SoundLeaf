@@ -6,6 +6,7 @@
 - Update level telemetry every 50 ms, expire stale PCM levels after 150 ms, and use a fast 14 ms attack / 35 ms release envelope so old word peaks cannot hold the whole contour up.
 - Show five clearly separated current-level bars in the live recording card instead of a tiny scrolling history. The drawing is not a frequency spectrum; it never invents activity during silence.
 - Keep historical signal confirmation, capture/device checks, PCM storage and encoder settings unchanged. Add quiet-gap, missing-packet, pause, stroke-coverage and compact-bar checks.
+- Render separate exact-DPI native leaf icons for the notification header and body. Simplify tiny veins, strengthen their contrast and remove the small-size shadow; retain the natural shape and all tray state artwork.
 
 ## 3.0.2 — real audio levels and smooth tray motion, 2026-10-01
 

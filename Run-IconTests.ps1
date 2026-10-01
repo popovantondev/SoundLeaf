@@ -2,6 +2,15 @@ $ErrorActionPreference = 'Stop'
 $folder = Split-Path -Parent $PSCommandPath
 Add-Type -TypeDefinition (Get-Content -LiteralPath (Join-Path $folder 'src/SoundLeafIcons.cs') -Raw -Encoding UTF8) -ReferencedAssemblies System.Drawing
 $checks = 0
+foreach ($size in @(16,20,24,32,40,48,64,128,256)) {
+    $brand = [SoundLeaf.SoundLeafIcons]::CreateBrand($size)
+    try {
+        if ($brand.Width -ne $size -or $brand.Height -ne $size -or $brand.Handle -eq [IntPtr]::Zero) { throw 'Native brand icon has the wrong pixel size.' }
+        $bitmap = $brand.ToBitmap()
+        try { if ($bitmap.Width -ne $size -or $bitmap.GetPixel(0,0).A -ne 0) { throw 'Native brand pixels lost size or transparency.' }; $checks++ }
+        finally { $bitmap.Dispose() }
+    } finally { $brand.Dispose() }
+}
 foreach ($state in 0..4) {
     foreach ($size in @(16,20,24,32,48,64,128,256)) {
         $bitmap = [SoundLeaf.SoundLeafIcons]::Render($state, $size, 0)
