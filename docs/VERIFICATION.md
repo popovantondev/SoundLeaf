@@ -1,6 +1,20 @@
 # Local verification — 2026-10-01
 
-SoundLeaf 3.0.1 educational preview, Windows x64, Windows PowerShell 5.1.
+SoundLeaf 3.0.2 candidate, Windows x64, Windows PowerShell 5.1.
+
+## 3.0.2 candidate — partial verification; installation deferred
+
+- One full MegaProg 2.0.18 attempt passed 73 core checks, 105 icon checks, 42,226 UI assertions and 252 renders, but its first genuine loopback session received no PCM packets from an idle system output and correctly refused an empty result. Overall runner status was failure, not a completed release; no timeout.
+- A second runner invocation explicitly used `Run-Checks.ps1 -NoLive`: the same 73/105/42,226 checks and 252 renders passed, `ok=true`, no timeout. This result is partial and does not certify the genuine capture lifecycle.
+- Current-level tests cover PCM16/24/32, float32, signed extremes, nonfinite values, silent flags, missing-packet expiry, pause reset, valid-frame boundaries, unmodified bytes and retained historical signal during silence.
+- UI additions cover real-level rendering, 95% expressiveness, quiet-line/timer behavior, current-session pagination, unchanged card identity on telemetry, pause, equal glyph widths, fixed window bounds during motion, open/close/reversal resource cleanup and native shell notification acceptance.
+- Eight embedded EXE icon resources match `SoundLeaf.ico` byte-for-byte. A real Windows notification screen capture shows the leaf in both the small source header and main body; visible recording state icons are untouched. Current UI renders were inspected separately from native compositor captures.
+- A test-only digital-silence renderer has been added to keep the shared audio engine producing deterministic packets. It is not application code and changes no system volume. The full runner refuses to start that fixture while the installed recorder's mutex exists. It compiles under Windows PowerShell 5.1; its three genuine cycles are still pending.
+- `Install-Verified.ps1` refuses partial/no-live verification and requires a matching full-check SHA-256 receipt before replacing anything. The refusal was tested. The installed 3.0.1 recorder was left running; no EXE/recordings/state/registry replacement has been performed for this candidate.
+
+The configured runner is restored to its complete command (without `-NoLive`). Stop/save/exit the installed recorder before the final complete runner and installation. The earlier installed-version baseline below is historical evidence, not a 3.0.2 full-pass claim.
+
+## Previous installed 3.0.1 baseline
 
 - Full `Run-Checks.ps1` executed through the local MegaProg verification runner: exit code 0, `ok=true`, no timeout.
 - Build and embedded leaf emblem: passed; installed encoder matches the encoder used for verification.

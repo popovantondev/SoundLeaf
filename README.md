@@ -4,7 +4,7 @@
 
 [Deutsch](docs/README.de.md) · [Русский](docs/README.ru.md) · English
 
-**Strictly an educational project · Windows 11 · x64 · Preview 3.0.1**
+**Strictly an educational project · Windows 11 · x64 · Preview 3.0.2**
 
 SoundLeaf is a C# learning project exploring Windows system audio, background processing, durable file storage and a system-tray interface. It is not a professional recording solution.
 
@@ -30,13 +30,17 @@ Opus bitrates: 16/24/32/48/64/96/128. AAC and MP3: 64/96/128/160/192/256/320 kbi
 
 Left click toggles a compact leaf-themed panel: Controls, Recordings and Settings. Right click opens the fallback menu. Escape or clicking outside hides the panel, not the recording. There is no main window or taskbar button.
 
-The panel grows from the actual tray icon over 200 ms, or appears immediately when Windows animations are disabled. Its usual size is 430 × 520 logical pixels; it stays inside the monitor's work area with per-monitor DPI scaling. A missing icon rectangle uses the saved click position. Settings use compact rows, a one-line folder path with a full-path tooltip, and an audio-information tooltip. Below 450 logical pixels of available height, Settings splits into Audio / Files / Appearance. Recordings use height-dependent pages instead of scrollbars. Custom rounded selectors support Tab, arrows, Enter, Space and Escape; Escape closes a dropdown before hiding the panel. Displayed format names are lowercase; codec settings and audio behavior are unchanged.
+The panel opens from the actual tray icon in 280 ms and closes in 220 ms; both are immediate when Windows animations are disabled. A cached, antialiased compositor surface moves without resizing the real window or relaying out controls on every frame. Its usual size is 430 × 520 logical pixels; it stays inside the monitor's work area with per-monitor DPI scaling. A missing icon rectangle uses the saved click position. Settings use compact rows, a one-line folder path with a full-path tooltip, and an audio-information tooltip. Below 450 logical pixels of available height, Settings splits into Audio / Files / Appearance. Recordings use height-dependent pages instead of scrollbars. Custom rounded selectors support Tab, arrows, Enter, Space and Escape; Escape closes a dropdown before hiding the panel. Displayed format names are lowercase; codec settings and audio behavior are unchanged.
+
+Controls show real PCM level bars above the play/pause/stop buttons, with 95% visual expressiveness. This does not alter volume, recorded PCM or codec settings. Quiet audio, missing packets for 250 ms, and pause show a stationary line; silence is not an error. “Audio detected” means the session has received a signal at least once and stays confirmed during breaks. “Capture device available” is a separate device-health indicator, not proof that a particular intended application is audible. Bars show recent measured levels, not a frequency spectrum. The same natural leaf identifies the EXE and Windows notifications; tray state icons stay unchanged.
 
 Settings can select a writable save folder. Existing files are not moved; previously selected folders remain in the library. The default remains the existing application folder's `Recordings`. Custom destinations store their own `State/Sessions`, backups and recovery work alongside dated recording folders; retain that metadata when moving audio. Settings themselves stay beside the EXE.
 
-The library loads in the background, newest first, with size, format and known duration. Verified WAV parts are grouped. Temporary outputs are excluded; old files without valid metadata are shown as existing, not verified, with unknown duration. Opening the list does not decode every recording. Open/reveal commands are available; deletion and moment markers are not implemented.
+The library loads in the background, newest first, with size, format and known duration. Its first page includes the active session, elapsed captured audio, PCM byte count and a small real-level display. Recording/paused/saving entries are explicitly unfinished and cannot be opened or converted as completed outputs. Verified WAV parts are grouped. Temporary outputs are excluded; old files without valid metadata are shown as existing, not verified, with unknown duration. Opening the list does not decode every recording. Open/reveal commands are available; deletion and moment markers are not implemented.
 
 “Save in another format” creates a separate verified file from a selected recording, retaining the original. Choose its format, bitrate and destination. Re-encoding compressed audio cannot restore quality. Existing target names and wrong extensions are refused. A completed WAV session is read as one PCM stream.
+
+Local candidate installation uses `Install-Verified.ps1` only after a full MegaProg run and matching candidate hash receipt. Partial `-NoLive` checks cannot authorize installation. The installer refuses a running recorder, preserves the old EXE in a unique backup and refreshes only the installed EXE/ICO paths in the shell. It never restarts Explorer or moves recordings.
 
 Additional formats use one live encoder across WAV boundaries, with a bounded queue. If it fails, the final output is rebuilt directly from verified WAV PCM. Full decoding and a maximum 250 ms duration mismatch precede durable, no-overwrite publication and backup deletion. Each new session commits its profile before capture; recovery uses that profile, or MKV/AAC 192 for older sessions without one.
 

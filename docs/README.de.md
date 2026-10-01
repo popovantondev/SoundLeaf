@@ -2,7 +2,7 @@
 
 Deutsch · [Русский](README.ru.md) · [English](../README.md)
 
-**Reines Lernprojekt · Windows 11 · x64 · Vorabversion 3.0.1**
+**Reines Lernprojekt · Windows 11 · x64 · Vorabversion 3.0.2**
 
 SoundLeaf ist ein C#-Lernprojekt zu Windows-Systemaudio, Hintergrundverarbeitung, sicherer Dateispeicherung und Bedienung im Infobereich. Es ist keine professionelle Aufnahmelösung. Oberfläche und Dokumentation sind deutsch, russisch und englisch; die Sprache ändert sich sofort.
 
@@ -28,7 +28,9 @@ Die Wiederherstellung nutzt vollständige und unvollständige WAV-Teile derselbe
 
 ## Profile, Panel und Aufnahmen
 
-Das Panel wächst in 200 ms vom tatsächlichen Tray-Symbol aus; bei deaktivierten Windows-Animationen erscheint es sofort. Die übliche Größe ist 430 × 520 logische Pixel. Es bleibt innerhalb der Monitor-Arbeitsfläche und berücksichtigt Per-Monitor-DPI. Bei fehlenden Symbolkoordinaten dient der gespeicherte Klickpunkt als Ersatz. Erneuter Klick, Escape und Fokusverlust verbergen nur das Panel, nicht die Aufnahme.
+Das Panel öffnet sich in 280 ms vom tatsächlichen Tray-Symbol aus und schließt sich in 220 ms. Bei deaktivierten Windows-Animationen sind beide Vorgänge sofortig. Eine geglättete, zwischengespeicherte Bildfläche bewegt sich ohne Größenänderungen des echten Fensters oder erneutes Layout pro Bild. Die übliche Größe ist 430 × 520 logische Pixel. Es bleibt innerhalb der Monitor-Arbeitsfläche und berücksichtigt Per-Monitor-DPI. Bei fehlenden Symbolkoordinaten dient der gespeicherte Klickpunkt als Ersatz. Erneuter Klick, Escape und Fokusverlust verbergen nur das Panel, nicht die Aufnahme.
+
+Über Start/Pause/Stopp stehen Balken des echten PCM-Pegels mit 95% visueller Ausprägung. Lautstärke, aufgezeichnetes PCM und Codec-Einstellungen bleiben unverändert. Stille, über 250 ms fehlende Pakete und Pause zeigen eine ruhende Linie. „Ton erkannt“ bestätigt einen zuvor empfangenen Ton dieser Sitzung und bleibt bei einer Sprechpause erhalten. Die Geräteverfügbarkeit wird getrennt gezeigt und beweist nicht, dass eine bestimmte gewünschte Anwendung hörbar ist. Die Balken zeigen aktuelle Pegel, kein Frequenzspektrum. Auf der ersten Aufnahmenseite steht die laufende Sitzung mit Dauer, PCM-Größe und kleinen Pegelbalken; unfertige Ergebnisse können nicht als fertige Dateien geöffnet werden. EXE und Windows-Mitteilungen teilen ein Blatt; Tray-Zustandssymbole bleiben erhalten.
 
 Keine Seiten-Scrollleisten: Unter 450 logischen Pixeln Höhe gliedern sich Einstellungen in Audio / Dateien / Design. Ordnerpfad und Codec-Details stehen vollständig im Tooltip. Aufnahmen werden seitenweise angezeigt. Abgerundete Auswahlfelder unterstützen Tab, Pfeile, Enter, Leertaste und Escape; Escape schließt zuerst die Liste, dann das Panel. Formatnamen werden kleingeschrieben; Audioeinstellungen bleiben unverändert.
 

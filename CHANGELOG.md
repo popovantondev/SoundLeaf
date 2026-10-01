@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.2 — real audio levels and smooth tray motion, 2026-10-01
+
+- Add read-only peak/RMS monitoring and measured level bars at 95% visual expressiveness; silence/expired packets/pause show a stationary line without changing PCM or encoding.
+- Replace the historical “audio received” wording with an explicit detected-signal confirmation and separate device availability; keep silence normal.
+- Put vector play/pause/stop icons on the lower control row, with identical pause bars.
+- Include the current unfinished session in recording pages, with duration, PCM byte count and a small level display; never offer it as a finished output.
+- Animate open/close and reversals on a fixed-bounds premultiplied-alpha surface; stop relayout/resize jitter and release cached/native resources at completion.
+- Share the leaf across EXE and native Windows notifications, without changing visible tray states; verify all eight embedded icon images byte-for-byte and refresh the installed path's shell icon.
+- Extend meter, pause-glyph, live-card, silence, expiry, notification and motion checks; retain three languages and existing audio/durability tests.
+
 ## 3.0.1 — tray panel refinement, 2026-10-01
 
 - Anchor the manually positioned panel to the shell's notification-icon rectangle; retain a saved-click fallback and clamp all sides to the monitor work area.
