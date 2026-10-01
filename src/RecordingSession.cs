@@ -49,6 +49,7 @@ namespace SoundLeaf
     }
     internal sealed class RecordingSession
     {
+        internal const long TelemetryInterval100ns = 500000;
         private readonly string folder, ffmpeg;
         private readonly AppLog log;
         private readonly Action<SessionUpdate> update;
@@ -186,7 +187,7 @@ namespace SoundLeaf
                         }
                         capturedBytes = sink.Frames * format.BlockAlign;
                         capturedSeconds = sink.Frames / (double)format.SampleRate;
-                        if (now - lastMeter >= 1000000)
+                        if (now - lastMeter >= TelemetryInterval100ns)
                         {
                             update(new SessionUpdate(isPaused ? RecordState.Paused : RecordState.Recording,
                                 isPaused ? TextCatalog.T("message.5") : (timeline.HeardSignal ? TextCatalog.T("message.52") : TextCatalog.T("message.53")),

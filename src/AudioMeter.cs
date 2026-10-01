@@ -5,7 +5,7 @@ namespace SoundLeaf
     // Observation only: never changes or buffers the PCM passed to durable storage.
     internal sealed class AudioMeter
     {
-        internal const long Freshness100ns = 2500000;
+        internal const long Freshness100ns = 1500000;
         private readonly WaveFormat format;
         private long observed;
         private float peak, rms;
