@@ -324,15 +324,17 @@ namespace SoundLeaf
         private readonly WaveFormat format;
         private long origin, baseFrame;
         private bool receivedPacket;
+        internal readonly AudioMeter Meter;
         internal bool HeardSignal { get; private set; }
         internal bool Discontinuity { get; private set; }
-        internal AudioTimeline(SegmentedWave sink, WaveFormat format) { this.sink = sink; this.format = format; }
+        internal AudioTimeline(SegmentedWave sink, WaveFormat format) { this.sink = sink; this.format = format; Meter = new AudioMeter(format); }
         internal void Resume(long qpc) { origin = qpc; baseFrame = sink.Frames; receivedPacket = false; }
         internal long FrameAt(long qpc)
         { return baseFrame + Math.Max(0, checked((qpc - origin) * format.SampleRate) / 10000000L); }
         internal void FillThrough(long qpc) { sink.SilenceTo(FrameAt(qpc)); }
         internal void Packet(byte[] bytes, int frames, ulong qpc, uint flags)
         {
+            Meter.Observe(bytes, frames, flags, AudioCapture.Clock100ns);
             long start = (flags & 4) != 0 ? sink.Frames : FrameAt((long)qpc);
             // QPC-to-frame rounding and clock drift must not splice a continuous stream.
             // Keep every captured sample. Only use timestamps to preserve substantial gaps.

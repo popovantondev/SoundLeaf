@@ -9,7 +9,7 @@ try {
     [void]$options.ReferencedAssemblies.Add('System.Core.dll')
     [void]$options.ReferencedAssemblies.Add('System.Runtime.Serialization.dll')
     [void]$options.ReferencedAssemblies.Add('System.Xml.dll')
-    $sources = @('src/TextCatalog.cs','src/RecordingCatalog.cs','src/RecordingProfile.cs','src/ProfileExport.cs','src/AudioCapture.cs','src/WaveStorage.cs','src/RecordingSession.cs','src/StartupChecks.cs','src/WavReceipt.cs','src/SessionRecovery.cs','tests/Tests.cs','tests/ReadinessTests.cs','tests/ProfileTests.cs') | ForEach-Object {
+    $sources = @('src/AudioMeter.cs','src/TextCatalog.cs','src/RecordingCatalog.cs','src/RecordingProfile.cs','src/ProfileExport.cs','src/AudioCapture.cs','src/WaveStorage.cs','src/RecordingSession.cs','src/StartupChecks.cs','src/WavReceipt.cs','src/SessionRecovery.cs','tests/Tests.cs','tests/ReadinessTests.cs','tests/ProfileTests.cs','tests/MeterTests.cs') | ForEach-Object {
         Get-Content -LiteralPath (Join-Path $PSScriptRoot $_) -Encoding UTF8 -Raw
     }
     $result = $provider.CompileAssemblyFromSource($options, [string[]]$sources)

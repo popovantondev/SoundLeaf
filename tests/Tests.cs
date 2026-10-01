@@ -561,6 +561,7 @@ namespace SoundLeaf
                 });
                 ReadinessTests.Run(Case, root, ffmpeg);
             ProfileTests.Run(Case, root, ffmpeg);
+            MeterTests.Run(Case, root);
                 string resultText = "PASS " + passed + " checks; artifacts: " + root;
                 File.WriteAllText(Path.Combine(root, "result.txt"), resultText);
                 Console.WriteLine(resultText);

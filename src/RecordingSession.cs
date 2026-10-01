@@ -17,6 +17,11 @@ namespace SoundLeaf
         internal string Message;
         internal double Seconds;
         internal bool HeardSignal;
+        internal float Peak, Rms;
+        internal bool DeviceAvailable, Telemetry;
+        internal string SessionId;
+        internal DateTime SessionStarted;
+        internal long CapturedBytes;
         internal string FinalPath;
         internal string[] FinalPaths = new string[0];
         internal FinalResultKind ResultKind;
@@ -60,6 +65,11 @@ namespace SoundLeaf
         private string preflightWarning;
         private string[] finalPaths = new string[0];
         private FinalResultKind resultKind;
+        private string sessionId;
+        private DateTime sessionStarted;
+        private long capturedBytes;
+        private double capturedSeconds;
+        private bool deviceAvailable;
         internal RecordingSession(string folder, string ffmpeg, AppLog log, Action<SessionUpdate> update)
             : this(folder, ffmpeg, log, update, RecordingMode.MkvWithWavBackup) { }
         internal RecordingSession(string folder, string ffmpeg, AppLog log, Action<SessionUpdate> update, RecordingMode mode)
@@ -94,7 +104,8 @@ namespace SoundLeaf
         {
             log.TryWrite(state + " " + text);
             update(new SessionUpdate(state, text, duration, signal) { FinalPath = finalPath, FinalPaths = finalPaths,
-                ResultKind = resultKind, Mode = Mode, CanRecordWavOnly = canWav, Warning = preflightWarning, Profile = Profile });
+                ResultKind = resultKind, Mode = Mode, CanRecordWavOnly = canWav, Warning = preflightWarning, Profile = Profile,
+                SessionId = sessionId, SessionStarted = sessionStarted, CapturedBytes = capturedBytes, DeviceAvailable = deviceAvailable });
         }
         private void Run()
         {
@@ -119,7 +130,8 @@ namespace SoundLeaf
             }
             try
             {
-                string sessionId = DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") + "-" + Guid.NewGuid().ToString("N").Substring(0, 12);
+                sessionStarted = DateTime.Now;
+                sessionId = sessionStarted.ToString("yyyy-MM-dd HH-mm-ss") + "-" + Guid.NewGuid().ToString("N").Substring(0, 12);
                 if (persistProfile) SessionProfile.Write(playerRoot, sessionId, Profile);
                 using (var audio = sourceFactory())
                 {
@@ -133,9 +145,11 @@ namespace SoundLeaf
                     timeline = new AudioTimeline(sink, format);
                     timeline.Resume(AudioCapture.Clock100ns);
                     audio.Start();
+                    deviceAvailable = true;
                     Publish(RecordState.Recording, TextCatalog.T("message.51"), 0, false);
                     bool isPaused = false;
                     long lastCheck = AudioCapture.Clock100ns;
+                    long lastMeter = 0;
                     while (Interlocked.CompareExchange(ref stop, 0, 0) == 0)
                     {
                         bool requestedPause = Interlocked.CompareExchange(ref pause, 0, 0) != 0;
@@ -146,6 +160,7 @@ namespace SoundLeaf
                                 audio.Stop();
                                 audio.Drain(timeline.Packet);
                                 sink.Checkpoint();
+                                timeline.Meter.Reset();
                             }
                             else
                             {
@@ -167,10 +182,19 @@ namespace SoundLeaf
                         {
                             audio.CheckDevice();
                             sink.Checkpoint();
+                            lastCheck = now;
+                        }
+                        capturedBytes = sink.Frames * format.BlockAlign;
+                        capturedSeconds = sink.Frames / (double)format.SampleRate;
+                        if (now - lastMeter >= 1000000)
+                        {
                             update(new SessionUpdate(isPaused ? RecordState.Paused : RecordState.Recording,
                                 isPaused ? TextCatalog.T("message.5") : (timeline.HeardSignal ? TextCatalog.T("message.52") : TextCatalog.T("message.53")),
-                                sink.Frames / (double)format.SampleRate, timeline.HeardSignal) { Mode = Mode, Warning = preflightWarning, Profile = Profile });
-                            lastCheck = now;
+                                capturedSeconds, timeline.HeardSignal) { Mode = Mode, Warning = preflightWarning, Profile = Profile,
+                                SessionId = sessionId, SessionStarted = sessionStarted, CapturedBytes = capturedBytes,
+                                DeviceAvailable = deviceAvailable, Telemetry = true,
+                                Peak = isPaused ? 0 : timeline.Meter.Peak(now), Rms = isPaused ? 0 : timeline.Meter.Rms(now) });
+                            lastMeter = now;
                         }
                         wake.WaitOne(10);
                     }
@@ -179,16 +203,20 @@ namespace SoundLeaf
                         audio.Stop();
                         audio.Drain(timeline.Packet);
                     }
+                    capturedBytes = sink.Frames * format.BlockAlign;
+                    capturedSeconds = sink.Frames / (double)format.SampleRate;
                 }
             }
             catch (Exception error)
             {
+                deviceAvailable = false;
                 failure = error.Message;
                 log.TryWrite(error.ToString());
             }
             try
             {
-                Publish(RecordState.Saving, TextCatalog.T("message.54"), 0, timeline != null && timeline.HeardSignal);
+                deviceAvailable = false;
+                Publish(RecordState.Saving, TextCatalog.T("message.54"), capturedSeconds, timeline != null && timeline.HeardSignal);
                 if (sink != null)
                 {
                     seconds = sink.Frames / (double)format.SampleRate;
