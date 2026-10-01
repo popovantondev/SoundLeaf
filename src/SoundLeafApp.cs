@@ -8,8 +8,8 @@ using Microsoft.Win32;
 
 [assembly: System.Reflection.AssemblyTitle("SoundLeaf")]
 [assembly: System.Reflection.AssemblyProduct("SoundLeaf")]
-[assembly: System.Reflection.AssemblyVersion("3.0.1.0")]
-[assembly: System.Reflection.AssemblyFileVersion("3.0.1.0")]
+[assembly: System.Reflection.AssemblyVersion("3.0.2.0")]
+[assembly: System.Reflection.AssemblyFileVersion("3.0.2.0")]
 
 namespace SoundLeaf
 {
@@ -54,6 +54,10 @@ namespace SoundLeaf
     {
         private readonly Control dispatcher = new Control();
         private readonly NotifyIcon tray = new NotifyIcon();
+        private readonly BrandedNotifications notifications = new BrandedNotifications();
+        private readonly object telemetryGate = new object();
+        private SessionUpdate pendingTelemetry;
+        private bool telemetryQueued;
         private readonly ContextMenuStrip menu = new ContextMenuStrip();
         private readonly ToolStripMenuItem startItem, pauseItem, stopItem, exitItem, recoverItem, autoStartItem,
             resultItem, openResultItem, pendingItem, wavItem, warningItem;
@@ -128,7 +132,7 @@ namespace SoundLeaf
                     if (lastKind == FinalResultKind.WavParts && lastResult != null) OpenFolder(Path.GetDirectoryName(lastResult));
                     else if (lastResult != null) Process.Start(new ProcessStartInfo(lastResult) { UseShellExecute = true });
                 }
-                catch (Exception error) { tray.ShowBalloonTip(5000, "SoundLeaf", error.Message, ToolTipIcon.Error); }
+                catch (Exception error) { notifications.Show(5000, "SoundLeaf", error.Message, ToolTipIcon.Error); }
             });
             pendingItem = new ToolStripMenuItem(TextCatalog.T("message.12")) { Enabled = false };
             autoStartItem = new ToolStripMenuItem(TextCatalog.T("message.13"), null, delegate { ToggleAutostart(); });
@@ -161,9 +165,9 @@ namespace SoundLeaf
             }, delegate { return state == RecordState.Starting || state == RecordState.Recording || state == RecordState.Paused || state == RecordState.Saving || recoveryBusy || conversionBusy; });
             panel.AnchorProvider = delegate { return TrayAnchorResolver.Resolve(tray, trayClick); };
             tray.Visible = true;
-            if (restored) tray.ShowBalloonTip(8000, "SoundLeaf", TextCatalog.T("restored"), ToolTipIcon.Warning);
+            if (restored) notifications.Show(8000, "SoundLeaf", TextCatalog.T("restored"), ToolTipIcon.Warning);
             RefreshPending();
-            if (!verify && pendingCount > 0) tray.ShowBalloonTip(7000, TextCatalog.T("message.18"),
+            if (!verify && pendingCount > 0) notifications.Show(7000, TextCatalog.T("message.18"),
                 TextCatalog.T("message.19") + pendingCount + TextCatalog.T("message.20"), ToolTipIcon.Warning);
             RefreshAutostart();
             if (!verify) MigrateStartup();
@@ -195,10 +199,31 @@ namespace SoundLeaf
         }
         private void Post(SessionUpdate update)
         {
-            if (!exiting) dispatcher.BeginInvoke(new Action(delegate { Apply(update); }));
+            if (exiting) return;
+            if (!update.Telemetry) { dispatcher.BeginInvoke(new Action(delegate { if (!exiting) Apply(update); })); return; }
+            lock (telemetryGate) { pendingTelemetry = update; if (telemetryQueued) return; telemetryQueued = true; }
+            dispatcher.BeginInvoke(new Action(delegate
+            {
+                SessionUpdate latest;
+                lock (telemetryGate) { latest = pendingTelemetry; pendingTelemetry = null; telemetryQueued = false; }
+                if (!exiting && latest != null && lastUpdate != null && latest.SessionId == lastUpdate.SessionId && latest.State == state) Apply(latest);
+            }));
         }
         private void Apply(SessionUpdate update)
         {
+            if (update.Telemetry && lastUpdate != null && update.State == state && update.SessionId == lastUpdate.SessionId)
+            {
+                bool tipChanged = (int)lastUpdate.Seconds != (int)update.Seconds || lastUpdate.HeardSignal != update.HeardSignal;
+                update.Message = TextCatalog.Translate(update.Message); update.Warning = TextCatalog.Translate(update.Warning);
+                lastUpdate = update; lastMessage = update.Message; resultItem.Text = update.Message + (activeMode == RecordingMode.WavOnly ? TextCatalog.T("message.26") : "");
+                if (tipChanged)
+                {
+                    string tip = "SoundLeaf — " + TextCatalog.T(state == RecordState.Paused ? "message.5" : update.HeardSignal ? "message.52" : "message.53") + " " + TimeSpan.FromSeconds(update.Seconds).ToString(@"hh\:mm\:ss");
+                    if (activeMode == RecordingMode.WavOnly) tip += TextCatalog.T("message.26");
+                    tray.Text = tip.Length > 63 ? tip.Substring(0, 63) : tip;
+                }
+                panel.SetState(update, update.CanRecordWavOnly, autoStartItem.Checked); return;
+            }
             update.Message = TextCatalog.Translate(update.Message); update.Warning = TextCatalog.Translate(update.Warning); lastUpdate = update;
             RecordState previous = state;
             state = update.State;
@@ -257,7 +282,7 @@ namespace SoundLeaf
             {
                 Failed = true;
                 log.TryWrite("UI ERROR " + update.Message);
-                if (!verify) tray.ShowBalloonTip(8000, TextCatalog.T("message.0"), update.Message, ToolTipIcon.Error);
+                if (!verify) notifications.Show(8000, TextCatalog.T("message.0"), update.Message, ToolTipIcon.Error);
             }
             if (verify && state == RecordState.Stopped && lastKind == FinalResultKind.WavParts)
             {
@@ -300,7 +325,7 @@ namespace SoundLeaf
             try { pending = SessionRecovery.Find(output, StorageRoot); }
             catch (Exception error) { Apply(new SessionUpdate(RecordState.Faulted, error.Message, 0, false)); return; }
             if (pending.Count == 0)
-            { tray.ShowBalloonTip(4000, "SoundLeaf", TextCatalog.T("message.38"), ToolTipIcon.Info); return; }
+            { notifications.Show(4000, "SoundLeaf", TextCatalog.T("message.38"), ToolTipIcon.Info); return; }
             if (!verify && MessageBox.Show(TextCatalog.T("message.39") + pending.Count +
                 TextCatalog.T("message.40"), TextCatalog.T("message.41"),
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
@@ -333,7 +358,7 @@ namespace SoundLeaf
                     recoveryBusy = false;
                     Apply(new SessionUpdate(errors == 0 ? RecordState.Stopped : RecordState.Faulted,
                         TextCatalog.T("message.43") + recovered + TextCatalog.T("message.44") + errors, 0, false) { FinalPath = final });
-                    if (errors == 0) tray.ShowBalloonTip(5000, "SoundLeaf", TextCatalog.T("message.45") + recovered, ToolTipIcon.Info);
+                    if (errors == 0) notifications.Show(5000, "SoundLeaf", TextCatalog.T("message.45") + recovered, ToolTipIcon.Info);
                 }));
             });
         }
@@ -347,7 +372,7 @@ namespace SoundLeaf
         private void OpenFolder(string folder)
         {
             try { Directory.CreateDirectory(folder); Process.Start("explorer.exe", MediaExport.Quote(folder)); }
-            catch (Exception error) { log.TryWrite(error.ToString()); tray.ShowBalloonTip(5000, "SoundLeaf", error.Message, ToolTipIcon.Error); }
+            catch (Exception error) { log.TryWrite(error.ToString()); notifications.Show(5000, "SoundLeaf", error.Message, ToolTipIcon.Error); }
         }
         private void RefreshAutostart()
         {
@@ -377,13 +402,13 @@ namespace SoundLeaf
                 }
                 RefreshAutostart();
                 if (lastUpdate != null) panel.SetState(lastUpdate, lastUpdate.CanRecordWavOnly, autoStartItem.Checked);
-                tray.ShowBalloonTip(3000, "SoundLeaf", autoStartItem.Checked ?
+                notifications.Show(3000, "SoundLeaf", autoStartItem.Checked ?
                     TextCatalog.T("message.47") : TextCatalog.T("message.48"), ToolTipIcon.Info);
             }
             catch (Exception error)
             {
                 log.TryWrite("Autostart update failed: " + error);
-                tray.ShowBalloonTip(5000, "SoundLeaf", TextCatalog.T("message.49") + error.Message, ToolTipIcon.Error);
+                notifications.Show(5000, "SoundLeaf", TextCatalog.T("message.49") + error.Message, ToolTipIcon.Error);
             }
         }
         private void CleanupOldBackups()
@@ -507,6 +532,7 @@ namespace SoundLeaf
             animationTimer.Stop(); animationTimer.Dispose();
             tray.Visible = false; tray.Dispose(); menu.Dispose(); dispatcher.Dispose();
             panel.Dispose();
+            notifications.Dispose();
             recordingIcon.Dispose(); pausedIcon.Dispose(); stoppedIcon.Dispose(); errorIcon.Dispose();
             foreach (var icon in savingIcons) if (icon != null) icon.Dispose();
             log.TryWrite("EXIT");

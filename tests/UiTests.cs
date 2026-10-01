@@ -22,7 +22,7 @@ namespace SoundLeaf
         private static void Outside(TrayPanel panel)
         {
             using (var outside = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Bounds = new Rectangle(30, 30, 100, 80), FormBorderStyle = FormBorderStyle.FixedToolWindow, TopMost = true })
-            { outside.Show(); outside.Activate(); Pump(20); Assert(!panel.Visible, "Outside focus did not hide panel."); }
+            { outside.Show(); outside.Activate(); Pump(350); Assert(!panel.Visible, "Outside focus did not hide panel."); }
         }
         private static IEnumerable<Control> Children(Control parent)
         { foreach (Control child in parent.Controls) { yield return child; foreach (var nested in Children(child)) yield return nested; } }
@@ -137,6 +137,27 @@ namespace SoundLeaf
                             }
                         }
                         Assert(panel.SelectNextControl(null, true, true, true, false), "No keyboard target.");
+                        panel.ShowPage("control");
+                        var liveUpdate = new SessionUpdate(RecordState.Recording, TextCatalog.T("message.52"), 256, true)
+                        { DeviceAvailable = true, SessionId = "Demo-live", SessionStarted = new DateTime(2026, 10, 1, 12, 0, 0), CapturedBytes = 1234567, Peak = .3f, Rms = .1f };
+                        for (int sample = 0; sample < 25; sample++) { liveUpdate.Peak = .05f + sample % 7 * .08f; liveUpdate.Rms = liveUpdate.Peak * .3f; panel.SetState(liveUpdate, false, true); }
+                        Pump(40);
+                        Render(panel, Path.Combine(root, language + "-" + theme + "-" + (int)(scale * 100) + "-" + height + "-live-control.png"));
+                        var meter = new List<Control>(Children(panel)).Find(delegate(Control c) { return c is AudioLevelView; }) as AudioLevelView;
+                        if (meter != null) Assert(meter.HasCurrentSignal && Math.Abs(AudioLevelView.Expressiveness - .95f) < .0001, "Live level/95% expressiveness missing.");
+                        panel.ShowPage("recordings"); panel.SetRecordsForVerification(Demo()); panel.SetState(liveUpdate, false, true); Pump(40);
+                        var card = new List<Control>(Children(panel)).Find(delegate(Control c) { return c is LiveRecordingCard; }) as LiveRecordingCard;
+                        Assert(card != null && card.Meter.HasCurrentSignal, "Current recording absent from list.");
+                        Render(panel, Path.Combine(root, language + "-" + theme + "-" + (int)(scale * 100) + "-" + height + "-live-recordings.png"));
+                        liveUpdate.Peak = liveUpdate.Rms = 0; panel.SetState(liveUpdate, false, true);
+                        Assert(!card.Meter.HasCurrentSignal && !card.Meter.TimerRunning && liveUpdate.HeardSignal, "Silence caused false error or synthetic animation.");
+                        Assert(new List<Control>(Children(panel)).Contains(card), "Telemetry rebuilt the live card.");
+                        panel.NextRecordPage(999); Layout(panel); Assert(new List<Control>(Children(panel)).Exists(delegate(Control c) { return c is RecordingCard; }), "Live card displaced completed records.");
+                        panel.SetState(new SessionUpdate(RecordState.Paused, TextCatalog.T("message.5"), 256, true) { SessionId = "Demo-live", DeviceAvailable = true }, false, true);
+                        panel.NextRecordPage(-999); Layout(panel);
+                        var pausedCard = new List<Control>(Children(panel)).Find(delegate(Control c) { return c is LiveRecordingCard; }) as LiveRecordingCard;
+                        Assert(pausedCard != null && !pausedCard.Meter.HasCurrentSignal, "Pause still showed audio.");
+                        panel.SetState(new SessionUpdate(RecordState.Faulted, "demo", 256, false), true, true);
                         if (height == 260)
                         {
                             panel.ConfigureForVerification(scale, new Size(320, 350));
@@ -174,10 +195,12 @@ namespace SoundLeaf
                         Assert(Math.Abs(TrayAnchorResolver.GetDpiForWindow(panel.Handle) / 96f - resolved.Scale) < .01, "Native monitor scale mismatch.");
                         var stable = panel.Bounds; panel.HidePanel(); panel.Open(resolved, false); Assert(panel.Bounds == stable, "Repeated open moved window.");
                         panel.HidePanel(); panel.Open(resolved, true); Assert(panel.Animating && panel.SnapshotAllocated, "Animation did not allocate frame.");
-                        panel.VerifyEscape(); Assert(!panel.Visible && !panel.Animating && !panel.SnapshotAllocated, "Animation cancellation leaked.");
+                        var motionBounds = panel.Bounds; Pump(60); Assert(panel.Bounds == motionBounds, "Opening animation resized real controls.");
+                        using (var image = panel.CaptureMotionForVerification()) { Assert(image != null && image.GetPixel(0, 0).A == 0, "Motion corners are opaque."); image.Save(Path.Combine(root, "native-opening-frame.png")); }
+                        panel.VerifyEscape(); Pump(350); Assert(!panel.Visible && !panel.Animating && !panel.SnapshotAllocated, "Animation cancellation leaked.");
                         panel.Open(resolved, true); Pump(300); Assert(panel.Visible && !panel.Animating && !panel.SnapshotAllocated && panel.Bounds == stable, "Animation finish incorrect."); Layout(panel);
                         panel.HidePanel(); panel.Open(resolved, true); panel.Toggle(resolved);
-                        Assert(!panel.Visible && !panel.Animating && !panel.SnapshotAllocated, "Repeated click did not cancel growth.");
+                        Pump(350); Assert(!panel.Visible && !panel.Animating && !panel.SnapshotAllocated, "Repeated click did not cancel growth.");
                         panel.Open(resolved, true); Outside(panel);
                         Assert(!panel.Visible && !panel.Animating && !panel.SnapshotAllocated, "Focus loss did not cancel growth.");
                         panel.Open(resolved, false);
@@ -199,10 +222,34 @@ namespace SoundLeaf
                             Key(choices, Keys.Tab); Assert(!selector.IsOpen && panel.Visible, "Tab closed owner instead of dropdown.");
                         }
                         panel.HidePanel();
+                        Pump(350);
+                        panel.Open(resolved, true); Pump(300); panel.HidePanel(); Pump(60);
+                        Assert(panel.Animating && panel.Bounds == stable, "Closing has no smooth fixed-bounds motion.");
+                        panel.Toggle(resolved); Pump(350); Assert(panel.Visible && !panel.Animating && !panel.SnapshotAllocated, "Closing reversal failed.");
+                        panel.HidePanel(); Pump(350);
+                    }
+                    using (var notification = new BrandedNotifications())
+                    {
+                        Icon recording = icon.Icon;
+                        notification.Show(2000, "SoundLeaf", "Проверка листа уведомления / notification leaf verification", ToolTipIcon.Info);
+                        Assert(notification.LastPublished && icon.Icon == recording, "Branded notification changed real tray state or was rejected.");
+                        Pump(1200);
+                        using (var picture = new Bitmap(420, 200))
+                        {
+                            var work = Screen.PrimaryScreen.WorkingArea;
+                            using (var graphics = Graphics.FromImage(picture)) graphics.CopyFromScreen(new Point(work.Right - 420, work.Bottom - 200), Point.Empty, picture.Size);
+                            picture.Save(Path.Combine(root, "native-branded-notification.png"));
+                        }
                     }
                 }
                 var fallback = TrayAnchorResolver.Resolve(null, new Point(20, 20)); Assert(!fallback.Native, "Fallback claimed native lookup.");
                 Assert(TrayPanel.Ease(0) == 0 && TrayPanel.Ease(1) == 1 && TrayPanel.Ease(.5) > .5, "Growth easing wrong.");
+                foreach (int size in new[] { 12, 18, 24 }) using (var image = new Bitmap(size, size))
+                {
+                    using (var graphics = Graphics.FromImage(image)) ActionGlyphDrawing.Draw(graphics, ActionGlyph.Pause, new Rectangle(0, 0, size, size), Color.White);
+                    int width = Math.Max(2, (int)Math.Round(size / 3.5));
+                    for (int y = 0; y < size; y++) for (int x = 0; x < width; x++) Assert(image.GetPixel(x, y).A == image.GetPixel(size - width + x, y).A, "Unequal pause bar thickness.");
+                }
                 Console.WriteLine("PASS " + checks + " UI checks; " + renders + " panel renders: " + root); return 0;
             }
             catch (Exception error) { Console.WriteLine(error); return 1; }

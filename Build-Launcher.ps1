@@ -14,7 +14,7 @@ $parameters.CompilerOptions = '/target:winexe /platform:x64 /optimize+ /warn:4 /
 [void]$parameters.ReferencedAssemblies.Add('Accessibility.dll')
 [void]$parameters.ReferencedAssemblies.Add('System.Runtime.Serialization.dll')
 [void]$parameters.ReferencedAssemblies.Add('System.Xml.dll')
-$sources = @('src/AudioMeter.cs','src/TextCatalog.cs','src/TrayPanel.cs','src/TrayAnchorResolver.cs','src/LeafSelect.cs','src/RecordingCatalog.cs','src/RecordingProfile.cs','src/ProfileExport.cs','src/AudioCapture.cs','src/WaveStorage.cs','src/RecordingSession.cs','src/StartupChecks.cs','src/WavReceipt.cs','src/SessionRecovery.cs','src/SoundLeafIcons.cs','src/SoundLeafApp.cs') | ForEach-Object {
+$sources = @('src/AudioMeter.cs','src/AudioLevelView.cs','src/PanelMotionSurface.cs','src/BrandedNotifications.cs','src/TextCatalog.cs','src/TrayPanel.cs','src/TrayAnchorResolver.cs','src/LeafSelect.cs','src/RecordingCatalog.cs','src/RecordingProfile.cs','src/ProfileExport.cs','src/AudioCapture.cs','src/WaveStorage.cs','src/RecordingSession.cs','src/StartupChecks.cs','src/WavReceipt.cs','src/SessionRecovery.cs','src/SoundLeafIcons.cs','src/SoundLeafApp.cs') | ForEach-Object {
     [IO.File]::ReadAllText((Join-Path $folder $_), (New-Object Text.UTF8Encoding($false, $true)))
 }
 $result = $provider.CompileAssemblyFromSource($parameters, [string[]]$sources)

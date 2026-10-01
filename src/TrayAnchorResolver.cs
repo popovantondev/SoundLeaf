@@ -29,9 +29,9 @@ namespace SoundLeaf
         [DllImport("user32.dll", SetLastError = true)] private static extern bool SystemParametersInfo(uint action, uint param, out bool result, uint flags);
 
         // Framework implementation details are contained here; lookup failure is a safe fallback.
-        internal static bool TryGetRectangle(NotifyIcon icon, out Rectangle rectangle)
+        internal static bool TryGetIdentity(NotifyIcon icon, out IntPtr handle, out uint identifier)
         {
-            rectangle = Rectangle.Empty;
+            handle = IntPtr.Zero; identifier = 0;
             try
             {
                 const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
@@ -41,7 +41,17 @@ namespace SoundLeaf
                 if (id == null || window == null) return false;
                 var native = window.GetValue(icon) as NativeWindow;
                 if (native == null || native.Handle == IntPtr.Zero) return false;
-                var identifier = new Identifier { Size = (uint)Marshal.SizeOf(typeof(Identifier)), Window = native.Handle, Id = Convert.ToUInt32(id.GetValue(icon)) };
+                handle = native.Handle; identifier = Convert.ToUInt32(id.GetValue(icon)); return true;
+            }
+            catch (Exception) { return false; }
+        }
+        internal static bool TryGetRectangle(NotifyIcon icon, out Rectangle rectangle)
+        {
+            rectangle = Rectangle.Empty;
+            try
+            {
+                IntPtr handle; uint id; if (!TryGetIdentity(icon, out handle, out id)) return false;
+                var identifier = new Identifier { Size = (uint)Marshal.SizeOf(typeof(Identifier)), Window = handle, Id = id };
                 Rect result;
                 if (Shell_NotifyIconGetRect(ref identifier, out result) != 0 || result.Right <= result.Left || result.Bottom <= result.Top) return false;
                 rectangle = result.Rectangle; return true;
