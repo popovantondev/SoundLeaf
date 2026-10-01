@@ -8,8 +8,8 @@ using Microsoft.Win32;
 
 [assembly: System.Reflection.AssemblyTitle("SoundLeaf")]
 [assembly: System.Reflection.AssemblyProduct("SoundLeaf")]
-[assembly: System.Reflection.AssemblyVersion("3.0.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("3.0.0.0")]
+[assembly: System.Reflection.AssemblyVersion("3.0.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("3.0.1.0")]
 
 namespace SoundLeaf
 {
@@ -32,7 +32,6 @@ namespace SoundLeaf
                 using (var mutex = new Mutex(true, verify ? "Local\\PlayerVerificationV2" : "Local\\PlayerCaptureSingle", out first))
                 {
                     if (!first) { log.TryWrite("Already running; second instance exits."); return 0; }
-                    TrayPanel.InitializeDpi();
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
                     Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
@@ -76,6 +75,7 @@ namespace SoundLeaf
         private readonly TrayPanel panel;
         private SessionUpdate lastUpdate;
         private bool conversionBusy;
+        private Point trayClick;
         private readonly bool verify, verifyWav;
         private readonly Stopwatch uptime = Stopwatch.StartNew();
         private readonly System.Windows.Forms.Timer verificationTimer = new System.Windows.Forms.Timer();
@@ -147,7 +147,11 @@ namespace SoundLeaf
             tray.ContextMenuStrip = menu;
             tray.MouseClick += delegate(object sender, MouseEventArgs args)
             {
-                if (args.Button == MouseButtons.Left) panel.Toggle(Cursor.Position);
+                if (args.Button == MouseButtons.Left)
+                {
+                    trayClick = Cursor.Position;
+                    panel.Toggle(TrayAnchorResolver.Resolve(tray, trayClick));
+                }
             };
             panel = new TrayPanel(root, settings, new PanelActions
             {
@@ -155,6 +159,7 @@ namespace SoundLeaf
                 Recover = Recover, Exit = delegate { Stop(true); }, Autostart = ToggleAutostart, OpenLog = delegate { OpenFolder(Path.Combine(root, "logs")); },
                 SaveSettings = SettingsChanged, Convert = ConvertRecording
             }, delegate { return state == RecordState.Starting || state == RecordState.Recording || state == RecordState.Paused || state == RecordState.Saving || recoveryBusy || conversionBusy; });
+            panel.AnchorProvider = delegate { return TrayAnchorResolver.Resolve(tray, trayClick); };
             tray.Visible = true;
             if (restored) tray.ShowBalloonTip(8000, "SoundLeaf", TextCatalog.T("restored"), ToolTipIcon.Warning);
             RefreshPending();
