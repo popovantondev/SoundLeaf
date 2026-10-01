@@ -1,17 +1,19 @@
 # Local verification — 2026-10-01
 
-SoundLeaf 3.0.3 candidate, Windows x64, Windows PowerShell 5.1.
+SoundLeaf 3.0.3, Windows x64, Windows PowerShell 5.1.
 
-## 3.0.3 — partial verification; installation deferred
+## 3.0.3 — complete verification passed
 
 - One explicit `-NoLive` MegaProg 2.0.18 invocation passed 73 core checks, 105 icon checks and the three hash cases, but UI containment caught a one-pixel overflow of the taller meter in a short recording card. The meter now sizes to the actual card height; the failed attempt remains failure, not a completed verification.
-- The second explicit `-NoLive` invocation passed all three hash cases, 73 core checks, 105 icon checks, 42,240 UI assertions and 252 panel renders: exit code 0, `ok=true`, no timeout. This is intentionally partial: no genuine 3.0.3 capture cycle has run yet. The runner configuration has been restored to its complete command.
+- The second explicit `-NoLive` invocation passed all three hash cases, 73 core checks, 105 icon checks, 42,240 UI assertions and 252 panel renders: exit code 0, `ok=true`, no timeout. That result was intentionally partial and did not authorize installation. The runner configuration was restored to its complete command.
+- After the additional leaf refinement, a third invocation ran the complete command through MegaProg 2.0.18: exit code 0, `ok=true`, no timeout. It passed three hash cases, 73 core checks, 114 icon checks, 42,244 UI assertions, 252 panel renders and three genuine MKV/Opus/WAV lifecycles. Checked version: `3.0.3.0`; SHA-256: `0E1C71D0BC6373BECF192AF1205F0812CC5BF0D284581962B0B138766F851D43`.
 - New deterministic cases verify 50 ms telemetry / 150 ms stale-packet expiry, rapid attack, release after a quiet gap, an unfilled 1.6 logical-pixel contour, five separated compact bars at 100/150/200%, background-to-line, historical signal retention, pause and no-packet timer shutdown. Four additional isolated meter bitmap files accompany the 252 panel renders. A separate native-only diagnostic passed 624 assertions; it is not counted as an additional runner invocation.
 - The 14/35 ms attack/release values are envelope time constants, not a promise about Windows scheduling or physical speech latency. The fall test applies 105 ms of deterministic envelope time and asserts that an old peak has mostly decayed. Positive levels use known PCM/telemetry fixtures; a real conversation with this candidate has not been claimed.
 - Main and recording-page renders in both themes were inspected; the compact-card height fix is covered by the entire three-language/scale/short-screen matrix. Audio writes, profiles, codecs, historical signal detection and one-second device checks/checkpoints are unchanged. The -60 dB visual floor only changes drawing; it never discards captured audio.
-- `Install-Verified.ps1` refuses this partial result before file replacement. The refusal and unchanged installed 3.0.2 SHA-256 were checked. The installed instance is still open; stop/save/exit it before complete capture verification and guarded installation. No running recorder was terminated or updated.
+- Notifications now render distinct small/large native HICONs at shell taskbar DPI instead of reusing one fixed 32-pixel handle. Nine icon cases verify exact native dimensions and transparency, including 40 pixels for 125% DPI. Four UI cases check small/large dimensions at 96/120/144/192 DPI without changing Windows settings. Small artwork has stronger contour/major veins, fewer details and no shadow; all recording/pause/stop/error/saving artwork is unchanged. A separate native-only diagnostic passed 628 assertions after this change, and an actual desktop notification capture was visually inspected. These metric checks are not physical tests of four monitors or DPI switching.
+- `Install-Verified.ps1` rejected the earlier partial result before replacement; refusal and unchanged installed 3.0.2 hash were checked. The installed instance subsequently exited normally at 20:59; no running recorder was terminated. The complete run used the guarded inaudible digital-silence fixture and verified pause/resume/save/restart/exit, intentional WAV completion, final-file readiness, no pending sessions and stopped saving animation. This does not claim human-speech testing of the new contour. Installation remains a separate hash-pinned step.
 
-All 3.0.2 results below are historical baseline evidence, not proof that 3.0.3 is installed or fully checked.
+All 3.0.2 results below are historical baseline evidence, not additional 3.0.3 test runs.
 
 ## 3.0.2 — complete verification passed
 
