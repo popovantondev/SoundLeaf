@@ -9,6 +9,7 @@
 - Animate open/close and reversals on a fixed-bounds premultiplied-alpha surface; stop relayout/resize jitter and release cached/native resources at completion.
 - Share the leaf across EXE and native Windows notifications, without changing visible tray states; verify all eight embedded icon images byte-for-byte and refresh the installed path's shell icon.
 - Extend meter, pause-glyph, live-card, silence, expiry, notification and motion checks; retain three languages and existing audio/durability tests.
+- Guard final installation with a complete-check receipt and matching streaming SHA-256; keep partial and failed runner results distinct from a verified release.
 
 ## 3.0.1 — tray panel refinement, 2026-10-01
 
