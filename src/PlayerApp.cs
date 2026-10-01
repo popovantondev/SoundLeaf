@@ -244,6 +244,7 @@ namespace Player
             if (!verify && MessageBox.Show("Собрать сессий: " + pending.Count +
                 "? Исходные WAV сохранятся в резервной папке после проверки MKV.", "Player — восстановление",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            lastResult = null;
             recoveryBusy = true;
             Apply(new SessionUpdate(RecordState.Saving, "Восстановление", 0, false));
             ThreadPool.QueueUserWorkItem(delegate

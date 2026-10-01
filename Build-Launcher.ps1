@@ -10,7 +10,7 @@ $parameters.CompilerOptions = '/target:winexe /platform:x64 /optimize+ /warn:4 /
 [void]$parameters.ReferencedAssemblies.Add('System.dll')
 [void]$parameters.ReferencedAssemblies.Add('System.Windows.Forms.dll')
 [void]$parameters.ReferencedAssemblies.Add('System.Drawing.dll')
-$sources = @('AudioCapture.cs','WaveStorage.cs','RecordingSession.cs','SessionRecovery.cs','PlayerIcons.cs','PlayerApp.cs') | ForEach-Object {
+$sources = @('src/AudioCapture.cs','src/WaveStorage.cs','src/RecordingSession.cs','src/SessionRecovery.cs','src/PlayerIcons.cs','src/PlayerApp.cs') | ForEach-Object {
     Get-Content -LiteralPath (Join-Path $folder $_) -Raw -Encoding UTF8
 }
 $result = $provider.CompileAssemblyFromSource($parameters, [string[]]$sources)

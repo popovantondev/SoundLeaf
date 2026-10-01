@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 $folder = Split-Path -Parent $PSCommandPath
-Add-Type -TypeDefinition (Get-Content -LiteralPath (Join-Path $folder 'PlayerIcons.cs') -Raw -Encoding UTF8) -ReferencedAssemblies System.Drawing
+Add-Type -TypeDefinition (Get-Content -LiteralPath (Join-Path $folder 'src/PlayerIcons.cs') -Raw -Encoding UTF8) -ReferencedAssemblies System.Drawing
 $checks = 0
 foreach ($state in 0..4) {
     foreach ($size in @(16,20,24,32,48,64,128,256)) {

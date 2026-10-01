@@ -4,6 +4,8 @@ Backups/
 logs/
 Verification/
 RecoveryWork/
+artifacts/
+*.bundle
 .ai-dev/
 # Built executables and external encoder
 *.exe
