@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.3.0 — educational preview, 2026-10-01
+
+- Keep the green triangle fixed at the center of a thicker rounded saving arc; preserve 24 frames and 80 ms timing. Other state icons are unchanged.
+- Check durable folder writes, free space and AAC/MKV encode/decode in the recording worker before opening the audio device; bound each preflight FFmpeg process to three seconds.
+- Block capture below 256 MiB and show initial space warnings without promising room for a full session.
+- Offer explicit WAV-only capture after encoder preflight failure, without an automatic mode switch or encoder launch.
+- Publish verified WAV parts with atomic completion receipts, list all result paths and exclude deliberate WAV completion from crash recovery. Metadata failure preserves audio and reports an error.
+- Expand verification to 48 core checks, 97 icon checks and real MKV/WAV loopback lifecycles; update affected multilingual documentation.
+
 ## 2.2.0 — educational preview, 2026-10-01
 
 - Show concrete save stages and the last verified final-file path.
