@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 
-namespace Player
+namespace SoundLeaf
 {
     [DataContract]
     internal sealed class WavReceiptData
@@ -25,17 +25,17 @@ namespace Player
     {
         internal static void Write(string root, IList<string> wavs)
         {
-            if (wavs.Count == 0) throw new IOException("Нет WAV для фиксации результата.");
+            if (wavs.Count == 0) throw new IOException(TextCatalog.T("message.98"));
             string name = Path.GetFileNameWithoutExtension(wavs[0]);
             int dash = name.LastIndexOf('-');
-            if (dash < 0) throw new InvalidDataException("Неверный идентификатор WAV-сессии.");
+            if (dash < 0) throw new InvalidDataException(TextCatalog.T("message.99"));
             var receipt = new WavReceiptData { SessionId = name.Substring(0, dash), Mode = "WavOnly",
                 Completed = true, Parts = new List<WavReceiptPart>() };
             string prefix = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             foreach (string wav in wavs)
             {
                 string full = Path.GetFullPath(wav);
-                if (!full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) throw new IOException("WAV вне папки приложения.");
+                if (!full.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) throw new IOException(TextCatalog.T("message.100"));
                 DurableWave.ReadInfo(full, false);
                 var file = new FileInfo(full);
                 receipt.Parts.Add(new WavReceiptPart { Path = full.Substring(prefix.Length).Replace('\\', '/'),
@@ -44,10 +44,10 @@ namespace Player
             string directory = Path.Combine(root, "State", "Sessions");
             string stateDirectory = Path.Combine(root, "State");
             if (Directory.Exists(stateDirectory) && (File.GetAttributes(stateDirectory) & FileAttributes.ReparsePoint) != 0)
-                throw new IOException("Папка состояния не должна быть ссылкой.");
+                throw new IOException(TextCatalog.T("message.101"));
             Directory.CreateDirectory(directory);
             if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0)
-                throw new IOException("Папка состояния не должна быть ссылкой.");
+                throw new IOException(TextCatalog.T("message.101"));
             string target = Path.Combine(directory, receipt.SessionId + ".json");
             string temp = Path.Combine(directory, Guid.NewGuid().ToString("N") + ".tmp");
             try

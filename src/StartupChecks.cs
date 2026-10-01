@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Player
+namespace SoundLeaf
 {
     internal sealed class PreflightResult
     {
@@ -18,64 +18,65 @@ namespace Player
             catch (Exception) { return null; }
         }
         internal static PreflightResult Check(string folder, string ffmpeg, RecordingMode mode,
-            Func<string, long?> space = null, Action<string, string, int> run = null)
+            Func<string, long?> space = null, Action<string, string, int> run = null, RecordingProfile profile = null)
         {
             var result = new PreflightResult();
+            profile = profile ?? RecordingProfile.Default;
             string probe = null;
             bool owned = false;
             try
             {
                 Directory.CreateDirectory(folder);
                 probe = Path.Combine(Path.GetFullPath(folder), ".preflight-" + Guid.NewGuid().ToString("N"));
-                if (Directory.Exists(probe)) { probe = null; throw new IOException("Папка проверки уже существует."); }
+                if (Directory.Exists(probe)) { probe = null; throw new IOException(TextCatalog.T("message.87")); }
                 Directory.CreateDirectory(probe);
                 string write = Path.Combine(probe, "write.tmp"), renamed = Path.Combine(probe, "renamed.tmp");
                 using (var file = new FileStream(write, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 { owned = true; file.WriteByte(1); file.Flush(true); }
                 File.Move(write, renamed);
-                if (File.ReadAllBytes(renamed).Length != 1) throw new IOException("Проверка записи в папку не пройдена.");
+                if (File.ReadAllBytes(renamed).Length != 1) throw new IOException(TextCatalog.T("message.88"));
                 long? bytes = (space ?? AvailableSpace)(folder);
                 if (bytes.HasValue && bytes.Value < MinimumBytes)
-                { result.Error = "Свободного места меньше 256 МиБ. Запись не начата."; return result; }
-                result.Warning = !bytes.HasValue ? "Не удалось определить свободное место; запись в папку проверена." :
-                    bytes.Value < WarningBytes ? "Свободного места меньше 1 ГиБ. Его может не хватить на всю запись." : null;
+                { result.Error = TextCatalog.T("message.89"); return result; }
+                result.Warning = !bytes.HasValue ? TextCatalog.T("message.90") :
+                    bytes.Value < WarningBytes ? TextCatalog.T("message.91") : null;
                 if (mode == RecordingMode.MkvWithWavBackup)
                 {
                     try
                     {
-                        if (!File.Exists(ffmpeg)) throw new FileNotFoundException("FFmpeg отсутствует в tools.");
-                        string mkv = Path.Combine(probe, "audio.mkv");
+                        if (!File.Exists(ffmpeg)) throw new FileNotFoundException(TextCatalog.T("message.92"));
+                        string mkv = Path.Combine(probe, "audio" + profile.Extension);
                         string arguments = "-hide_banner -loglevel error -nostdin -n -f lavfi -i anullsrc=r=48000:cl=stereo" +
-                            " -t 0.1 -c:a aac -b:a 192k -f matroska " + MediaExport.Quote(mkv);
+                            " -t 0.1" + profile.Arguments(2) + " " + MediaExport.Quote(mkv);
                         if (run != null) run(ffmpeg, arguments, 3000);
                         else
                         {
                             var encoded = MediaExport.Run(ffmpeg, arguments, 3000);
-                            if (encoded.ExitCode != 0) throw new IOException("Тест AAC/MKV не пройден: " + encoded.Error);
+                            if (encoded.ExitCode != 0) throw new IOException(TextCatalog.T("message.93") + encoded.Error);
                         }
                         if (run != null) run(ffmpeg, "decode " + mkv, 3000);
                         else if (MediaExport.DecodeDuration(mkv, ffmpeg, 3000) < 0.05)
-                            throw new IOException("Проверка тестового MKV не пройдена.");
+                            throw new IOException(TextCatalog.T("message.94"));
                     }
                     catch (Exception error)
                     {
                         result.CanRecordWavOnly = true;
-                        result.Error = "MKV недоступен: " + error.Message +
-                            " Для резервной записи выберите «Начать запись только в WAV».";
+                        result.Error = profile.Label + TextCatalog.T("message.95") + error.Message +
+                            TextCatalog.T("message.96");
                         return result;
                     }
                 }
                 result.CanRecord = true;
                 return result;
             }
-            catch (Exception error) { result.Error = "Запись не начата: " + error.Message; return result; }
+            catch (Exception error) { result.Error = TextCatalog.T("message.97") + error.Message; return result; }
             finally
             {
                 // Exact filenames in our fresh GUID folder; never recurse into user data.
                 if (probe != null && owned && string.Equals(Path.GetDirectoryName(probe).TrimEnd(Path.DirectorySeparatorChar),
                     Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
                 {
-                    foreach (string name in new[] { "write.tmp", "renamed.tmp", "audio.mkv" })
+                    foreach (string name in new[] { "write.tmp", "renamed.tmp", "audio" + profile.Extension })
                         try { File.Delete(Path.Combine(probe, name)); } catch (IOException) { } catch (UnauthorizedAccessException) { }
                     try { Directory.Delete(probe, false); } catch (IOException) { } catch (UnauthorizedAccessException) { }
                 }

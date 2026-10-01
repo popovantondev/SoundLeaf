@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 
-namespace Player
+namespace SoundLeaf
 {
     internal static class Tests
     {
@@ -560,6 +560,7 @@ namespace Player
                     Assert(Hash(saved) == before && SessionRecovery.Find(folder).Count == 1, "Failed recovery hid/damaged the pending session.");
                 });
                 ReadinessTests.Run(Case, root, ffmpeg);
+            ProfileTests.Run(Case, root, ffmpeg);
                 string resultText = "PASS " + passed + " checks; artifacts: " + root;
                 File.WriteAllText(Path.Combine(root, "result.txt"), resultText);
                 Console.WriteLine(resultText);

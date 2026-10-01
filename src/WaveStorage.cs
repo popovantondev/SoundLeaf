@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Player
+namespace SoundLeaf
 {
     internal static class BackupCleanup
     {
@@ -67,7 +67,7 @@ namespace Player
         internal readonly bool Float;
         internal WaveFormat(byte[] bytes)
         {
-            if (bytes.Length < 16) throw new InvalidDataException("WAV format is too short.");
+            if (bytes.Length < 16) throw new InvalidDataException(TextCatalog.T("diagnostic.18"));
             Bytes = (byte[])bytes.Clone();
             int tag = BitConverter.ToUInt16(bytes, 0);
             Channels = BitConverter.ToUInt16(bytes, 2);
@@ -77,20 +77,20 @@ namespace Player
             if (tag == 65534)
             {
                 if (bytes.Length < 40 || BitConverter.ToUInt16(bytes, 16) < 22)
-                    throw new InvalidDataException("Incomplete WAVEFORMATEXTENSIBLE header.");
+                    throw new InvalidDataException(TextCatalog.T("diagnostic.19"));
                 byte[] guid = new byte[16];
                 Buffer.BlockCopy(bytes, 24, guid, 0, 16);
                 Guid sub = new Guid(guid);
                 if (sub == new Guid("00000001-0000-0010-8000-00aa00389b71")) tag = 1;
                 else if (sub == new Guid("00000003-0000-0010-8000-00aa00389b71")) tag = 3;
-                else throw new InvalidDataException("Unsupported WAV subformat.");
+                else throw new InvalidDataException(TextCatalog.T("diagnostic.20"));
             }
             if ((tag != 1 && tag != 3) || Channels < 1 || Channels > 32 ||
                 SampleRate < 8000 || SampleRate > 384000 ||
                 (Bits != 16 && Bits != 24 && Bits != 32) ||
                 (tag == 3 && Bits != 32) || BlockAlign != Channels * Bits / 8 ||
                 BitConverter.ToInt32(bytes, 8) != SampleRate * BlockAlign)
-                throw new InvalidDataException("Unsupported or inconsistent PCM/float audio format.");
+                throw new InvalidDataException(TextCatalog.T("diagnostic.21"));
             Float = tag == 3;
         }
     }
@@ -135,9 +135,9 @@ namespace Player
         }
         internal void Write(byte[] bytes, int offset, int count)
         {
-            if (count % Format.BlockAlign != 0) throw new InvalidDataException("Unaligned audio data.");
+            if (count % Format.BlockAlign != 0) throw new InvalidDataException(TextCatalog.T("diagnostic.22"));
             if (dataOffset + (Frames * Format.BlockAlign) + count > uint.MaxValue)
-                throw new IOException("WAV size limit reached.");
+                throw new IOException(TextCatalog.T("diagnostic.23"));
             stream.Write(bytes, offset, count);
             Frames += count / Format.BlockAlign;
         }
@@ -158,7 +158,7 @@ namespace Player
             Checkpoint();
             Dispose();
             ReadInfo(PartialPath, false);
-            if (Frames == 0) throw new IOException("Нет аудиоданных; оставлен временный WAV.");
+            if (Frames == 0) throw new IOException(TextCatalog.T("diagnostic.35"));
             string final = PartialPath.Substring(0, PartialPath.Length - ".partial.wav".Length) + ".wav";
             File.Move(PartialPath, final); // Never overwrite, including rename races.
             return final;
@@ -173,10 +173,10 @@ namespace Player
             using (var reader = new BinaryReader(file, Encoding.ASCII))
             {
                 if (file.Length < 44 || Encoding.ASCII.GetString(reader.ReadBytes(4)) != "RIFF")
-                    throw new InvalidDataException("Not a RIFF WAV.");
+                    throw new InvalidDataException(TextCatalog.T("diagnostic.24"));
                 long riffLength = reader.ReadUInt32() + 8L;
                 if (Encoding.ASCII.GetString(reader.ReadBytes(4)) != "WAVE")
-                    throw new InvalidDataException("Not a WAVE file.");
+                    throw new InvalidDataException(TextCatalog.T("diagnostic.25"));
                 var info = new WaveInfo();
                 info.FactOffset = -1;
                 while (file.Position + 8 <= file.Length)
@@ -187,7 +187,7 @@ namespace Player
                     long begin = file.Position;
                     if (id == "data")
                     {
-                        if (info.Format == null) throw new InvalidDataException("Missing WAV format.");
+                        if (info.Format == null) throw new InvalidDataException(TextCatalog.T("diagnostic.26"));
                         info.SizeOffset = sizePosition;
                         info.DataOffset = begin;
                         info.DataBytes = recovery ? file.Length - begin : size;
@@ -195,16 +195,16 @@ namespace Player
                         if (info.DataBytes <= 0 || info.DataBytes % info.Format.BlockAlign != 0 ||
                             begin + info.DataBytes > file.Length ||
                             (!recovery && (riffLength != file.Length || begin + size != file.Length)))
-                            throw new InvalidDataException("WAV data size does not match the file.");
+                            throw new InvalidDataException(TextCatalog.T("diagnostic.27"));
                         return info;
                     }
                     if (size > file.Length - begin || size > 1048576)
-                        throw new InvalidDataException("Invalid WAV chunk.");
+                        throw new InvalidDataException(TextCatalog.T("diagnostic.28"));
                     if (id == "fmt ") info.Format = new WaveFormat(reader.ReadBytes((int)size));
                     if (id == "fact" && size >= 4) info.FactOffset = begin;
                     file.Position = begin + size + (size & 1);
                 }
-                throw new InvalidDataException("Missing WAV data.");
+                throw new InvalidDataException(TextCatalog.T("diagnostic.29"));
             }
         }
         internal static string RecoverCopy(string source)
@@ -247,18 +247,22 @@ namespace Player
         private int part;
         private readonly byte[] silence;
         private readonly string ffmpeg;
+        private readonly RecordingProfile profile;
+        internal Action<byte[], int, int> PcmWritten;
+        internal string SessionId { get { return Path.GetFileName(session); } }
         private LiveMkv live;
         internal readonly List<LiveMkv> Encoders = new List<LiveMkv>();
         internal long Frames { get; private set; }
         internal string CurrentPath { get { return current == null ? null : current.PartialPath; } }
-        internal SegmentedWave(string folder, WaveFormat format, long maxBytes, string ffmpeg = null)
+        internal SegmentedWave(string folder, WaveFormat format, long maxBytes, string ffmpeg = null, RecordingProfile profile = null, string sessionId = null)
         {
             Directory.CreateDirectory(folder);
             this.format = format;
             this.ffmpeg = ffmpeg;
+            this.profile = profile;
             maxFrames = Math.Max(1, maxBytes / format.BlockAlign);
-            session = Path.Combine(folder, DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") +
-                "-" + Guid.NewGuid().ToString("N").Substring(0, 12));
+            session = Path.Combine(folder, sessionId ?? (DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") +
+                "-" + Guid.NewGuid().ToString("N").Substring(0, 12)));
             silence = new byte[format.BlockAlign * 8192];
             OpenPart();
         }
@@ -267,18 +271,19 @@ namespace Player
             current = new DurableWave(session + "-" + (++part).ToString("D3") + ".partial.wav", format);
             if (ffmpeg != null)
             {
-                live = new LiveMkv(current.PartialPath, format, ffmpeg);
+                live = new LiveMkv(current.PartialPath, format, ffmpeg, profile);
                 Encoders.Add(live);
             }
         }
         internal void Write(byte[] data, int offset, int count)
         {
-            if (count % format.BlockAlign != 0) throw new InvalidDataException("Unaligned packet.");
+            if (count % format.BlockAlign != 0) throw new InvalidDataException(TextCatalog.T("diagnostic.30"));
             while (count > 0)
             {
                 if (current == null) OpenPart();
                 int bytes = (int)Math.Min(count, (maxFrames - current.Frames) * format.BlockAlign);
                 current.Write(data, offset, bytes);
+                if (PcmWritten != null) PcmWritten(data, offset, bytes);
                 if (live != null) live.Enqueue(data, offset, bytes);
                 Frames += bytes / format.BlockAlign;
                 count -= bytes; offset += bytes;

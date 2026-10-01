@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace Player
+namespace SoundLeaf
 {
     internal interface IAudioSource : IDisposable
     {
@@ -43,7 +43,7 @@ namespace Player
                 try
                 {
                     int extra = (ushort)Marshal.ReadInt16(format, 16);
-                    if (extra > 1024) throw new InvalidOperationException("Unexpected audio format length.");
+                    if (extra > 1024) throw new InvalidOperationException(TextCatalog.T("diagnostic.31"));
                     byte[] bytes = new byte[18 + extra];
                     Marshal.Copy(format, bytes, 0, bytes.Length);
                     Format = new WaveFormat(bytes);
@@ -70,7 +70,7 @@ namespace Player
             int packets = 0;
             while (frames != 0)
             {
-                if (++packets > 4096) throw new InvalidOperationException("Audio device buffer did not drain.");
+                if (++packets > 4096) throw new InvalidOperationException(TextCatalog.T("diagnostic.32"));
                 IntPtr pointer;
                 uint flags;
                 ulong position, qpc;
@@ -94,7 +94,7 @@ namespace Player
         {
             uint state, padding;
             Check(device.GetState(out state));
-            if (state != 1) throw new InvalidOperationException("Устройство вывода отключено.");
+            if (state != 1) throw new InvalidOperationException(TextCatalog.T("diagnostic.33"));
             Check(client.GetCurrentPadding(out padding));
             IMMDevice current = null;
             try
@@ -102,7 +102,7 @@ namespace Player
                 Check(enumerator.GetDefaultAudioEndpoint(0, 0, out current));
                 string id;
                 Check(current.GetId(out id));
-                if (id != DeviceId) throw new InvalidOperationException("Устройство вывода сменилось. Начните новую запись для нового устройства.");
+                if (id != DeviceId) throw new InvalidOperationException(TextCatalog.T("diagnostic.34"));
             }
             finally { Release(current); }
         }

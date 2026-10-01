@@ -6,11 +6,11 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
-namespace Player
+namespace SoundLeaf
 {
     internal enum RecordState { Starting, Recording, Paused, Saving, Stopped, Faulted }
     internal enum RecordingMode { MkvWithWavBackup, WavOnly }
-    internal enum FinalResultKind { None, Mkv, WavParts }
+    internal enum FinalResultKind { None, Mkv, WavParts, EncodedFile }
     internal sealed class SessionUpdate
     {
         internal RecordState State;
@@ -23,6 +23,7 @@ namespace Player
         internal RecordingMode Mode;
         internal bool CanRecordWavOnly;
         internal string Warning;
+        internal RecordingProfile Profile = RecordingProfile.Default;
         internal SessionUpdate(RecordState state, string message, double seconds, bool signal)
         { State = state; Message = message; Seconds = seconds; HeardSignal = signal; }
     }
@@ -51,6 +52,8 @@ namespace Player
         private readonly Thread worker;
         private readonly Func<IAudioSource> sourceFactory;
         internal readonly RecordingMode Mode;
+        internal readonly RecordingProfile Profile;
+        private readonly bool persistProfile;
         private readonly string playerRoot;
         private readonly long segmentBytes;
         private readonly Func<PreflightResult> preflight;
@@ -60,20 +63,23 @@ namespace Player
         internal RecordingSession(string folder, string ffmpeg, AppLog log, Action<SessionUpdate> update)
             : this(folder, ffmpeg, log, update, RecordingMode.MkvWithWavBackup) { }
         internal RecordingSession(string folder, string ffmpeg, AppLog log, Action<SessionUpdate> update, RecordingMode mode)
+            : this(folder, ffmpeg, log, update, mode, RecordingProfile.Default) { }
+        internal RecordingSession(string folder, string ffmpeg, AppLog log, Action<SessionUpdate> update, RecordingMode mode, RecordingProfile profile, string storageRoot = null)
             : this(folder, ffmpeg, log, update, delegate { return new AudioCapture(); }, mode,
-                AppDomain.CurrentDomain.BaseDirectory, 256L * 1024 * 1024,
-                delegate { return StartupChecks.Check(folder, ffmpeg, mode); }) { }
+                storageRoot ?? AppDomain.CurrentDomain.BaseDirectory, 256L * 1024 * 1024,
+                delegate { return StartupChecks.Check(folder, ffmpeg, mode, null, null, profile); }, profile) { }
         internal RecordingSession(string folder, string ffmpeg, AppLog log, Action<SessionUpdate> update,
             Func<IAudioSource> sourceFactory)
             : this(folder, ffmpeg, log, update, sourceFactory, RecordingMode.MkvWithWavBackup,
                 AppDomain.CurrentDomain.BaseDirectory, 256L * 1024 * 1024, null) { }
         internal RecordingSession(string folder, string ffmpeg, AppLog log, Action<SessionUpdate> update,
             Func<IAudioSource> sourceFactory, RecordingMode mode, string playerRoot, long segmentBytes,
-            Func<PreflightResult> preflight)
+            Func<PreflightResult> preflight, RecordingProfile profile = null)
         {
             this.folder = folder; this.ffmpeg = ffmpeg; this.log = log; this.update = update;
             this.sourceFactory = sourceFactory;
             Mode = mode; this.playerRoot = playerRoot; this.segmentBytes = segmentBytes; this.preflight = preflight;
+            Profile = profile ?? RecordingProfile.Default; persistProfile = profile != null;
             worker = new Thread(Run);
             worker.SetApartmentState(ApartmentState.MTA);
             worker.Name = "Player audio and storage";
@@ -88,11 +94,12 @@ namespace Player
         {
             log.TryWrite(state + " " + text);
             update(new SessionUpdate(state, text, duration, signal) { FinalPath = finalPath, FinalPaths = finalPaths,
-                ResultKind = resultKind, Mode = Mode, CanRecordWavOnly = canWav, Warning = preflightWarning });
+                ResultKind = resultKind, Mode = Mode, CanRecordWavOnly = canWav, Warning = preflightWarning, Profile = Profile });
         }
         private void Run()
         {
             SegmentedWave sink = null;
+            LiveMkv continuous = null;
             AudioTimeline timeline = null;
             WaveFormat format = null;
             string failure = null;
@@ -100,28 +107,33 @@ namespace Player
             string finalPath = null;
             if (preflight != null)
             {
-                Publish(RecordState.Starting, "Проверка перед записью", 0, false);
+                Publish(RecordState.Starting, TextCatalog.T("message.4"), 0, false);
                 PreflightResult readiness;
                 try { readiness = preflight(); }
                 catch (Exception error) { readiness = new PreflightResult { Error = error.Message }; }
                 preflightWarning = readiness.Warning;
                 if (Interlocked.CompareExchange(ref stop, 0, 0) != 0)
-                { wake.Dispose(); Publish(RecordState.Stopped, "Запуск отменён; запись не начата", 0, false); return; }
+                { wake.Dispose(); Publish(RecordState.Stopped, TextCatalog.T("message.50"), 0, false); return; }
                 if (!readiness.CanRecord)
                 { wake.Dispose(); Publish(RecordState.Faulted, readiness.Error, 0, false, null, readiness.CanRecordWavOnly); return; }
             }
             try
             {
+                string sessionId = DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss") + "-" + Guid.NewGuid().ToString("N").Substring(0, 12);
+                if (persistProfile) SessionProfile.Write(playerRoot, sessionId, Profile);
                 using (var audio = sourceFactory())
                 {
                     format = audio.Format;
                     log.Write("Device " + audio.DeviceId + "; " + format.SampleRate + " Hz; " +
                         format.Channels + " channels; " + format.Bits + " bits; float=" + format.Float);
-                    sink = new SegmentedWave(folder, format, segmentBytes, Mode == RecordingMode.WavOnly ? null : ffmpeg);
+                    sink = new SegmentedWave(folder, format, segmentBytes,
+                        Mode == RecordingMode.WavOnly || Profile.Format != AudioOutputFormat.Mkv ? null : ffmpeg, Profile, sessionId);
+                    if (Mode != RecordingMode.WavOnly && Profile.Format != AudioOutputFormat.Mkv)
+                    { continuous = new LiveMkv(sink.CurrentPath, format, ffmpeg, Profile, true); sink.PcmWritten = continuous.Enqueue; }
                     timeline = new AudioTimeline(sink, format);
                     timeline.Resume(AudioCapture.Clock100ns);
                     audio.Start();
-                    Publish(RecordState.Recording, "Запись системного вывода", 0, false);
+                    Publish(RecordState.Recording, TextCatalog.T("message.51"), 0, false);
                     bool isPaused = false;
                     long lastCheck = AudioCapture.Clock100ns;
                     while (Interlocked.CompareExchange(ref stop, 0, 0) == 0)
@@ -143,7 +155,7 @@ namespace Player
                             }
                             isPaused = requestedPause;
                             Publish(isPaused ? RecordState.Paused : RecordState.Recording,
-                                isPaused ? "Пауза" : "Запись системного вывода",
+                                isPaused ? TextCatalog.T("message.5") : TextCatalog.T("message.51"),
                                 sink.Frames / (double)format.SampleRate, timeline.HeardSignal);
                         }
                         if (!isPaused)
@@ -156,8 +168,8 @@ namespace Player
                             audio.CheckDevice();
                             sink.Checkpoint();
                             update(new SessionUpdate(isPaused ? RecordState.Paused : RecordState.Recording,
-                                isPaused ? "Пауза" : (timeline.HeardSignal ? "Запись; звук поступал" : "Запись; пока тишина"),
-                                sink.Frames / (double)format.SampleRate, timeline.HeardSignal) { Mode = Mode, Warning = preflightWarning });
+                                isPaused ? TextCatalog.T("message.5") : (timeline.HeardSignal ? TextCatalog.T("message.52") : TextCatalog.T("message.53")),
+                                sink.Frames / (double)format.SampleRate, timeline.HeardSignal) { Mode = Mode, Warning = preflightWarning, Profile = Profile });
                             lastCheck = now;
                         }
                         wake.WaitOne(10);
@@ -176,20 +188,31 @@ namespace Player
             }
             try
             {
-                Publish(RecordState.Saving, "Сохранение", 0, timeline != null && timeline.HeardSignal);
+                Publish(RecordState.Saving, TextCatalog.T("message.54"), 0, timeline != null && timeline.HeardSignal);
                 if (sink != null)
                 {
                     seconds = sink.Frames / (double)format.SampleRate;
                     sink.Complete();
-                    if (sink.Completed.Count == 0) throw new IOException("Аудиоданные не получены. Временный WAV оставлен.");
+                    if (sink.Completed.Count == 0) throw new IOException(TextCatalog.T("message.55"));
                     if (Mode == RecordingMode.WavOnly)
                     {
-                        Publish(RecordState.Saving, "Проверка WAV и фиксация результата", seconds, timeline.HeardSignal);
+                        Publish(RecordState.Saving, TextCatalog.T("message.56"), seconds, timeline.HeardSignal);
                         foreach (string wav in sink.Completed) DurableWave.ReadInfo(wav, false);
                         if (failure == null) WavReceipt.Write(playerRoot, sink.Completed);
                         finalPaths = sink.Completed.ToArray();
                         finalPath = finalPaths[0];
                         resultKind = FinalResultKind.WavParts;
+                        if (persistProfile && failure == null) ResultReceipt.Write(playerRoot, sink.SessionId, Profile, seconds, true, finalPaths);
+                    }
+                    else if (continuous != null)
+                    {
+                        finalPath = continuous.FinishSession(sink.Completed,
+                            delegate(string phase) { Publish(RecordState.Saving, phase, seconds, timeline.HeardSignal); });
+                        finalPaths = new[] { finalPath }; resultKind = FinalResultKind.EncodedFile;
+                        if (persistProfile && failure == null) ResultReceipt.Write(playerRoot, sink.SessionId, Profile, seconds, false, finalPaths);
+                        if (failure == null && !timeline.Discontinuity)
+                            foreach (string wav in sink.Completed) File.Delete(wav);
+                        else MediaExport.ArchiveParts(sink.Completed, playerRoot, false);
                     }
                     else
                     {
@@ -208,6 +231,7 @@ namespace Player
                         }
                         else finalPath = Path.ChangeExtension(sink.Completed[0], ".mkv");
                         finalPaths = new[] { finalPath }; resultKind = FinalResultKind.Mkv;
+                        if (persistProfile && failure == null) ResultReceipt.Write(playerRoot, sink.SessionId, Profile, seconds, false, finalPaths);
                         if (failure == null && !timeline.Discontinuity)
                         {
                             foreach (string wav in sink.Completed)
@@ -230,7 +254,7 @@ namespace Player
                         }
                     }
                 }
-                else if (failure == null) failure = "Не удалось открыть аудиоустройство.";
+                else if (failure == null) failure = TextCatalog.T("message.57");
             }
             catch (Exception error)
             {
@@ -239,17 +263,18 @@ namespace Player
             }
             finally
             {
+                if (continuous != null) continuous.Dispose();
                 if (sink != null) sink.Dispose();
                 wake.Dispose();
             }
             bool signal = timeline != null && timeline.HeardSignal;
             string warning = null;
             if (timeline != null && timeline.Discontinuity)
-                warning = "Windows сообщила о разрыве аудиопотока; сохранённый звук стоит проверить.";
+                warning = TextCatalog.T("message.58");
             Publish(failure == null ? RecordState.Stopped : RecordState.Faulted,
-                failure ?? (Mode == RecordingMode.WavOnly ? "WAV сохранён; MKV не создавался. Частей: " + finalPaths.Length +
+                failure ?? (Mode == RecordingMode.WavOnly ? TextCatalog.T("message.59") + finalPaths.Length +
                     (warning == null ? "" : Environment.NewLine + warning) :
-                    warning ?? (signal ? "MKV сохранён и проверен" : "Сохранено; за время записи был только тихий сигнал или тишина")),
+                    warning ?? (signal ? Profile.Label + TextCatalog.T("message.60") : TextCatalog.T("message.61"))),
                 seconds, signal, finalPath);
         }
     }
@@ -262,17 +287,26 @@ namespace Player
         private readonly Thread worker;
         private readonly string ffmpeg, partial;
         private readonly WaveFormat format;
+        private readonly RecordingProfile profile;
+        private readonly string final;
         private volatile Exception failure;
         private Process process;
         private readonly object gate = new object();
         private bool cancelled;
         internal readonly string Wav;
         internal string TemporaryPath { get { return partial; } }
-        internal LiveMkv(string partialWav, WaveFormat format, string ffmpeg)
+        internal bool HasFailed { get { return failure != null; } }
+        internal int QueuedBytes { get { return Interlocked.CompareExchange(ref queuedBytes, 0, 0); } }
+        internal void AbortForVerification() { failure = new IOException("Simulated live encoder failure."); CompleteInput(); Cancel(); }
+        internal LiveMkv(string partialWav, WaveFormat format, string ffmpeg, RecordingProfile profile = null, bool wholeSession = false)
         {
             this.format = format; this.ffmpeg = ffmpeg;
+            this.profile = profile ?? RecordingProfile.Default;
             Wav = partialWav.Substring(0, partialWav.Length - ".partial.wav".Length) + ".wav";
-            partial = Path.ChangeExtension(Wav, "." + Guid.NewGuid().ToString("N") + ".partial.mkv");
+            string baseName = Path.GetFileNameWithoutExtension(Wav);
+            if (wholeSession) baseName = baseName.Substring(0, baseName.LastIndexOf('-'));
+            final = Path.Combine(Path.GetDirectoryName(Wav), baseName + this.profile.Extension);
+            partial = Path.Combine(Path.GetDirectoryName(Wav), baseName + "." + Guid.NewGuid().ToString("N") + ".partial" + this.profile.Extension);
             worker = new Thread(Encode) { IsBackground = true, Name = "Player MKV encoder" };
             worker.Start();
         }
@@ -286,7 +320,7 @@ namespace Player
                 if (Interlocked.Add(ref queuedBytes, n) > 8 * 1024 * 1024)
                 {
                     Interlocked.Add(ref queuedBytes, -n);
-                    failure = new IOException("Кодировщик не успевает. Резервный WAV сохранён.");
+                    failure = new IOException(TextCatalog.T("message.62"));
                     return;
                 }
                 var copy = new byte[n];
@@ -294,7 +328,7 @@ namespace Player
                 if (!queue.TryAdd(copy))
                 {
                     Interlocked.Add(ref queuedBytes, -n);
-                    failure = new IOException("Кодировщик не успевает. Резервный WAV сохранён.");
+                    failure = new IOException(TextCatalog.T("message.62"));
                     return;
                 }
                 count -= n; offset += n;
@@ -305,10 +339,7 @@ namespace Player
         {
             try
             {
-                string pcm = format.Float ? "f32le" : "s" + format.Bits + "le";
-                var info = new ProcessStartInfo(ffmpeg, "-hide_banner -loglevel error -nostdin -n -xerror -f " + pcm +
-                    " -ar " + format.SampleRate + " -ac " + format.Channels + " -probesize 32 -analyzeduration 0 -i pipe:0 -c:a aac -b:a 192k" +
-                    " -flush_packets 1 -cluster_time_limit 1000 -f matroska " + MediaExport.Quote(partial));
+                var info = new ProcessStartInfo(ffmpeg, ProfileExport.InputArguments(format) + profile.Arguments(format.Channels) + " " + MediaExport.Quote(partial));
                 info.UseShellExecute = false; info.CreateNoWindow = true;
                 info.RedirectStandardInput = true; info.RedirectStandardError = true;
                 var errors = new StringBuilder();
@@ -331,9 +362,9 @@ namespace Player
                         p.StandardInput.BaseStream.Write(chunk, 0, chunk.Length);
                     }
                     p.StandardInput.Close();
-                    if (!p.WaitForExit(30000)) { p.Kill(); throw new IOException("FFmpeg не завершился вовремя. WAV сохранён."); }
+                    if (!p.WaitForExit(30000)) { p.Kill(); throw new IOException(TextCatalog.T("message.63")); }
                     p.WaitForExit();
-                    if (p.ExitCode != 0) throw new IOException("Ошибка MKV; WAV сохранён. " + errors);
+                    if (p.ExitCode != 0) throw new IOException(TextCatalog.T("message.64") + errors);
                     }
                     finally
                     {
@@ -355,29 +386,38 @@ namespace Player
         }
         internal void FinishAndVerify(Action<string> phase = null)
         {
-            if (phase != null) phase("Завершение кодирования");
+            if (phase != null) phase(TextCatalog.T("message.65"));
             CompleteInput();
             if (!worker.Join(60000))
             {
                 Cancel();
-                throw new IOException("Превышено время сохранения MKV. WAV оставлен.");
+                throw new IOException(TextCatalog.T("message.66"));
             }
             if (failure != null)
             {
                 // A live encoder may lose real-time during startup or disk load.
                 // The durable WAV is authoritative; rebuild this part synchronously.
                 try { if (File.Exists(partial)) File.Delete(partial); } catch { }
-                MediaExport.Convert(Wav, ffmpeg, phase);
+                MediaExport.Convert(Wav, ffmpeg, phase, profile);
                 return;
             }
             var source = DurableWave.ReadInfo(Wav, false);
             int timeout = (int)Math.Min(1800000, Math.Max(60000, source.Duration * 4000 + 30000));
-            if (phase != null) phase("Проверка части MKV");
+            if (phase != null) phase(TextCatalog.T("message.67"));
             double actual = MediaExport.DecodeDuration(partial, ffmpeg, timeout);
             if (Math.Abs(actual - source.Duration) > Math.Max(0.05, 2048.0 / source.Format.SampleRate))
-                throw new IOException("Длительность MKV не совпадает с WAV. WAV сохранён.");
+                throw new IOException(TextCatalog.T("message.68"));
             using (var file = new FileStream(partial, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) file.Flush(true);
-            File.Move(partial, Path.ChangeExtension(Wav, ".mkv"));
+            File.Move(partial, final);
+        }
+        internal string FinishSession(System.Collections.Generic.IList<string> wavs, Action<string> phase)
+        {
+            if (phase != null) phase(TextCatalog.T("message.65"));
+            CompleteInput();
+            if (!worker.Join(60000)) { Cancel(); if (!worker.Join(5000)) throw new IOException(TextCatalog.T("encoderTimeout")); failure = new IOException(TextCatalog.T("diagnostic.11")); }
+            double duration = 0; foreach (string wav in wavs) duration += DurableWave.ReadInfo(wav, false).Duration;
+            if (failure != null) return ProfileExport.Rebuild(wavs, final, ffmpeg, profile, phase);
+            ProfileExport.Publish(partial, final, duration, ffmpeg, phase); return final;
         }
         private void Cancel()
         {
@@ -422,7 +462,7 @@ namespace Player
                 {
                     process.Kill();
                     process.WaitForExit();
-                    throw new IOException("FFmpeg превысил время ожидания. Исходный WAV сохранён.");
+                    throw new IOException(TextCatalog.T("message.69"));
                 }
                 process.WaitForExit(); // Drain asynchronous stdout/stderr callbacks.
                 return new ProcessResult { ExitCode = process.ExitCode, Output = output.ToString(), Error = error.ToString() };
@@ -430,14 +470,14 @@ namespace Player
         }
         internal static string Quote(string path)
         {
-            if (path.IndexOf('"') >= 0) throw new ArgumentException("Invalid path.");
+            if (path.IndexOf('"') >= 0) throw new ArgumentException(TextCatalog.T("diagnostic.12"));
             return "\"" + path + "\"";
         }
         internal static double DecodeDuration(string path, string ffmpeg, int timeout)
         {
             var result = Run(ffmpeg, "-hide_banner -loglevel error -nostdin -xerror -progress pipe:1 -nostats -i " +
                 Quote(path) + " -map 0:a:0 -f null -", timeout);
-            if (result.ExitCode != 0) throw new IOException("Проверка MKV не пройдена: " + result.Error);
+            if (result.ExitCode != 0) throw new IOException(TextCatalog.T("message.70") + result.Error);
             double seconds = -1;
             foreach (string line in result.Output.Split('\n'))
             {
@@ -447,26 +487,27 @@ namespace Player
                     if (long.TryParse(line.Substring(12).Trim(), out us)) seconds = us / 1000000.0;
                 }
             }
-            if (seconds <= 0) throw new IOException("MKV не содержит декодируемого аудио.");
+            if (seconds <= 0) throw new IOException(TextCatalog.T("message.71"));
             return seconds;
         }
-        internal static string Convert(string wav, string ffmpeg, Action<string> phase = null)
+        internal static string Convert(string wav, string ffmpeg, Action<string> phase = null, RecordingProfile profile = null)
         {
             WaveInfo source = DurableWave.ReadInfo(wav, false);
-            if (!File.Exists(ffmpeg)) throw new FileNotFoundException("FFmpeg отсутствует в tools. WAV сохранён.", ffmpeg);
+            profile = profile ?? RecordingProfile.Default;
+            if (!File.Exists(ffmpeg)) throw new FileNotFoundException(TextCatalog.T("message.72"), ffmpeg);
             string final = Path.ChangeExtension(wav, ".mkv");
-            if (File.Exists(final)) throw new IOException("MKV уже существует; перезапись запрещена.");
+            if (File.Exists(final)) throw new IOException(TextCatalog.T("message.73"));
             string partial = Path.Combine(Path.GetDirectoryName(wav),
                 Path.GetFileNameWithoutExtension(wav) + "-" + Guid.NewGuid().ToString("N") + ".partial.mkv");
             int timeout = (int)Math.Min(1800000, Math.Max(60000, source.Duration * 4000 + 30000));
-            if (phase != null) phase("Кодирование резервного WAV");
+            if (phase != null) phase(TextCatalog.T("message.74"));
             var result = Run(ffmpeg, "-hide_banner -loglevel error -nostdin -n -xerror -i " + Quote(wav) +
-                " -map 0:a:0 -c:a aac -b:a 192k -f matroska " + Quote(partial), timeout);
-            if (result.ExitCode != 0) throw new IOException("MKV не создан. WAV сохранён. " + result.Error);
-            if (phase != null) phase("Проверка части MKV");
+                " -map 0:a:0" + profile.Arguments(source.Format.Channels) + " " + Quote(partial), timeout);
+            if (result.ExitCode != 0) throw new IOException(TextCatalog.T("message.75") + result.Error);
+            if (phase != null) phase(TextCatalog.T("message.67"));
             double actual = DecodeDuration(partial, ffmpeg, timeout);
             if (Math.Abs(actual - source.Duration) > Math.Max(0.25, source.Duration * 0.001))
-                throw new IOException("Длительности WAV и MKV различаются; временный MKV и исходный WAV сохранены.");
+                throw new IOException(TextCatalog.T("message.76"));
             using (var stream = new FileStream(partial, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 stream.Flush(true);
             File.Move(partial, final);
@@ -474,15 +515,15 @@ namespace Player
         }
         internal static string ConcatParts(System.Collections.Generic.IList<string> wavs, string ffmpeg, Action<string> phase = null)
         {
-            if (wavs == null || wavs.Count < 2) throw new ArgumentException("At least two parts are required.");
-            if (!File.Exists(ffmpeg)) throw new FileNotFoundException("FFmpeg отсутствует; части сохранены.", ffmpeg);
+            if (wavs == null || wavs.Count < 2) throw new ArgumentException(TextCatalog.T("diagnostic.13"));
+            if (!File.Exists(ffmpeg)) throw new FileNotFoundException(TextCatalog.T("message.77"), ffmpeg);
             string first = Path.ChangeExtension(wavs[0], ".mkv");
             string name = Path.GetFileNameWithoutExtension(first);
             int dash = name.LastIndexOf('-');
             if (dash < 0 || name.Length - dash != 4 || name.Substring(dash + 1) != "001")
-                throw new InvalidDataException("Неверное имя первой части MKV.");
+                throw new InvalidDataException(TextCatalog.T("message.78"));
             string final = Path.Combine(Path.GetDirectoryName(first), name.Substring(0, dash) + ".mkv");
-            if (File.Exists(final)) throw new IOException("Итоговый MKV уже существует; части сохранены.");
+            if (File.Exists(final)) throw new IOException(TextCatalog.T("message.79"));
             string id = Guid.NewGuid().ToString("N");
             string list = Path.Combine(Path.GetDirectoryName(first), id + ".partial.ffconcat");
             string partial = Path.Combine(Path.GetDirectoryName(first), id + ".partial.mkv");
@@ -494,30 +535,30 @@ namespace Player
                 for (int i = 0; i < wavs.Count; i++)
                 {
                     string part = Path.ChangeExtension(wavs[i], ".mkv");
-                    if (!File.Exists(part)) throw new FileNotFoundException("Часть MKV отсутствует; WAV сохранены.", part);
+                    if (!File.Exists(part)) throw new FileNotFoundException(TextCatalog.T("message.80"), part);
                     if (Path.GetDirectoryName(part) != Path.GetDirectoryName(first))
-                        throw new InvalidDataException("Части MKV находятся в разных папках.");
+                        throw new InvalidDataException(TextCatalog.T("message.81"));
                     expected += DurableWave.ReadInfo(wavs[i], false).Duration;
                     // ffconcat uses forward slashes on Windows; reject its only quote delimiter.
                     string path = Path.GetFullPath(part).Replace('\\', '/');
-                    if (path.IndexOf('\'') >= 0) throw new InvalidDataException("Апостроф в пути MKV не поддерживается.");
+                    if (path.IndexOf('\'') >= 0) throw new InvalidDataException(TextCatalog.T("message.82"));
                     writer.WriteLine("file '" + path + "'");
                 }
             }
             int timeout = (int)Math.Min(1800000, Math.Max(60000, expected * 250 + 30000));
             ProcessResult joined;
-            if (phase != null) phase("Объединение частей");
+            if (phase != null) phase(TextCatalog.T("message.83"));
             try
             {
                 joined = Run(ffmpeg, "-hide_banner -loglevel error -nostdin -n -xerror -f concat -safe 0 -i " +
                     Quote(list) + " -map 0:a:0 -c:a copy -f matroska " + Quote(partial), timeout);
             }
             finally { File.Delete(list); }
-            if (joined.ExitCode != 0) throw new IOException("Объединение MKV не удалось; части и WAV сохранены. " + joined.Error);
-            if (phase != null) phase("Проверка итогового файла");
+            if (joined.ExitCode != 0) throw new IOException(TextCatalog.T("message.84") + joined.Error);
+            if (phase != null) phase(TextCatalog.T("message.85"));
             double actual = DecodeDuration(partial, ffmpeg, Math.Max(timeout, 60000));
             if (Math.Abs(actual - expected) > Math.Max(2.0, wavs.Count * 0.05))
-                throw new IOException("Длительность объединённого MKV неверна; части и WAV сохранены.");
+                throw new IOException(TextCatalog.T("message.86"));
             using (var stream = new FileStream(partial, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 stream.Flush(true);
             File.Move(partial, final);
@@ -526,22 +567,22 @@ namespace Player
         internal static string ArchiveParts(System.Collections.Generic.IList<string> wavs,
             string playerRoot, bool includeMkv)
         {
-            if (wavs == null || wavs.Count == 0) throw new ArgumentException("No WAV parts to archive.");
+            if (wavs == null || wavs.Count == 0) throw new ArgumentException(TextCatalog.T("diagnostic.14"));
             string first = Path.GetFileNameWithoutExtension(wavs[0]);
             int dash = first.LastIndexOf('-');
-            if (dash < 0 || first.Length - dash != 4) throw new InvalidDataException("Invalid part name.");
+            if (dash < 0 || first.Length - dash != 4) throw new InvalidDataException(TextCatalog.T("diagnostic.15"));
             string archive = Path.Combine(playerRoot, "Backups", "RecordingParts", first.Substring(0, dash));
             Directory.CreateDirectory(archive);
             foreach (string wav in wavs)
             {
                 string backupWav = Path.Combine(archive, Path.GetFileName(wav));
-                if (File.Exists(backupWav)) throw new IOException("Backup WAV already exists; nothing overwritten.");
+                if (File.Exists(backupWav)) throw new IOException(TextCatalog.T("diagnostic.16"));
                 File.Move(wav, backupWav);
                 if (includeMkv)
                 {
                     string part = Path.ChangeExtension(wav, ".mkv");
                     string backupMkv = Path.Combine(archive, Path.GetFileName(part));
-                    if (File.Exists(backupMkv)) throw new IOException("Backup MKV already exists; nothing overwritten.");
+                    if (File.Exists(backupMkv)) throw new IOException(TextCatalog.T("diagnostic.17"));
                     File.Move(part, backupMkv);
                 }
             }

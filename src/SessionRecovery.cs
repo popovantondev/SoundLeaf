@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace Player
+namespace SoundLeaf
 {
     internal sealed class PendingSession
     {
@@ -46,13 +46,14 @@ namespace Player
         }
         internal static string Recover(PendingSession session, string playerRoot, string ffmpeg, Action<string> phase)
         {
-            if (WavReceipt.IsCompleted(session, playerRoot)) throw new IOException("Эта WAV-сессия намеренно завершена; автоматическое восстановление запрещено.");
-            if (session.Duplicate || session.Parts.Count == 0) throw new IOException("Неоднозначный набор частей; исходники оставлены.");
+            if (WavReceipt.IsCompleted(session, playerRoot)) throw new IOException(TextCatalog.T("message.102"));
+            if (session.Duplicate || session.Parts.Count == 0) throw new IOException(TextCatalog.T("message.103"));
             int expected = 1;
             foreach (int part in session.Parts.Keys)
-                if (part != expected++) throw new IOException("Пропущена часть записи; автоматическая сборка запрещена.");
-            string final = Path.Combine(session.Folder, session.Stem + ".mkv");
-            if (File.Exists(final)) throw new IOException("Итоговый файл уже существует; перезапись и очистка запрещены.");
+                if (part != expected++) throw new IOException(TextCatalog.T("message.104"));
+            RecordingProfile profile = SessionProfile.Read(playerRoot, session.Stem);
+            string final = Path.Combine(session.Folder, session.Stem + profile.Extension);
+            if (File.Exists(final)) throw new IOException(TextCatalog.T("message.105"));
             string work = Path.Combine(playerRoot, "RecoveryWork", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(work);
             var locks = new List<FileStream>();
@@ -67,13 +68,13 @@ namespace Player
                     locks.Add(new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read));
                     WaveInfo info = DurableWave.ReadInfo(source, source.EndsWith(".partial.wav", StringComparison.OrdinalIgnoreCase));
                     if (firstFormat == null) firstFormat = info.Format.Bytes;
-                    else if (!SameFormat(firstFormat, info.Format.Bytes)) throw new IOException("Форматы частей различаются; исходники оставлены.");
+                    else if (!SameFormat(firstFormat, info.Format.Bytes)) throw new IOException(TextCatalog.T("message.106"));
                     duration += info.Duration;
                 }
                 int index = 0;
                 foreach (string source in session.Parts.Values)
                 {
-                    if (phase != null) phase("Подготовка части " + (++index) + "/" + session.Parts.Count);
+                    if (phase != null) phase(TextCatalog.T("message.107") + (++index) + "/" + session.Parts.Count);
                     else index++;
                     string target = Path.Combine(work, session.Stem + "-" + index.ToString("D3") + ".wav");
                     if (source.EndsWith(".partial.wav", StringComparison.OrdinalIgnoreCase))
@@ -85,25 +86,28 @@ namespace Player
                     }
                     else File.Copy(source, target, false);
                     wavs.Add(target);
-                    MediaExport.Convert(target, ffmpeg, phase);
+                    if (profile.Format == AudioOutputFormat.Mkv) MediaExport.Convert(target, ffmpeg, phase, profile);
                 }
-                string result = wavs.Count == 1 ? Path.ChangeExtension(wavs[0], ".mkv") : MediaExport.ConcatParts(wavs, ffmpeg, phase);
-                if (phase != null) phase("Проверка итогового файла");
+                string result = profile.Format == AudioOutputFormat.Mkv ?
+                    (wavs.Count == 1 ? Path.ChangeExtension(wavs[0], ".mkv") : MediaExport.ConcatParts(wavs, ffmpeg, phase)) :
+                    ProfileExport.Rebuild(wavs, Path.Combine(work, session.Stem + profile.Extension), ffmpeg, profile, phase);
+                if (phase != null) phase(TextCatalog.T("message.85"));
                 double actual = MediaExport.DecodeDuration(result, ffmpeg,
                     (int)Math.Min(1800000, Math.Max(60000, duration * 1000 + 30000)));
-                if (Math.Abs(actual - duration) > Math.Max(0.25, duration * 0.001)) throw new IOException("Итоговая длительность неверна; исходники оставлены.");
+                if (Math.Abs(actual - duration) > Math.Max(0.25, duration * 0.001)) throw new IOException(TextCatalog.T("message.108"));
                 File.Move(result, final); // Atomic publication on the same volume; never overwrite.
+                ResultReceipt.Write(playerRoot, session.Stem, profile, duration, false, new[] { final });
             }
             finally { foreach (var file in locks) file.Dispose(); }
             string archive = Path.Combine(playerRoot, "Backups", "RecoveredSessions", session.Stem + "-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(archive);
             // Original files are archived, never deleted by recovery or the 24-hour cleanup.
             foreach (string source in session.Parts.Values) File.Move(source, Path.Combine(archive, Path.GetFileName(source)));
-            foreach (string old in Directory.GetFiles(session.Folder, session.Stem + "-*.partial.mkv"))
+            foreach (string old in Directory.GetFiles(session.Folder, session.Stem + "*.partial" + profile.Extension))
                 if ((File.GetAttributes(old) & FileAttributes.ReparsePoint) == 0)
                     File.Move(old, Path.Combine(archive, Path.GetFileName(old)));
             string workRoot = Path.GetFullPath(Path.Combine(playerRoot, "RecoveryWork"));
-            if (Path.GetDirectoryName(Path.GetFullPath(work)) != workRoot) throw new IOException("Invalid recovery staging directory.");
+            if (Path.GetDirectoryName(Path.GetFullPath(work)) != workRoot) throw new IOException(TextCatalog.T("diagnostic.10"));
             Directory.Delete(work, true); // Only our generated GUID directory, never the source folder.
             return final;
         }

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 
-namespace Player
+namespace SoundLeaf
 {
     internal static class ReadinessTests
     {
