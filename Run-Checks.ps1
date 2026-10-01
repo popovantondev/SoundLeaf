@@ -30,3 +30,7 @@ try {
     if ($first) { $liveGuard.ReleaseMutex() }; $liveGuard.Dispose()
 }
 Write-Output 'PASS build, storage/readiness/profiles/WAV tests, icons, panel and genuine MKV/Opus/WAV loopback lifecycles using an inaudible digital-silence renderer.'
+$candidate = Join-Path $folder 'SoundLeaf.next.exe'
+$checked = [pscustomobject]@{Full=$true; Version=(Get-Item -LiteralPath $candidate).VersionInfo.FileVersion; Sha256=(Get-FileHash -LiteralPath $candidate).Hash; Checked=(Get-Date -Format o)}
+[void][IO.Directory]::CreateDirectory((Join-Path $folder 'artifacts'))
+$checked | ConvertTo-Json | Out-File -LiteralPath (Join-Path $folder 'artifacts\checked-candidate.json') -Encoding utf8
