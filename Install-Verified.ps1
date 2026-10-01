@@ -9,15 +9,21 @@ if (!(Test-Path -LiteralPath $receiptPath)) { throw 'Full-check candidate receip
 $verified = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
 $candidate = Join-Path $projectRoot 'SoundLeaf.next.exe'
 $expectedHash = $verified.Sha256
-if (!$verified.Full -or $verified.Version -ne '3.0.3.0' -or (Get-SoundLeafSha256 $candidate) -ne $expectedHash) { throw 'Candidate does not match completed verification.' }
-if ((Get-Item -LiteralPath $candidate).VersionInfo.FileVersion -ne '3.0.3.0') { throw 'Wrong candidate version.' }
+if (!$verified.Full -or $verified.Version -ne '3.0.4.0' -or (Get-SoundLeafSha256 $candidate) -ne $expectedHash) { throw 'Candidate does not match completed verification.' }
+if ((Get-Item -LiteralPath $candidate).VersionInfo.FileVersion -ne '3.0.4.0') { throw 'Wrong candidate version.' }
 if ((Get-SoundLeafSha256 (Join-Path $installRoot 'tools\ffmpeg.exe')) -ne (Get-SoundLeafSha256 (Join-Path $projectRoot 'tools\ffmpeg.exe'))) { throw 'Installed encoder differs from verified encoder.' }
 if ((Get-Item -LiteralPath $installRoot).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Installation root is a reparse point.' }
 $first = $false
 $updateMutex = New-Object Threading.Mutex($true, 'Local\PlayerCaptureSingle', [ref]$first)
 try {
     if (!$first -or (Get-Process -Name SoundLeaf,Player -ErrorAction SilentlyContinue)) { throw 'Recorder is running; save and exit first. No files were replaced.' }
-    $backupRoot = Join-Path $installRoot ('Backups\BeforeSoundLeaf303-' + (Get-Date -Format yyyyMMdd-HHmmss) + '-' + [Guid]::NewGuid().ToString('N').Substring(0,6))
+    Add-Type -TypeDefinition (Get-Content -LiteralPath (Join-Path $projectRoot 'ShellIconRefresh.cs') -Raw -Encoding UTF8) -ReferencedAssemblies System.Drawing
+    $oldIcons = @()
+    foreach ($relative in @('SoundLeaf.exe','SoundLeaf.ico')) {
+        $oldPath = Join-Path $installRoot $relative
+        if (Test-Path -LiteralPath $oldPath) { $oldIcons += [SoundLeaf.ShellIconRefresh]::Capture($oldPath) }
+    }
+    $backupRoot = Join-Path $installRoot ('Backups\BeforeSoundLeaf304-' + (Get-Date -Format yyyyMMdd-HHmmss) + '-' + [Guid]::NewGuid().ToString('N').Substring(0,6))
     if (![IO.Path]::GetFullPath($backupRoot).StartsWith($installRoot + '\Backups\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Unsafe backup target.' }
     [void][IO.Directory]::CreateDirectory($backupRoot)
     $pairs = @(
@@ -52,11 +58,11 @@ try {
     }
     $installedHash = Get-SoundLeafSha256 (Join-Path $installRoot 'SoundLeaf.exe')
     if ($installedHash -ne $expectedHash) { throw 'Installed executable hash mismatch.' }
-    # Targeted shell refresh only: no Explorer restart or global icon-cache deletion.
-    Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public static class SoundLeafShellRefresh { [DllImport("shell32.dll", CharSet=CharSet.Unicode)] public static extern void SHChangeNotify(uint change, uint flags, string path, IntPtr second); }'
-    [SoundLeafShellRefresh]::SHChangeNotify(0x2000, 0x1005, (Join-Path $installRoot 'SoundLeaf.exe'), [IntPtr]::Zero)
-    [SoundLeafShellRefresh]::SHChangeNotify(0x2000, 0x1005, (Join-Path $installRoot 'SoundLeaf.ico'), [IntPtr]::Zero)
-    $receipt = [pscustomobject]@{Version='3.0.3'; Commit=(& git -C $projectRoot rev-parse HEAD).Trim(); Sha256=$installedHash; Backup=$backupRoot; Updated=(Get-Date -Format o); EncoderUnchanged=$true; RecordingsMoved=$false}
-    $receipt | ConvertTo-Json | Out-File -LiteralPath (Join-Path $projectRoot 'artifacts\install-3.0.3.json') -Encoding utf8
+    # Notify the changed files, then invalidate shell artwork once. No Explorer restart,
+    # icon-cache file deletion, file associations or registry writes.
+    foreach ($oldIcon in $oldIcons) { [SoundLeaf.ShellIconRefresh]::Refresh($oldIcon) }
+    [SoundLeaf.ShellIconRefresh]::InvalidateShellArtwork()
+    $receipt = [pscustomobject]@{Version='3.0.4'; Commit=(& git -C $projectRoot rev-parse HEAD).Trim(); Sha256=$installedHash; Backup=$backupRoot; Updated=(Get-Date -Format o); EncoderUnchanged=$true; RecordingsMoved=$false; ShellIconsRefreshed=$oldIcons.Count; ShellArtworkInvalidated=$true; ExplorerRestarted=$false; CacheFilesDeleted=$false}
+    $receipt | ConvertTo-Json | Out-File -LiteralPath (Join-Path $projectRoot 'artifacts\install-3.0.4.json') -Encoding utf8
     $receipt | ConvertTo-Json
 } finally { if ($first) { $updateMutex.ReleaseMutex() }; $updateMutex.Dispose() }
