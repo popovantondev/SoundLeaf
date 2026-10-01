@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $installRoot = 'C:\Users\Public\Player'
 $projectRoot = $PSScriptRoot
+. (Join-Path $projectRoot 'File-Hash.ps1')
 $check = Get-Content -LiteralPath (Join-Path $projectRoot '.ai-dev\verification.json') -Raw | ConvertFrom-Json
 if (!$check.ok -or $check.timed_out -or $check.checks[0].exit_code -ne 0 -or $check.checks[0].command -contains '-NoLive') { throw 'Complete MegaProg verification required; partial checks cannot authorize installation.' }
 $receiptPath = Join-Path $projectRoot 'artifacts\checked-candidate.json'
@@ -8,9 +9,9 @@ if (!(Test-Path -LiteralPath $receiptPath)) { throw 'Full-check candidate receip
 $verified = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
 $candidate = Join-Path $projectRoot 'SoundLeaf.next.exe'
 $expectedHash = $verified.Sha256
-if (!$verified.Full -or $verified.Version -ne '3.0.2.0' -or (Get-FileHash -LiteralPath $candidate).Hash -ne $expectedHash) { throw 'Candidate does not match completed verification.' }
+if (!$verified.Full -or $verified.Version -ne '3.0.2.0' -or (Get-SoundLeafSha256 $candidate) -ne $expectedHash) { throw 'Candidate does not match completed verification.' }
 if ((Get-Item -LiteralPath $candidate).VersionInfo.FileVersion -ne '3.0.2.0') { throw 'Wrong candidate version.' }
-if ((Get-FileHash -LiteralPath (Join-Path $installRoot 'tools\ffmpeg.exe')).Hash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'tools\ffmpeg.exe')).Hash) { throw 'Installed encoder differs from verified encoder.' }
+if ((Get-SoundLeafSha256 (Join-Path $installRoot 'tools\ffmpeg.exe')) -ne (Get-SoundLeafSha256 (Join-Path $projectRoot 'tools\ffmpeg.exe'))) { throw 'Installed encoder differs from verified encoder.' }
 if ((Get-Item -LiteralPath $installRoot).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Installation root is a reparse point.' }
 $first = $false
 $updateMutex = New-Object Threading.Mutex($true, 'Local\PlayerCaptureSingle', [ref]$first)
@@ -49,7 +50,7 @@ try {
         try { $flush.Flush($true) } finally { $flush.Dispose() }
         if (Test-Path -LiteralPath $target) { [IO.File]::Replace($stage, $target, $backup) } else { [IO.File]::Move($stage, $target) }
     }
-    $installedHash = (Get-FileHash -LiteralPath (Join-Path $installRoot 'SoundLeaf.exe')).Hash
+    $installedHash = Get-SoundLeafSha256 (Join-Path $installRoot 'SoundLeaf.exe')
     if ($installedHash -ne $expectedHash) { throw 'Installed executable hash mismatch.' }
     # Targeted shell refresh only: no Explorer restart or global icon-cache deletion.
     Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public static class SoundLeafShellRefresh { [DllImport("shell32.dll", CharSet=CharSet.Unicode)] public static extern void SHChangeNotify(uint change, uint flags, string path, IntPtr second); }'
