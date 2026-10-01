@@ -27,33 +27,49 @@ namespace SoundLeaf
             {
                 meter.CreateControl(); meter.SetLevel(loud);
                 var samples = new float[25]; for (int i = 0; i < samples.Length; i++) samples[i] = AudioLevelView.Expressiveness;
-                meter.SeedHistory(samples); meter.AdvanceEnvelope(42);
-                Assert(meter.CurrentEnvelope >= AudioLevelView.Expressiveness * .94f, "Level attack is too slow.");
+                meter.SeedHistory(samples);
+                Assert(meter.CurrentEnvelope == 0 && meter.Activity == 0 && meter.DisplayedBar(10) == 0, "Telemetry/history seed snapped the histogram.");
+                meter.AdvanceEnvelope(16);
+                Assert(meter.CurrentEnvelope > 0 && meter.CurrentEnvelope < .27f && meter.Activity < .28f, "First histogram frame jumps too far.");
+                meter.AdvanceEnvelope(134);
+                Assert(meter.CurrentEnvelope >= AudioLevelView.Expressiveness * .94f, "Histogram attack is too slow.");
                 using (var bitmap = new Bitmap(meter.Width, meter.Height))
                 {
                     meter.DrawToBitmap(bitmap, meter.ClientRectangle);
                     int ink = 0, area = 0;
                     for (int y = 5; y < meter.Height - 22; y++) for (int x = 16; x < meter.Width - 16; x++)
                     { area++; if (bitmap.GetPixel(x, y).G > 80) ink++; }
-                    Assert(ink > 100 && ink < area * .15, "Wave is missing or a filled thick band.");
-                    Assert(Math.Abs(AudioLevelView.StrokeWidth - 1.6f) < .001, "Wave stroke is too thick.");
-                    bitmap.Save(Path.Combine(root, "meter-thin-contour.png"));
+                    int groups = 0; bool previous = false;
+                    for (int x = 0; x < bitmap.Width; x++)
+                    { bool present = bitmap.GetPixel(x, 54).G > 80; if (present && !previous) groups++; previous = present; }
+                    Assert(ink > 100 && ink < area * .4 && groups == AudioLevelView.HistogramBarCount, "Histogram columns are missing or joined into a band.");
+                    Assert(Math.Abs(meter.IndicatorSpan - 204) < .001, "Histogram span changed.");
+                    bitmap.Save(Path.Combine(root, "meter-histogram.png"));
                 }
                 float before = meter.CurrentEnvelope;
                 var quiet = new SessionUpdate(RecordState.Recording, "", 1, true) { DeviceAvailable = true, Peak = .01f, Rms = .01f };
-                float target = AudioLevelView.DisplayLevel(quiet); meter.SetLevel(quiet); meter.AdvanceEnvelope(105);
-                Assert(meter.CurrentEnvelope < before && meter.CurrentEnvelope <= target + (before - target) * .055f, "Previous word holds the wave up after a quiet gap.");
+                float target = AudioLevelView.DisplayLevel(quiet); meter.SetLevel(quiet);
+                Assert(meter.CurrentEnvelope == before, "New telemetry snapped the histogram height.");
+                meter.AdvanceEnvelope(150);
+                Assert(meter.CurrentEnvelope < before && meter.CurrentEnvelope <= target + (before - target) * .055f, "Previous word holds columns up after a quiet gap.");
                 quiet.Peak = quiet.Rms = .0002f; meter.SetLevel(quiet);
-                Assert(meter.CurrentEnvelope == 0 && !meter.HasCurrentSignal && !meter.TimerRunning && quiet.HeardSignal, "Background display floor changed historical audio detection or kept a thick wave.");
-                meter.SetLevel(loud); meter.AdvanceEnvelope(42); Pump(185);
+                Assert(!meter.HasCurrentSignal && meter.TimerRunning && quiet.HeardSignal, "Quiet fade changed historical detection or falsely reports a current signal.");
+                meter.AdvanceEnvelope(200);
+                Assert(meter.CurrentEnvelope == 0 && meter.Activity == 0 && !meter.TimerRunning, "Histogram quiet fade did not settle and stop.");
+                meter.SetLevel(loud); meter.AdvanceEnvelope(80); Pump(400);
                 Assert(!meter.HasCurrentSignal && !meter.TimerRunning && meter.CurrentEnvelope == 0, "Missing packets kept the animation alive.");
-                meter.SetLevel(loud); meter.AdvanceEnvelope(42);
+                meter.SetLevel(loud); meter.AdvanceEnvelope(80);
                 meter.SetLevel(new SessionUpdate(RecordState.Paused, "", 1, true) { DeviceAvailable = true, Peak = 1, Rms = 1 });
-                Assert(meter.CurrentEnvelope == 0 && !meter.TimerRunning, "Pause did not stop the contour immediately.");
+                Assert(meter.CurrentEnvelope == 0 && !meter.TimerRunning, "Pause did not stop the histogram immediately.");
             }
             foreach (float scale in new[] { 1f, 1.5f, 2f }) using (var meter = new AudioLevelView { Mini = true, Dark = true, Scale = scale, Size = new Size((int)(74 * scale), (int)(24 * scale)), BackColor = Color.Black })
             {
-                meter.CreateControl(); meter.SetLevel(loud); meter.AdvanceEnvelope(42);
+                meter.CreateControl(); meter.SetLevel(loud); meter.AdvanceEnvelope(16);
+                Assert(meter.CurrentEnvelope > 0 && meter.CurrentEnvelope < .21f && meter.Activity < .22f, "Compact meter first frame is jerky.");
+                float firstFrame = meter.CurrentEnvelope;
+                meter.SetLevel(loud); meter.SeedHistory(new float[25]);
+                Assert(meter.CurrentEnvelope == firstFrame, "Compact telemetry/history seed snaps the visible level.");
+                meter.AdvanceEnvelope(179);
                 using (var bitmap = new Bitmap(meter.Width, meter.Height))
                 {
                     meter.DrawToBitmap(bitmap, meter.ClientRectangle); int groups = 0; bool previous = false;
@@ -63,7 +79,27 @@ namespace SoundLeaf
                     bitmap.Save(Path.Combine(root, "meter-five-bars-" + (int)(scale * 100) + ".png"));
                 }
                 meter.SetLevel(new SessionUpdate(RecordState.Recording, "", 1, true) { DeviceAvailable = true });
-                Assert(!meter.HasCurrentSignal && meter.CurrentEnvelope == 0 && !meter.TimerRunning, "Compact meter kept fake activity during silence.");
+                Assert(!meter.HasCurrentSignal && meter.Activity > .9f, "Compact meter switches shape abruptly instead of fading.");
+                float activity = meter.Activity; meter.AdvanceEnvelope(32);
+                Assert(meter.Activity < activity && meter.Activity > 0, "Compact fade is not continuous.");
+                meter.AdvanceEnvelope(168);
+                Assert(meter.CurrentEnvelope == 0 && meter.Activity == 0 && !meter.TimerRunning, "Compact meter kept fake activity during silence.");
+                Assert(Math.Abs(meter.IndicatorSpan - 31 * scale) < .001, "Compact quiet line must match the short bar cluster.");
+                using (var bitmap = new Bitmap(meter.Width, meter.Height))
+                {
+                    meter.DrawToBitmap(bitmap, meter.ClientRectangle); int first = bitmap.Width, last = -1;
+                    for (int x = 0; x < bitmap.Width; x++) if (bitmap.GetPixel(x, bitmap.Height / 2).G > 80) { first = Math.Min(first, x); last = x; }
+                    Assert(last > first && last - first + 1 <= 34 * scale && Math.Abs((first + last) / 2.0 - bitmap.Width / 2.0) <= 1, "Silence line is too wide or off-center.");
+                    bitmap.Save(Path.Combine(root, "meter-short-silence-" + (int)(scale * 100) + ".png"));
+                }
+            }
+            // Same elapsed time yields the same result independent of frame subdivisions.
+            foreach (bool mini in new[] { false, true }) using (var a = new AudioLevelView { Mini = mini }) using (var b = new AudioLevelView { Mini = mini })
+            {
+                a.SetLevel(loud); b.SetLevel(loud); a.AdvanceEnvelope(48);
+                b.AdvanceEnvelope(16); b.AdvanceEnvelope(16); b.AdvanceEnvelope(16);
+                Assert(Math.Abs(a.CurrentEnvelope - b.CurrentEnvelope) < .00001 && Math.Abs(a.Activity - b.Activity) < .00001, "Meter smoothing depends on frame rate.");
+                Assert(Math.Abs(a.DisplayedBar(20) - b.DisplayedBar(20)) < .00001, "Histogram smoothing depends on frame rate.");
             }
         }
         private static void Outside(TrayPanel panel)
@@ -190,15 +226,23 @@ namespace SoundLeaf
                         { DeviceAvailable = true, SessionId = "Demo-live", SessionStarted = new DateTime(2026, 10, 1, 12, 0, 0), CapturedBytes = 1234567, Peak = .3f, Rms = .1f };
                         for (int sample = 0; sample < 25; sample++) { liveUpdate.Peak = .05f + sample % 7 * .08f; liveUpdate.Rms = liveUpdate.Peak * .3f; panel.SetState(liveUpdate, false, true); }
                         Pump(40);
-                        Render(panel, Path.Combine(root, language + "-" + theme + "-" + (int)(scale * 100) + "-" + height + "-live-control.png"));
                         var meter = new List<Control>(Children(panel)).Find(delegate(Control c) { return c is AudioLevelView; }) as AudioLevelView;
-                        if (meter != null) Assert(meter.HasCurrentSignal && Math.Abs(AudioLevelView.Expressiveness - .95f) < .0001, "Live level/95% expressiveness missing.");
-                        panel.ShowPage("recordings"); panel.SetRecordsForVerification(Demo()); panel.SetState(liveUpdate, false, true); Pump(40);
+                        // Layout/render can take longer than packet freshness on a busy desktop.
+                        // Assert newly delivered telemetry before that blocking work; expiry has
+                        // its own real-time test. Geometry snapshots use a modeled settled frame.
+                        panel.SetState(liveUpdate, false, true);
+                        Assert(meter != null && meter.HasCurrentSignal && Math.Abs(AudioLevelView.Expressiveness - .95f) < .0001, "Live level/95% expressiveness missing.");
+                        meter.AdvanceEnvelope(150);
+                        Render(panel, Path.Combine(root, language + "-" + theme + "-" + (int)(scale * 100) + "-" + height + "-live-control.png"));
+                        panel.ShowPage("recordings"); panel.SetRecordsForVerification(Demo()); panel.SetState(liveUpdate, false, true);
                         var card = new List<Control>(Children(panel)).Find(delegate(Control c) { return c is LiveRecordingCard; }) as LiveRecordingCard;
                         Assert(card != null && card.Meter.HasCurrentSignal, "Current recording absent from list.");
+                        card.Meter.AdvanceEnvelope(195);
                         Render(panel, Path.Combine(root, language + "-" + theme + "-" + (int)(scale * 100) + "-" + height + "-live-recordings.png"));
                         liveUpdate.Peak = liveUpdate.Rms = 0; panel.SetState(liveUpdate, false, true);
-                        Assert(!card.Meter.HasCurrentSignal && !card.Meter.TimerRunning && liveUpdate.HeardSignal, "Silence caused false error or synthetic animation.");
+                        Assert(!card.Meter.HasCurrentSignal && liveUpdate.HeardSignal, "Silence caused false error or historical signal loss.");
+                        card.Meter.AdvanceEnvelope(200);
+                        Assert(!card.Meter.TimerRunning && card.Meter.Activity == 0, "Compact quiet transition did not stop.");
                         Assert(new List<Control>(Children(panel)).Contains(card), "Telemetry rebuilt the live card.");
                         panel.NextRecordPage(999); Layout(panel); Assert(new List<Control>(Children(panel)).Exists(delegate(Control c) { return c is RecordingCard; }), "Live card displaced completed records.");
                         panel.SetState(new SessionUpdate(RecordState.Paused, TextCatalog.T("message.5"), 256, true) { SessionId = "Demo-live", DeviceAvailable = true }, false, true);

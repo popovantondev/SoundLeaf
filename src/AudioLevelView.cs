@@ -9,48 +9,64 @@ namespace SoundLeaf
     internal sealed class AudioLevelView : Control
     {
         internal const float Expressiveness = .95f;
-        internal const float StrokeWidth = 1.6f;
-        internal const int MiniBarCount = 5, FreshnessMilliseconds = 150;
-        internal const float AttackMilliseconds = 14, ReleaseMilliseconds = 35;
+        internal const int HistogramBarCount = 21, MiniBarCount = 5, FreshnessMilliseconds = 150;
+        internal const float MainAttackMilliseconds = 50, MainReleaseMilliseconds = 50;
+        internal const float MiniAttackMilliseconds = 65, MiniReleaseMilliseconds = 65;
+        internal const float FadeReleaseMilliseconds = 42;
         private readonly float[] history = new float[25];
-        private readonly float[] displayed = new float[25];
+        private readonly float[] targets = new float[HistogramBarCount];
+        private readonly float[] displayed = new float[HistogramBarCount];
         private readonly Timer timer = new Timer { Interval = 16 };
         private readonly Stopwatch freshness = new Stopwatch();
         private readonly Stopwatch frameClock = new Stopwatch();
-        private float level, envelope;
+        private float level, envelope, activity;
         private bool active;
-        private bool seeded;
         private string caption = "";
         internal bool Mini, Dark;
         internal float Scale = 1;
         internal bool HasCurrentSignal { get { return active && level > 0 && freshness.IsRunning && freshness.ElapsedMilliseconds <= FreshnessMilliseconds; } }
         internal bool TimerRunning { get { return timer.Enabled; } }
         internal float CurrentEnvelope { get { return envelope; } }
+        internal float Activity { get { return activity; } }
+        internal float DisplayedBar(int index) { return displayed[index]; }
+        internal float IndicatorSpan { get { return Math.Min(PlotBounds.Width, Mini ? 31 * Scale : 204 * Scale); } }
         internal AudioLevelView()
         {
             DoubleBuffered = true; TabStop = false; AccessibleRole = AccessibleRole.Graphic;
             timer.Tick += delegate
             {
-                if (!HasCurrentSignal)
-                {
-                    ClearLevels(); timer.Stop(); frameClock.Reset();
-                    if (active) { caption = TextCatalog.T("meterQuiet"); AccessibleName = TextCatalog.T("meterLabel") + ": " + caption; }
-                }
-                else
-                {
-                    double elapsed = frameClock.IsRunning ? Math.Min(100, frameClock.Elapsed.TotalMilliseconds) : 16;
-                    frameClock.Restart(); AdvanceEnvelope(elapsed);
-                }
+                // A stalled UI does not jump straight to a large new shape on its first frame.
+                double elapsed = frameClock.IsRunning ? Math.Min(32, frameClock.Elapsed.TotalMilliseconds) : 16;
+                frameClock.Restart(); AdvanceEnvelope(elapsed);
                 Invalidate();
             };
         }
-        private void ClearLevels() { Array.Clear(history, 0, history.Length); Array.Clear(displayed, 0, displayed.Length); envelope = 0; }
+        private void ClearLevels() { Array.Clear(history, 0, history.Length); Array.Clear(targets, 0, targets.Length); Array.Clear(displayed, 0, displayed.Length); envelope = activity = 0; }
+        private static float Approach(float value, float target, double milliseconds, float attack, float release)
+        { return value + (target - value) * (float)(1 - Math.Exp(-Math.Max(0, milliseconds) / (target >= value ? attack : release))); }
+        private void UpdateTargets()
+        {
+            float maximum = 0; foreach (float sample in history) maximum = Math.Max(maximum, sample);
+            for (int i = 0; i < targets.Length; i++)
+            {
+                int sample = (int)Math.Round(i * (history.Length - 1.0) / (targets.Length - 1));
+                // This is measured level history scaled by current loudness, not spectrum bins.
+                targets[i] = maximum > 0 ? level * history[sample] / maximum : 0;
+            }
+        }
         internal void AdvanceEnvelope(double elapsedMilliseconds)
         {
-            double elapsed = Math.Max(0, elapsedMilliseconds);
-            float blend = (float)(1 - Math.Exp(-elapsed / (level >= envelope ? AttackMilliseconds : ReleaseMilliseconds)));
-            envelope += (level - envelope) * blend;
-            for (int i = 0; i < history.Length; i++) displayed[i] += (history[i] - displayed[i]) * (float)(1 - Math.Exp(-elapsed / 14));
+            if (!HasCurrentSignal)
+            {
+                level = 0; Array.Clear(targets, 0, targets.Length);
+                if (active) { caption = TextCatalog.T("meterQuiet"); AccessibleName = TextCatalog.T("meterLabel") + ": " + caption; }
+            }
+            float attack = Mini ? MiniAttackMilliseconds : MainAttackMilliseconds;
+            float release = Mini ? MiniReleaseMilliseconds : MainReleaseMilliseconds;
+            envelope = Approach(envelope, level, elapsedMilliseconds, attack, release);
+            activity = Approach(activity, HasCurrentSignal ? 1 : 0, elapsedMilliseconds, attack, FadeReleaseMilliseconds);
+            for (int i = 0; i < displayed.Length; i++) displayed[i] = Approach(displayed[i], targets[i], elapsedMilliseconds, attack, release);
+            if (!HasCurrentSignal && activity < .015f) { ClearLevels(); timer.Stop(); frameClock.Reset(); }
         }
         internal void SetLevel(SessionUpdate update)
         {
@@ -59,11 +75,13 @@ namespace SoundLeaf
             freshness.Restart();
             for (int i = 0; i < history.Length - 1; i++) history[i] = history[i + 1];
             history[history.Length - 1] = level;
-            if (level == 0) ClearLevels();
+            UpdateTargets();
+            // Quiet input fades; explicit pause/stop/device loss is immediately quiescent.
+            if (!active) ClearLevels();
             caption = TextCatalog.T(update.State == RecordState.Paused ? "meterPaused" : update.State == RecordState.Saving ? "meterSaving" :
                 update.State == RecordState.Stopped || update.State == RecordState.Faulted ? "meterStopped" : level > 0 ? "meterSound" : "meterQuiet");
             AccessibleName = TextCatalog.T("meterLabel") + ": " + caption;
-            if (HasCurrentSignal && Visible) { if (!timer.Enabled) frameClock.Restart(); timer.Start(); }
+            if (Visible && (HasCurrentSignal || activity >= .015f)) { if (!timer.Enabled) frameClock.Restart(); timer.Start(); }
             else { timer.Stop(); frameClock.Reset(); }
             Invalidate();
         }
@@ -72,13 +90,30 @@ namespace SoundLeaf
             if (update.State != RecordState.Recording || !update.DeviceAvailable) return 0;
             float value = Math.Max(update.Rms, update.Peak * .35f);
             if (float.IsNaN(value) || float.IsInfinity(value) || value <= 0) return 0;
-            // Presentation floor only: faint background must not inflate the contour.
+            // Presentation floor only: faint background must not inflate the histogram.
             // Capture bytes and the session's historical signal detection are untouched.
             double normalized = Math.Max(0, Math.Min(1, (20 * Math.Log10(value) + 60) / 60));
             return (float)Math.Pow(normalized, 1.5) * Expressiveness;
         }
-        internal void SeedHistory(float[] values) { Array.Copy(values, history, Math.Min(values.Length, history.Length)); if (!seeded) { Array.Copy(history, displayed, history.Length); seeded = true; } }
-        protected override void OnVisibleChanged(EventArgs e) { base.OnVisibleChanged(e); if (Visible && HasCurrentSignal) { frameClock.Restart(); timer.Start(); } else { timer.Stop(); frameClock.Reset(); } }
+        internal void SeedHistory(float[] values)
+        {
+            Array.Clear(history, 0, history.Length);
+            for (int i = 0; i < Math.Min(values.Length, history.Length); i++)
+                history[i] = float.IsNaN(values[i]) || float.IsInfinity(values[i]) ? 0 : Math.Max(0, Math.Min(Expressiveness, values[i]));
+            // A history seed only sets targets. It never snaps the visible columns.
+            UpdateTargets();
+        }
+        protected override void OnVisibleChanged(EventArgs e) { base.OnVisibleChanged(e); if (Visible && (HasCurrentSignal || activity >= .015f)) { frameClock.Restart(); timer.Start(); } else { timer.Stop(); frameClock.Reset(); } }
+        private RectangleF PlotBounds
+        {
+            get
+            {
+                float margin = Mini ? 3 * Scale : 16 * Scale, captionHeight = Mini ? 0 : 22 * Scale;
+                margin = Math.Min(margin, Math.Max(0, (Width - 1) / 2f));
+                float padding = Math.Min(5 * Scale, Math.Max(0, (Height - captionHeight - 1) / 2f));
+                return new RectangleF(margin, padding, Math.Max(1, Width - margin * 2), Math.Max(1, Height - captionHeight - padding * 2));
+            }
+        }
         protected override void OnPaintBackground(PaintEventArgs e) { e.Graphics.Clear(Parent == null ? BackColor : Parent.BackColor); }
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -86,45 +121,29 @@ namespace SoundLeaf
             if (!Mini) using (var shape = LeafDrawing.Rounded(new RectangleF(0, 0, Math.Max(1, Width - 1), Math.Max(1, Height - 1)), 12 * Scale))
                 using (var brush = new SolidBrush(BackColor)) g.FillPath(brush, shape);
             Color ink = ColorTranslator.FromHtml(Dark ? "#74C991" : "#278C55");
-            float margin = Mini ? 3 * Scale : 16 * Scale, captionHeight = Mini ? 0 : 22 * Scale;
-            margin = Math.Min(margin, Math.Max(0, (Width - 1) / 2f));
-            float padding = Math.Min(5 * Scale, Math.Max(0, (Height - captionHeight - 1) / 2f));
-            var plot = new RectangleF(margin, padding, Math.Max(1, Width - margin * 2), Math.Max(1, Height - captionHeight - padding * 2));
+            float captionHeight = Mini ? 0 : 22 * Scale;
+            var plot = PlotBounds;
             float middle = plot.Top + plot.Height / 2;
-            if (!HasCurrentSignal)
+            float span = IndicatorSpan, left = plot.Left + (plot.Width - span) / 2;
+            if (activity < 1)
             {
-                using (var pen = new Pen(Color.FromArgb(130, ink), Math.Max(1, 1.4f * Scale))) { pen.StartCap = pen.EndCap = LineCap.Round; g.DrawLine(pen, plot.Left, middle, plot.Right, middle); }
+                using (var pen = new Pen(Color.FromArgb((int)Math.Round(130 * (1 - activity)), ink), Math.Max(1, 1.4f * Scale)))
+                { pen.StartCap = pen.EndCap = LineCap.Round; g.DrawLine(pen, left, middle, left + span, middle); }
             }
-            else
+            if (activity > 0)
             {
-                if (Mini)
-                {
-                    float width = Math.Max(1, Math.Min(3 * Scale, plot.Width / 10)), gap = Math.Max(1, Math.Min(4 * Scale, plot.Width / 12));
-                    float left = plot.Left + (plot.Width - MiniBarCount * width - (MiniBarCount - 1) * gap) / 2;
-                    using (var brush = new SolidBrush(ink)) for (int i = 0; i < MiniBarCount; i++)
+                int count = Mini ? MiniBarCount : HistogramBarCount;
+                float fit = span / (Mini ? 31 * Scale : 204 * Scale);
+                float width = (Mini ? 3 : 4) * Scale * fit, gap = (Mini ? 4 : 6) * Scale * fit;
+                using (var brush = new SolidBrush(Color.FromArgb((int)Math.Round(255 * activity), ink)))
+                    for (int i = 0; i < count; i++)
                     {
-                        // Five clearly separated level bars, not miniature scrolling history or spectrum bins.
-                        float weight = 1 - Math.Abs(i - 2) * .22f;
-                        float height = Math.Min(plot.Height, Math.Max(Math.Min(2 * Scale, plot.Height), envelope * weight * plot.Height));
+                        // Shared rounded-column grammar; each size keeps its own pacing and span.
+                        float value = Mini ? envelope * (1 - Math.Abs(i - 2) * .22f) : displayed[i];
+                        float baseline = Math.Min(2 * Scale, plot.Height);
+                        float height = Math.Min(plot.Height, baseline + value * Math.Max(0, plot.Height - baseline));
                         using (var bar = LeafDrawing.Rounded(new RectangleF(left + i * (width + gap), middle - height / 2, width, height), Math.Min(width, height) / 2)) g.FillPath(brush, bar);
                     }
-                }
-                else
-                {
-                    var points = new PointF[history.Length]; float maximum = 0;
-                    foreach (float sample in displayed) maximum = Math.Max(maximum, sample);
-                    for (int i = 0; i < points.Length; i++)
-                    {
-                        // The contour is a level envelope, not a sampled audio waveform.
-                        // Current amplitude scales the whole short history down immediately after a word.
-                        float relative = maximum > 0 ? displayed[i] / maximum : 0;
-                        float edge = (float)Math.Sin(Math.PI * i / (points.Length - 1));
-                        float offset = (i % 2 == 0 ? 1 : -1) * relative * envelope * edge * plot.Height * .38f;
-                        points[i] = new PointF(plot.Left + i * plot.Width / (points.Length - 1), middle + offset);
-                    }
-                    using (var pen = new Pen(ink, Math.Max(1, StrokeWidth * Scale)))
-                    { pen.StartCap = pen.EndCap = LineCap.Round; pen.LineJoin = LineJoin.Round; g.DrawCurve(pen, points, .35f); }
-                }
             }
             if (!Mini && Height >= 40 * Scale) TextRenderer.DrawText(g, caption, Font, new Rectangle(0, Height - (int)captionHeight, Width, (int)captionHeight), ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         }
