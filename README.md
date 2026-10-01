@@ -1,36 +1,52 @@
-<p align="center"><img src="assets/tray-preview.png" width="640" alt="Player recording, pause, stop, error and saving icons"></p>
+<p align="center"><img src="assets/tray-preview.png" width="640" alt="SoundLeaf recording, pause, stop, error and saving icons"></p>
 
-# Player
+# SoundLeaf
 
 [Deutsch](docs/README.de.md) · [Русский](docs/README.ru.md) · English
 
-**Strictly an educational project · Windows 11 · x64 · Preview 2.3.0**
+**Strictly an educational project · Windows 11 · x64 · Preview 3.0.0**
 
-Player is a C# learning project exploring Windows system audio, background processing, durable file storage and a system-tray interface. It is not a professional recording solution.
+SoundLeaf is a C# learning project exploring Windows system audio, background processing, durable file storage and a system-tray interface. It is not a professional recording solution.
 
 ## Features
 
 - Capture the default Windows output device through WASAPI loopback; microphone capture is not implemented.
-- Start, pause, resume and stop from the tray. The current interface is Russian; documentation is available in three languages.
+- Start, pause, resume and stop from the tray. Interface, notifications and documentation support German, Russian and English; language changes apply immediately.
 - Green play: recording. Yellow bars: paused. Black square: stopped. A thicker rotating ring around a fixed, centered green triangle: saving. Red: failure or unfinished previous sessions while stopped.
 - Durable WAV backup with live AAC encoding and one verified final MKV per session.
 - Saving stages and an explicit final-file path; open the last verified output from the menu.
 - Detect unfinished sessions and rebuild them from finalized or partial WAV parts. Originals are archived only after full verification.
 - User-level startup option without administrator rights.
-- Background checks before capture: durable folder write/rename, free space, and a short AAC/MKV encode/decode with a three-second limit per FFmpeg process.
+- Background checks before capture: durable folder write/rename, free space, and a short selected-profile encode/decode with a three-second limit per FFmpeg process.
 - Explicit WAV-only recording when FFmpeg is unavailable; verified WAV parts and an atomic completion marker prevent deliberate WAV results being mistaken for crashes.
 
-Recording starts automatically when Player is launched only after its checks pass. Below 256 MiB free, capture is blocked. From 256 MiB to 1 GiB, or when space cannot be measured, the menu warns; these initial checks cannot guarantee enough space for the entire session. An FFmpeg failure offers “Начать запись только в WAV” but never switches modes automatically. Only capture audio you are entitled to record, with any required participant consent. Silence is normal and is not treated as a fault.
+Recording starts automatically when SoundLeaf is launched only after its checks pass. Below 256 MiB free, capture is blocked. From 256 MiB to 1 GiB, or when space cannot be measured, the menu warns; these initial checks cannot guarantee enough space for the entire session. An FFmpeg failure offers “Начать запись только в WAV” but never switches modes automatically. Only capture audio you are entitled to record, with any required participant consent. Silence is normal and is not treated as a fault.
 
-## Run
+## Profiles, panel and recording library
 
-The current package is source-only; no public binary release is available yet. Build `Player.next.exe`, place a compatible AAC-enabled FFmpeg at `tools/ffmpeg.exe` beside it, then launch the EXE from a writable folder. For normal use, rename the tested candidate to `Player.exe`.
+The default remains **MKV / AAC 192 kbit/s**, with the source sample rate and channels. In Settings, choose one output format: MKV/AAC, OGG/Opus (initially 24 kbit/s, mono), MP3, M4A/AAC or AAC/ADTS. Opus uses 48 kHz, speech-oriented VBR and a target bitrate; file size is not guaranteed. MP3 uses CBR. Additional AAC/MP3 profiles use 48 kHz and retain mono/stereo; multichannel input is downmixed to stereo. Backup WAV retains original PCM.
+
+Opus bitrates: 16/24/32/48/64/96/128. AAC and MP3: 64/96/128/160/192/256/320 kbit/s. Each format remembers its bitrate. Format and save folder can change only while stopped; a session keeps its immutable profile. Language and the light/dark/system theme change immediately, including during recording.
+
+Left click toggles a compact leaf-themed panel: Controls, Recordings and Settings. Right click opens the fallback menu. Escape or clicking outside hides the panel, not the recording. There is no main window or taskbar button.
+
+Settings can select a writable save folder. Existing files are not moved; previously selected folders remain in the library. The default remains the existing application folder's `Recordings`. Custom destinations store their own `State/Sessions`, backups and recovery work alongside dated recording folders; retain that metadata when moving audio. Settings themselves stay beside the EXE.
+
+The library loads in the background, newest first, with size, format and known duration. Verified WAV parts are grouped. Temporary outputs are excluded; old files without valid metadata are shown as existing, not verified, with unknown duration. Opening the list does not decode every recording. Open/reveal commands are available; deletion and moment markers are not implemented.
+
+“Save in another format” creates a separate verified file from a selected recording, retaining the original. Choose its format, bitrate and destination. Re-encoding compressed audio cannot restore quality. Existing target names and wrong extensions are refused. A completed WAV session is read as one PCM stream.
+
+Additional formats use one live encoder across WAV boundaries, with a bounded queue. If it fails, the final output is rebuilt directly from verified WAV PCM. Full decoding and a maximum 250 ms duration mismatch precede durable, no-overwrite publication and backup deletion. Each new session commits its profile before capture; recovery uses that profile, or MKV/AAC 192 for older sessions without one.
+
+## Running the source build
+
+The current package is source-only; no public binary release is available yet. Build `SoundLeaf.next.exe`, place a compatible AAC-enabled FFmpeg at `tools/ffmpeg.exe` beside it, then launch the EXE from a writable folder. FFmpeg must provide AAC, libopus and libmp3lame for the respective profiles. For normal use, rename the tested candidate to `SoundLeaf.exe`.
 
 Files are stored beside the executable: `Recordings`, `logs`, `Backups`, `State/Sessions`, and temporary `RecoveryWork`. Keep the entire application folder together, including WAV completion markers. Re-enable startup after moving the folder so the saved path is updated. WAV-only mode does not run FFmpeg: long recordings remain multiple verified parts of up to 256 MiB, not one unlimited WAV. After stopping, the result lists all paths and provides a folder-opening command; MKV was not created. A completion-marker failure keeps the audio and reports an error.
 
 ## Build and verify
 
-Use Windows PowerShell 5.1 and the Windows .NET Framework compiler. No Python, Node.js or separate .NET SDK is needed to build Player.
+Use Windows PowerShell 5.1 and the Windows .NET Framework compiler. No Python, Node.js or separate .NET SDK is needed to build SoundLeaf.
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Build-Launcher.ps1

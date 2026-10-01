@@ -1,10 +1,10 @@
-# Player
+# SoundLeaf
 
 Deutsch · [Русский](README.ru.md) · [English](../README.md)
 
-**Reines Lernprojekt · Windows 11 · x64 · Vorabversion 2.3.0**
+**Reines Lernprojekt · Windows 11 · x64 · Vorabversion 3.0.0**
 
-Player ist ein C#-Lernprojekt zu Windows-Systemaudio, Hintergrundverarbeitung, sicherer Dateispeicherung und Bedienung im Infobereich. Es ist keine professionelle Aufnahmelösung. Die Oberfläche ist derzeit russisch; die Dokumentation ist dreisprachig.
+SoundLeaf ist ein C#-Lernprojekt zu Windows-Systemaudio, Hintergrundverarbeitung, sicherer Dateispeicherung und Bedienung im Infobereich. Es ist keine professionelle Aufnahmelösung. Oberfläche und Dokumentation sind deutsch, russisch und englisch; die Sprache ändert sich sofort.
 
 ![Demonstration der Statussymbole](../assets/tray-preview.png)
 
@@ -16,7 +16,7 @@ Die Aufnahme startet automatisch beim Öffnen der EXE. Das Symbolmenü bietet St
 
 Die Quelle ist das standardmäßige Windows-Ausgabegerät, nicht das Mikrofon. Stille ist kein Fehler. Nur erlaubte Inhalte aufnehmen und erforderliche Zustimmung einholen.
 
-Vor Aufnahmebeginn prüft ein Hintergrund-Thread Schreiben, Datenträger-Flush und Umbenennen einer eigenen Testdatei sowie kurzes AAC/MKV-Kodieren und Dekodieren mit jeweils drei Sekunden Prozesslimit. Unter 256 MiB freiem Speicher wird die Aufnahme gesperrt; zwischen 256 MiB und 1 GiB wird gewarnt. Nicht messbarer Speicher erlaubt den Start nur nach erfolgreicher Ordnerprüfung mit Warnung. Die Anfangsprüfung garantiert keinen Platz für die gesamte Aufnahme.
+Vor Aufnahmebeginn prüft ein Hintergrund-Thread Schreiben, Datenträger-Flush und Umbenennen einer eigenen Testdatei sowie kurzes Kodieren des gewählten Profils und Dekodieren mit jeweils drei Sekunden Prozesslimit. Unter 256 MiB freiem Speicher wird die Aufnahme gesperrt; zwischen 256 MiB und 1 GiB wird gewarnt. Nicht messbarer Speicher erlaubt den Start nur nach erfolgreicher Ordnerprüfung mit Warnung. Die Anfangsprüfung garantiert keinen Platz für die gesamte Aufnahme.
 
 ## Speicherung und Wiederherstellung
 
@@ -26,11 +26,27 @@ Bei fehlgeschlagener FFmpeg-Prüfung startet keine automatische Aufnahme. Der Me
 
 Die Wiederherstellung nutzt vollständige und unvollständige WAV-Teile derselben Sitzung. Fehlende/mehrdeutige Teile, aktive Schreiber, unterschiedliche Formate und vorhandene Zieldateien werden abgelehnt. Nach erfolgreicher Prüfung werden Originale nach `Backups/RecoveredSessions` verschoben; die automatische 24-Stunden-Bereinigung betrifft diesen Ordner nicht. Bei Fehlern bleiben Originale erhalten, Arbeitsdateien können in `RecoveryWork` verbleiben.
 
-## Start und Prüfungen
+## Profile, Panel und Aufnahmen
 
-Noch kein öffentliches Binärpaket. `Build-Launcher.ps1` unter Windows PowerShell 5.1 erzeugt `Player.next.exe`. Für MKV muss ein kompatibles `tools/ffmpeg.exe` neben der EXE liegen; ausdrücklich gewähltes WAV benötigt keinen Encoder. Einen beschreibbaren Ordner verwenden; beim Umzug den gesamten Ordner mitnehmen und Autostart neu aktivieren.
+Standard bleibt **MKV / AAC 192 kbit/s**, mit ursprünglicher Abtastrate und Kanalzahl. Einstellungen wählen ein Ausgabeformat: MKV/AAC, OGG/Opus (anfangs 24 kbit/s, mono), MP3, M4A/AAC oder AAC/ADTS. Opus nutzt 48 kHz, Sprachprofil und VBR-Zielbitrate, keine feste Dateigröße. MP3 nutzt CBR. Weitere AAC/MP3-Profile nutzen 48 kHz, behalten mono/stereo und mischen Mehrkanalton zu stereo. WAV sichert unverändertes PCM.
 
-`Run-Checks.ps1` führt Build, synthetische Tests, Symbolprüfungen und echte MKV-/WAV-Loopback-Tests aus. Die letzten Tests zeichnen Systemaudio im separaten Ordner `Verification` auf. Für Player-Builds sind Python und ein separates SDK nicht erforderlich.
+Opus: 16/24/32/48/64/96/128; AAC und MP3: 64/96/128/160/192/256/320 kbit/s. Bitraten werden pro Format gespeichert. Format und Speicherordner ändern sich nur im gestoppten Zustand; das Sitzungsprofil bleibt unveränderlich. Sprache Deutsch / Русский / English und helles/dunkles/systemabhängiges Design wechseln sofort, auch während einer Aufnahme.
+
+Linksklick öffnet das kompakte Laub-Panel mit Steuerung, Aufnahmen und Einstellungen; Rechtsklick das Ersatzmenü. Escape oder ein Klick außerhalb blendet es aus, ohne die Aufnahme zu stoppen. Kein Hauptfenster und keine Taskleisten-Schaltfläche.
+
+Der Speicherordner ist wählbar. Vorhandene Dateien werden nicht verschoben; vorher gewählte Ordner bleiben in der Bibliothek. Standard bleibt `Recordings` neben der EXE. Eigene Ziele enthalten auch `State/Sessions`, Sicherungen und Wiederherstellungsdateien; Metadaten mitnehmen. Programmeinstellungen bleiben neben der EXE.
+
+Aufnahmen laden im Hintergrund, neueste zuerst, mit Format, Größe und bekannter Dauer. Abgeschlossene WAV-Teile sind gruppiert; temporäre Dateien ausgeschlossen. Alte Dateien ohne gültige Metadaten gelten als vorhanden, nicht geprüft; unbekannte Dauer wird nicht erfunden. Keine Massendekodierung beim Öffnen. Öffnen, im Ordner zeigen und in anderem Format speichern sind möglich; Löschen und Momentmarken fehlen bewusst.
+
+Konvertieren erzeugt eine neue geprüfte Datei mit gewähltem Format, Bitrate und Ziel; das Original bleibt unverändert. Erneutes Kodieren erhöht die Qualität nicht. Bestehende Ziele und falsche Dateiendungen werden abgelehnt; WAV-Teile werden als ein PCM-Strom gelesen.
+
+Zusatzformate verwenden einen Encoder über WAV-Grenzen hinweg und eine begrenzte Warteschlange. Fehler führen zur Neuerstellung aus geprüftem WAV-PCM. Vollständige Dekodierung, maximal 250 ms Dauerabweichung, Flush und Umbenennen ohne Überschreiben erfolgen vor WAV-Löschung. Sitzungsprofile werden vor Aufnahmebeginn atomar festgehalten; alte Sitzungen ohne Profil bleiben MKV/AAC 192.
+
+## Build und Prüfungen
+
+Noch kein öffentliches Binärpaket. `Build-Launcher.ps1` unter Windows PowerShell 5.1 erzeugt `SoundLeaf.next.exe`. Für MKV muss ein kompatibles `tools/ffmpeg.exe` neben der EXE liegen; ausdrücklich gewähltes WAV benötigt keinen Encoder. Einen beschreibbaren Ordner verwenden; beim Umzug den gesamten Ordner mitnehmen und Autostart neu aktivieren.
+
+`Run-Checks.ps1` führt Build, synthetische Tests, Symbolprüfungen und echte MKV-/WAV-Loopback-Tests aus. Die letzten Tests zeichnen Systemaudio im separaten Ordner `Verification` auf. Für SoundLeaf-Builds sind Python und ein separates SDK nicht erforderlich.
 
 Praktisch nur auf einem Windows-Rechner geprüft. Stromausfall, voller echter Datenträger und mehrstündiger Dauerbetrieb wurden nicht getestet. Keine absolute Datensicherheitsgarantie. Bei Wechsel/Trennung des Ausgabegeräts eine neue Sitzung beginnen. Private Aufnahmen und persönliche Pfade nicht öffentlich teilen.
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.0 — SoundLeaf educational preview, 2026-10-01
+
+- Rename the application and executable; keep existing installation/recordings and shared single-instance protection.
+- Retain default MKV/AAC 192; add OGG/Opus 24 mono, MP3, M4A/AAC and ADTS AAC, per-format bitrates and immutable session profiles.
+- Stream additional formats through one bounded encoder across WAV segments; rebuild failed outputs from original PCM and verify before publication.
+- Add atomic profile/result metadata and profile-aware recovery compatible with intentional WAV completion.
+- Add leaf-themed tray panel, light/dark/system themes, immediate German/Russian/English selection and separate leaf executable emblem; existing status icons remain.
+- Add background recording library, safe save-folder selection and resaving existing recordings without modifying originals.
+- Expand codec, queue failure, corrupt metadata and panel rendering checks; retain all earlier storage/readiness/recovery checks.
+
 ## 2.3.0 — educational preview, 2026-10-01
 
 - Keep the green triangle fixed at the center of a thicker rounded saving arc; preserve 24 frames and 80 ms timing. Other state icons are unchanged.
