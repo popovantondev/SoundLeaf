@@ -342,6 +342,7 @@ namespace SoundLeaf
                 var info = new ProcessStartInfo(ffmpeg, ProfileExport.InputArguments(format) + profile.Arguments(format.Channels) + " " + MediaExport.Quote(partial));
                 info.UseShellExecute = false; info.CreateNoWindow = true;
                 info.RedirectStandardInput = true; info.RedirectStandardError = true;
+                info.StandardErrorEncoding = Encoding.UTF8;
                 var errors = new StringBuilder();
                 using (var p = new Process { StartInfo = info })
                 {
@@ -450,6 +451,7 @@ namespace SoundLeaf
             var info = new ProcessStartInfo(executable, arguments);
             info.UseShellExecute = false; info.CreateNoWindow = true;
             info.RedirectStandardOutput = true; info.RedirectStandardError = true;
+            info.StandardOutputEncoding = Encoding.UTF8; info.StandardErrorEncoding = Encoding.UTF8;
             using (var process = new Process())
             {
                 process.StartInfo = info;

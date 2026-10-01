@@ -136,6 +136,25 @@ namespace SoundLeaf
             {
                 Assert(TextCatalog.Complete, "Incomplete translations."); foreach (string lang in new[] { "ru", "en", "de" }) { TextCatalog.SetLanguage(lang); Assert(TextCatalog.T("settings") != "settings" && TextCatalog.T("conversionDone") != "conversionDone", "Missing translation."); } TextCatalog.SetLanguage("ru");
             });
+            check("UTF-8 diagnostics retain Cyrillic, accents and Unicode paths", delegate
+            {
+                string name = "Жёлтый лист — Grüße.wav";
+                var result = MediaExport.Run(ffmpeg, "-hide_banner -nostdin -i " + MediaExport.Quote(Path.Combine(root, name)), 3000);
+                Assert(result.ExitCode != 0 && result.Error.Contains(name) && result.Error.IndexOf('\uFFFD') < 0, "External UTF-8 diagnostic was corrupted.");
+                TextCatalog.SetLanguage("ru"); Assert(TextCatalog.T("settings") == "Настройки", "Cyrillic catalog corrupted.");
+                TextCatalog.SetLanguage("de"); Assert(TextCatalog.T("previous") == "Zurück", "German accents corrupted."); TextCatalog.SetLanguage("ru");
+            });
+            check("translation preserves codec words instead of replacing embedded labels", delegate
+            {
+                foreach (string lang in new[] { "ru", "de", "en" })
+                {
+                    TextCatalog.SetLanguage(lang);
+                    foreach (AudioOutputFormat format in Enum.GetValues(typeof(AudioOutputFormat))) { string label = new RecordingProfile(format, format == AudioOutputFormat.Opus ? 24 : 192).Label; Assert(TextCatalog.Translate(label) == label, "Profile words were translated internally."); }
+                    Assert(TextCatalog.Translate("mono monotonic someone AAC ffmpeg libopus libmp3lame") == "mono monotonic someone AAC ffmpeg libopus libmp3lame", "Short label changed technical text.");
+                    Assert(TextCatalog.Translate("on") == TextCatalog.T("on"), "Standalone label no longer translates.");
+                }
+                TextCatalog.SetLanguage("ru"); Assert(TextCatalog.Translate(" — saved and verified").Contains("сохранён"), "Known completion suffix no longer translates.");
+            });
         }
     }
 }

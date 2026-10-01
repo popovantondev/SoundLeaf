@@ -37,7 +37,7 @@ namespace SoundLeaf
             if (phase != null) phase(TextCatalog.T("message.74"));
             var errors = new StringBuilder();
             var start = new ProcessStartInfo(ffmpeg, InputArguments(first.Format) + profile.Arguments(first.Format.Channels) + " " + MediaExport.Quote(partial))
-            { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardError = true };
+            { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardError = true, StandardErrorEncoding = Encoding.UTF8 };
             using (var process = new Process { StartInfo = start })
             {
                 process.ErrorDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data != null) lock (errors) { if (errors.Length < 8192) errors.AppendLine(e.Data); } };
