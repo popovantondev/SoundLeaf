@@ -66,4 +66,6 @@ try {
         $checks++
     } finally { $bitmap.Dispose() }
 } finally { if ($embedded) { $embedded.Dispose() } }
-Write-Output "PASS $checks icon checks; 24 distinct animation frames."
+Add-Type -TypeDefinition (Get-Content -LiteralPath (Join-Path $folder 'tests/EmbeddedIconTests.cs') -Raw -Encoding UTF8)
+$checks += [SoundLeaf.EmbeddedIconTests]::Verify((Join-Path $folder 'SoundLeaf.next.exe'), (Join-Path $folder 'assets/SoundLeaf.ico'))
+Write-Output "PASS $checks icon checks; 24 distinct animation frames; all 8 EXE artwork resources match SoundLeaf.ico byte-for-byte."

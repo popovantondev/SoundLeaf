@@ -1,3 +1,4 @@
+param([switch]$NoLive)
 $ErrorActionPreference = 'Stop'
 $folder = $PSScriptRoot
 $shell = Join-Path $PSHOME 'powershell.exe'
@@ -5,15 +6,27 @@ foreach ($script in @('Build-Launcher.ps1','Run-Tests.ps1','Run-IconTests.ps1','
     & $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $folder $script)
     if ($LASTEXITCODE -ne 0) { throw "Failed: $script" }
 }
-foreach ($scenario in @('--verify-live','--verify-opus','--verify-wav-fallback')) {
-    $check = Start-Process -FilePath (Join-Path $folder 'SoundLeaf.next.exe') -ArgumentList $scenario -WindowStyle Hidden -PassThru
-    $watch = [Diagnostics.Stopwatch]::StartNew()
-    while (!$check.WaitForExit(1000)) {
-        if ($watch.Elapsed.TotalSeconds -gt 120) {
-            $check.Kill()
-            throw 'Live verification timed out; test artifacts retained.'
+if ($NoLive) { Write-Output 'PARTIAL PASS build, synthetic audio/storage/profile tests, icons and UI; genuine loopback deliberately omitted.'; exit 0 }
+$first = $false
+$liveGuard = New-Object Threading.Mutex($true, 'Local\PlayerCaptureSingle', [ref]$first)
+$fixture = $null
+try {
+    if (!$first) { throw 'Installed recorder is running. Live fixture deferred; stop/save/exit it before a complete verification.' }
+    Add-Type -TypeDefinition (Get-Content -LiteralPath (Join-Path $folder 'tests\LiveAudioFixture.cs') -Raw -Encoding UTF8)
+    $fixture = New-Object SoundLeaf.LiveAudioFixture
+    foreach ($scenario in @('--verify-live','--verify-opus','--verify-wav-fallback')) {
+        $check = Start-Process -FilePath (Join-Path $folder 'SoundLeaf.next.exe') -ArgumentList $scenario -WindowStyle Hidden -PassThru
+        $watch = [Diagnostics.Stopwatch]::StartNew()
+        while (!$check.WaitForExit(1000)) {
+            if ($watch.Elapsed.TotalSeconds -gt 120) {
+                $check.Kill()
+                throw 'Live verification timed out; test artifacts retained.'
+            }
         }
+        if ($check.ExitCode -ne 0) { throw "Live verification failed: $($check.ExitCode)" }
     }
-    if ($check.ExitCode -ne 0) { throw "Live verification failed: $($check.ExitCode)" }
+} finally {
+    if ($fixture) { $fixture.Dispose() }
+    if ($first) { $liveGuard.ReleaseMutex() }; $liveGuard.Dispose()
 }
-Write-Output 'PASS build, storage/readiness/profiles/WAV tests, icons, panel and real MKV/Opus/WAV loopback lifecycles.'
+Write-Output 'PASS build, storage/readiness/profiles/WAV tests, icons, panel and genuine MKV/Opus/WAV loopback lifecycles using an inaudible digital-silence renderer.'
