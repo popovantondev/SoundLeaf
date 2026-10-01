@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace SoundLeaf
 {
@@ -10,6 +11,7 @@ namespace SoundLeaf
     public static class SoundLeafIcons
     {
         public const int FrameCount = 24;
+        [DllImport("user32.dll")] private static extern bool DestroyIcon(IntPtr icon);
         private static readonly int[] Sizes = { 16, 20, 24, 32, 48, 64, 128, 256 };
         public static Bitmap Brand(int size)
         {
@@ -23,7 +25,7 @@ namespace SoundLeaf
                 leaf.AddBezier(19, 17, 31, 10, 42, 12, 56, 5);
                 leaf.AddBezier(56, 5, 54, 18, 58, 28, 48, 41);
                 leaf.AddBezier(48, 41, 39, 52, 23, 57, 12, 49); leaf.CloseFigure();
-                using (var shadow = new SolidBrush(Color.FromArgb(32, 7, 49, 24)))
+                if (size > 48) using (var shadow = new SolidBrush(Color.FromArgb(32, 7, 49, 24)))
                 { g.TranslateTransform(1, 1.5f); g.FillPath(shadow, leaf); g.TranslateTransform(-1, -1.5f); }
                 using (var fill = new PathGradientBrush(leaf))
                 {
@@ -36,18 +38,21 @@ namespace SoundLeaf
                 using (var shade = new GraphicsPath())
                 using (var brush = new SolidBrush(Color.FromArgb(46, 11, 69, 32)))
                 { shade.AddBezier(11, 51, 31, 42, 39, 23, 56, 5); shade.AddLine(56, 5, 63, 60); shade.AddLine(63, 60, 11, 60); shade.CloseFigure(); g.FillPath(brush, shade); }
-                using (var veins = new Pen(Color.FromArgb(116, 173, 203, 110), size <= 24 ? .75f : .6f))
+                using (var veins = new Pen(Color.FromArgb(size <= 48 ? 210 : 150, 178, 205, 115), size <= 48 ? 48f / size : .8f))
                 {
                     veins.StartCap = veins.EndCap = LineCap.Round;
                     g.DrawBezier(veins, 12, 50, 29, 41, 40, 20, 54, 8);
                     if (size >= 24)
                     {
                         g.DrawBezier(veins, 21, 44, 18, 35, 15, 29, 18, 22);
-                        g.DrawBezier(veins, 29, 35, 24, 27, 23, 23, 25, 18);
-                        g.DrawBezier(veins, 38, 24, 33, 20, 32, 17, 33, 14);
                         g.DrawBezier(veins, 22, 43, 31, 45, 39, 43, 47, 39);
                         g.DrawBezier(veins, 32, 31, 40, 32, 46, 30, 52, 26);
-                        g.DrawBezier(veins, 42, 19, 47, 20, 51, 17, 54, 14);
+                        if (size >= 32) g.DrawBezier(veins, 29, 35, 24, 27, 23, 23, 25, 18);
+                        if (size > 48)
+                        {
+                            g.DrawBezier(veins, 38, 24, 33, 20, 32, 17, 33, 14);
+                            g.DrawBezier(veins, 42, 19, 47, 20, 51, 17, 54, 14);
+                        }
                     }
                     if (size >= 64)
                     {
@@ -56,10 +61,22 @@ namespace SoundLeaf
                     }
                 }
                 g.Restore(saved);
-                using (var stem = new Pen(Color.FromArgb(131, 131, 58), 1.3f))
+                if (size <= 48) using (var edge = new Pen(Color.FromArgb(170, 23, 84, 35), 35.2f / size)) g.DrawPath(edge, leaf);
+                using (var stem = new Pen(Color.FromArgb(110, 121, 45), size <= 48 ? 48f / size : 1.3f))
                 { stem.StartCap = stem.EndCap = LineCap.Round; g.DrawBezier(stem, 7, 57, 9, 53, 13, 49, 20, 45); }
             }
             return bitmap;
+        }
+
+        public static Icon CreateBrand(int size)
+        {
+            if (size < 8 || size > 256) throw new ArgumentOutOfRangeException("size");
+            using (var bitmap = Brand(size))
+            {
+                IntPtr handle = bitmap.GetHicon();
+                try { using (var native = Icon.FromHandle(handle)) return (Icon)native.Clone(); }
+                finally { DestroyIcon(handle); }
+            }
         }
 
         public static Bitmap Render(int state, int size, int frame)
