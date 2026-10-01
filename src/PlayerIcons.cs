@@ -32,7 +32,13 @@ namespace Player
                 using (var rim = new Pen(Color.FromArgb(225, 255, 255, 255), 4))
                 using (var shape = new GraphicsPath())
                 {
-                    if (state == 0 || state == 4)
+                    if (state == 4)
+                    {
+                        shape.AddLines(new[] { new PointF(23, 20), new PointF(44, 30),
+                            new PointF(44, 34), new PointF(23, 44), new PointF(20, 42), new PointF(20, 22) });
+                        shape.CloseFigure();
+                    }
+                    else if (state == 0)
                     {
                         float inset = state == 4 ? 11 : 0;
                         shape.AddLines(new[] { new PointF(17 + inset / 2, 9 + inset),
@@ -65,16 +71,16 @@ namespace Player
                     }
                     if (state == 4)
                     {
-                        using (var track = new Pen(Color.FromArgb(100, 124, 145, 138), 5))
-                        using (var arc = new Pen(Color.FromArgb(25, 204, 129), 5))
-                        using (var outline = new Pen(Color.FromArgb(215, 255, 255, 255), 8))
+                        using (var track = new Pen(Color.FromArgb(100, 124, 145, 138), 7.5f))
+                        using (var arc = new Pen(Color.FromArgb(25, 204, 129), 7.5f))
+                        using (var outline = new Pen(Color.FromArgb(215, 255, 255, 255), 10.5f))
                         {
                             arc.StartCap = arc.EndCap = LineCap.Round;
                             outline.StartCap = outline.EndCap = LineCap.Round;
-                            g.DrawEllipse(track, 6, 6, 52, 52);
+                            g.DrawEllipse(track, 7, 7, 50, 50);
                             float angle = -90 + frame * 360f / FrameCount;
-                            g.DrawArc(outline, 6, 6, 52, 52, angle, 110);
-                            g.DrawArc(arc, 6, 6, 52, 52, angle, 110);
+                            g.DrawArc(outline, 7, 7, 50, 50, angle, 110);
+                            g.DrawArc(arc, 7, 7, 50, 50, angle, 110);
                         }
                     }
                 }

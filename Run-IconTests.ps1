@@ -36,6 +36,26 @@ try {
         finally { $icon.Dispose() }
     }
 } finally { $sha.Dispose() }
+$reference = [Player.PlayerIcons]::Render(4,64,0)
+try {
+    $left = 64; $right = -1
+    foreach ($x in 16..48) { if ($reference.GetPixel($x,32).A -gt 0) { $left = [Math]::Min($left,$x); $right = [Math]::Max($right,$x) } }
+    if ([Math]::Abs(($left + $right + 1) / 2.0 - 32) -gt 0.5) { throw 'Saving triangle is not centered.' }
+    $checks++
+    foreach ($frame in 0..23) {
+        $bitmap = [Player.PlayerIcons]::Render(4,64,$frame)
+        try {
+            foreach ($y in 20..44) { foreach ($x in 20..44) {
+                if ($bitmap.GetPixel($x,$y).ToArgb() -ne $reference.GetPixel($x,$y).ToArgb()) { throw 'Central triangle moves during saving.' }
+            } }
+            foreach ($x in 0..63) {
+                if ($bitmap.GetPixel($x,0).A -ne 0 -or $bitmap.GetPixel($x,63).A -ne 0 -or
+                    $bitmap.GetPixel(0,$x).A -ne 0 -or $bitmap.GetPixel(63,$x).A -ne 0) { throw 'Saving ring touches canvas edge.' }
+            }
+            $checks++
+        } finally { $bitmap.Dispose() }
+    }
+} finally { $reference.Dispose() }
 $embedded = [System.Drawing.Icon]::ExtractAssociatedIcon((Join-Path $folder 'Player.next.exe'))
 try {
     if ($embedded -eq $null) { throw 'Executable has no embedded icon.' }
