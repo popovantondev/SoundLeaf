@@ -16,6 +16,10 @@ SoundLeaf 3.0.2, Windows x64, Windows PowerShell 5.1.
 
 The configured runner uses its complete command (without `-NoLive`). Local installation is a separate guarded step, not inferred from a passing test command. Earlier baseline results below remain historical evidence; private reports preserve unsuccessful and partial attempts as well as the final pass.
 
+## Local installation — completed at 19:49 CEST
+
+The checked `3.0.2.0` executable was atomically installed at `C:\Users\Public\Player\SoundLeaf.exe` after the user exited the previous version. Its SHA-256 matches the full-check receipt above, all eight installed icon resources match the installed ICO, and the original 3.0.1 executable is preserved in `Backups\BeforeSoundLeaf302-20261001-194935-595834` with its original hash. FFmpeg is unchanged. Before/after listings of `Recordings` and `State` match in names, sizes and modification times; these directories and startup registry entries were not deployment targets. This comparison is not a separate byte-level audit of every recording. The application was not automatically relaunched, since ordinary launch starts a new recording after preflight. No GitHub upload was performed.
+
 ## Previous installed 3.0.1 baseline
 
 - Full `Run-Checks.ps1` executed through the local MegaProg verification runner: exit code 0, `ok=true`, no timeout.
