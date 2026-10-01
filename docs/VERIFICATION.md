@@ -1,12 +1,14 @@
 # Local verification — 2026-10-01
 
-SoundLeaf 3.0.0 educational preview, Windows x64, Windows PowerShell 5.1.
+SoundLeaf 3.0.1 educational preview, Windows x64, Windows PowerShell 5.1.
 
 - Full `Run-Checks.ps1` executed through the local MegaProg verification runner: exit code 0, `ok=true`, no timeout.
 - Build and embedded leaf emblem: passed; installed encoder matches the encoder used for verification.
-- 64 core storage/session/recovery/preflight/profile checks: passed, retaining the earlier 48 cases.
+- 66 core storage/session/recovery/preflight/profile/text checks: passed, retaining all earlier audio cases. UTF-8 encoder diagnostics retain Cyrillic, German accents and a Unicode filename; translated labels never alter `mono` or other codec words.
 - 97 icon checks: passed, including 24 distinct saving frames, fixed centered triangle and clear outer borders. Other tray states remain unchanged.
-- 138 panel assertions and 54 renders: German/Russian/English, light/dark, emulated 100/150/200% font/control scales, all three pages. Checks include nonblank output, root bounds, keyboard-focusable controls, Escape/focus-loss hiding, no taskbar button and placement near four edges in three work areas including negative coordinates and a small screen. Representative renders were visually inspected.
+- 28,405 UI assertions and 180 client-panel renders: German/Russian/English, light/dark, emulated 100/150/200% scales, 520/260 logical heights, plus layout checks at 350. Every visible child is checked against its parent and root, interactive siblings for overlap, text containers for line height, and all pages for absence of scrollbars. Short settings groups, long paths/warnings, explicit WAV availability, pagination, conversion and lowercase selectors are covered. Client-only bitmap capture excludes the synthetic non-client caption that could cover text during growth. Representative renders were visually inspected.
+- Real native checks on the current desktop: shell lookup of a newly registered notification icon, monitor DPI agreement, first/repeated programmatic opening, work-area containment, dropdown focus restoration, Enter/Space/Tab/arrows, accessible popup/child links, upward opening, auto-closed-popup disposal, Escape hierarchy, actual focus transfer to a separate test window and animation completion/cancellation. Windows Forms tests now run a real message loop through shutdown.
+- Two real compositor captures on a black demonstration backdrop, light/dark: corners contain intermediate blended pixels, no window-region mask, no caption or taskbar button. These are screen captures, not DrawToBitmap simulations.
 - Genuine system loopback MKV and Opus: record → pause → resume → save → restart → save → exit; exit code 0.
 - Genuine explicit WAV fallback: failed preflight opens no capture; WAV selection records and saves verified parts.
 - Stopped UI checks: final exists, open command enabled, test folder has no pending session and saving animation has stopped.
@@ -25,4 +27,4 @@ Earlier checks cover unavailable folder, low/unknown free space, missing/invalid
 
 Machine-generated runner evidence is stored locally in ignored `.ai-dev/verification.json` and `.ai-dev/verify-0.log`; private synthetic/live artifacts and panel renders are under ignored `Verification`. They are not included in public source packages. This report is local verification, not a public release or clean-machine certification.
 
-Physical power loss, a full real disk, clean-machine deployment, many-hour endurance, Explorer restart and real multi-monitor DPI switching remain untested. Scale/placement tests simulate combinations; they do not claim every physical monitor was exercised. The application is system-DPI-aware; a changed Windows scaling configuration can require restarting it. Full FFmpeg decoding cannot recover sound that was never captured.
+Physical power loss, a full real disk, clean-machine deployment, many-hour endurance, Explorer restart and real multi-monitor DPI switching remain untested. Scale/placement tests simulate combinations; they do not claim every physical monitor or expanded hidden-tray configuration was exercised. During simulated rendering, automatic focus hiding is suppressed to avoid unrelated desktop activity invalidating a bitmap; real focus checks use an ordinary panel. The manifest is verified as Per-Monitor V2; mixed-monitor changes are implemented but not physically exercised here. Tray-click handling is checked through its toggle path, not a physical mouse test. The disabled-animation path is exercised without changing the user's Windows setting. Full FFmpeg decoding cannot recover sound that was never captured.

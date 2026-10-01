@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.0.1 — tray panel refinement, 2026-10-01
+
+- Anchor the manually positioned panel to the shell's notification-icon rectangle; retain a saved-click fallback and clamp all sides to the monitor work area.
+- Declare Per-Monitor V2 in the manifest; use one explicit geometry/font scale and reposition on DPI changes.
+- Add a cancellable 200 ms cached-bitmap growth animation, respecting Windows animation preferences.
+- Replace scrolling with compact settings groups and height-dependent recording pages; keep folder and codec details in tooltips and errors in fixed banners.
+- Add rounded accessible selectors with bounded upward/downward popups, keyboard navigation and two-stage Escape handling; display lowercase format names.
+- Replace the decorative branch and flat brand leaf with one natural vector emblem; preserve all recording/saving state icons and audio behavior.
+- Let the Windows 11 compositor smooth window corners instead of an aliased region; reserve sufficient text-line height at enlarged scales.
+- Read source and external encoder diagnostics explicitly as UTF-8; preserve Cyrillic and German accents in errors and paths.
+- Expand child-boundary, overlap, short-screen, native anchor, popup and animation checks; correct the UI harness to use a real Windows Forms message loop through shutdown.
+
 ## 3.0.0 — SoundLeaf educational preview, 2026-10-01
 
 - Rename the application and executable; keep existing installation/recordings and shared single-instance protection.
