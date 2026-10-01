@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.3 — responsive thin contour and clear compact meter, 2026-10-01
+
+- Replace the large filled-looking level history with a 1.6 logical-pixel unfilled contour; retain 95% expressiveness while reducing visual expansion of faint background levels.
+- Update level telemetry every 50 ms, expire stale PCM levels after 150 ms, and use a fast 14 ms attack / 35 ms release envelope so old word peaks cannot hold the whole contour up.
+- Show five clearly separated current-level bars in the live recording card instead of a tiny scrolling history. The drawing is not a frequency spectrum; it never invents activity during silence.
+- Keep historical signal confirmation, capture/device checks, PCM storage and encoder settings unchanged. Add quiet-gap, missing-packet, pause, stroke-coverage and compact-bar checks.
+
 ## 3.0.2 — real audio levels and smooth tray motion, 2026-10-01
 
 - Add read-only peak/RMS monitoring and measured level bars at 95% visual expressiveness; silence/expired packets/pause show a stationary line without changing PCM or encoding.
