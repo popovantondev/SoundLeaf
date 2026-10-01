@@ -1,0 +1,15 @@
+# Private runtime data and test artifacts
+Recordings/
+Backups/
+logs/
+Verification/
+.ai-dev/
+# Built executables and external encoder
+*.exe
+*.pdb
+tools/
+bin/
+obj/
+.vs/
+*.user
+*.zip
