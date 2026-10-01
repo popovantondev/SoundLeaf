@@ -16,13 +16,48 @@ namespace SoundLeaf
             var bitmap = new Bitmap(size, size, PixelFormat.Format32bppArgb);
             using (var g = Graphics.FromImage(bitmap))
             using (var leaf = new GraphicsPath())
-            using (var fill = new LinearGradientBrush(new Point(0, 0), new Point(64, 64), Color.FromArgb(126, 222, 149), Color.FromArgb(12, 105, 66)))
-            using (var vein = new Pen(Color.FromArgb(237, 255, 239), 2.4f))
             {
-                g.SmoothingMode = SmoothingMode.AntiAlias; g.ScaleTransform(size / 64f, size / 64f);
-                leaf.AddBezier(10, 49, 3, 23, 25, 8, 56, 8); leaf.AddBezier(56, 8, 57, 38, 39, 59, 10, 49); leaf.CloseFigure();
-                g.FillPath(fill, leaf); vein.StartCap = vein.EndCap = LineCap.Round;
-                g.DrawLine(vein, 10, 54, 46, 20); g.DrawLine(vein, 24, 40, 24, 27); g.DrawLine(vein, 33, 33, 46, 34);
+                g.SmoothingMode = SmoothingMode.AntiAlias; g.PixelOffsetMode = PixelOffsetMode.HighQuality; g.ScaleTransform(size / 64f, size / 64f);
+                // A curved stem, uneven silhouette and translucent veins retain a natural small-size shape.
+                leaf.AddBezier(12, 49, 5, 38, 8, 23, 19, 17);
+                leaf.AddBezier(19, 17, 31, 10, 42, 12, 56, 5);
+                leaf.AddBezier(56, 5, 54, 18, 58, 28, 48, 41);
+                leaf.AddBezier(48, 41, 39, 52, 23, 57, 12, 49); leaf.CloseFigure();
+                using (var shadow = new SolidBrush(Color.FromArgb(32, 7, 49, 24)))
+                { g.TranslateTransform(1, 1.5f); g.FillPath(shadow, leaf); g.TranslateTransform(-1, -1.5f); }
+                using (var fill = new PathGradientBrush(leaf))
+                {
+                    fill.CenterPoint = new PointF(28, 29); fill.CenterColor = Color.FromArgb(111, 179, 61);
+                    fill.SurroundColors = new[] { Color.FromArgb(28, 99, 40) }; g.FillPath(fill, leaf);
+                }
+                var saved = g.Save(); g.SetClip(leaf);
+                using (var highlight = new LinearGradientBrush(new PointF(14, 13), new PointF(45, 50), Color.FromArgb(100, 206, 233, 133), Color.FromArgb(0, 68, 153, 45)))
+                    g.FillRectangle(highlight, 4, 4, 56, 56);
+                using (var shade = new GraphicsPath())
+                using (var brush = new SolidBrush(Color.FromArgb(46, 11, 69, 32)))
+                { shade.AddBezier(11, 51, 31, 42, 39, 23, 56, 5); shade.AddLine(56, 5, 63, 60); shade.AddLine(63, 60, 11, 60); shade.CloseFigure(); g.FillPath(brush, shade); }
+                using (var veins = new Pen(Color.FromArgb(116, 173, 203, 110), size <= 24 ? .75f : .6f))
+                {
+                    veins.StartCap = veins.EndCap = LineCap.Round;
+                    g.DrawBezier(veins, 12, 50, 29, 41, 40, 20, 54, 8);
+                    if (size >= 24)
+                    {
+                        g.DrawBezier(veins, 21, 44, 18, 35, 15, 29, 18, 22);
+                        g.DrawBezier(veins, 29, 35, 24, 27, 23, 23, 25, 18);
+                        g.DrawBezier(veins, 38, 24, 33, 20, 32, 17, 33, 14);
+                        g.DrawBezier(veins, 22, 43, 31, 45, 39, 43, 47, 39);
+                        g.DrawBezier(veins, 32, 31, 40, 32, 46, 30, 52, 26);
+                        g.DrawBezier(veins, 42, 19, 47, 20, 51, 17, 54, 14);
+                    }
+                    if (size >= 64)
+                    {
+                        veins.Color = Color.FromArgb(45, 180, 213, 124); veins.Width = .35f;
+                        for (int i = 0; i < 4; i++) { g.DrawLine(veins, 18 + i * 5, 36 - i * 5, 12 + i * 6, 30 - i * 5); g.DrawLine(veins, 29 + i * 5, 42 - i * 5, 31 + i * 6, 48 - i * 5); }
+                    }
+                }
+                g.Restore(saved);
+                using (var stem = new Pen(Color.FromArgb(131, 131, 58), 1.3f))
+                { stem.StartCap = stem.EndCap = LineCap.Round; g.DrawBezier(stem, 7, 57, 9, 53, 13, 49, 20, 45); }
             }
             return bitmap;
         }

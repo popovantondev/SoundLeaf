@@ -12,7 +12,7 @@ namespace SoundLeaf
         internal static string Language { get { return language; } }
         internal static void SetLanguage(string value) { language = value == "de" || value == "ru" ? value : "en"; }
         internal static string T(string id) { string[] value; return entries.TryGetValue(id, out value) ? value[language == "ru" ? 0 : language == "de" ? 2 : 1] : id; }
-        internal static string Translate(string text) { return string.IsNullOrEmpty(text) ? text : known.Replace(text, delegate(Match m) { return T(ids[m.Value]); }); }
+        internal static string Translate(string text) { if (string.IsNullOrEmpty(text)) return text; string id; if (ids.TryGetValue(text, out id)) return T(id); return known.Replace(text, delegate(Match m) { return T(ids[m.Value]); }); }
         internal static bool Complete { get { foreach (var value in entries.Values) if (value.Length != 3 || Array.Exists(value, string.IsNullOrEmpty)) return false; return true; } }
         private static void Add(string id, string ru, string en, string de) { entries.Add(id, new[] { ru, en, de }); }
         static TextCatalog()
@@ -209,9 +209,35 @@ namespace SoundLeaf
             Add("diagnostic.33", "Устройство вывода отключено.", "Output device disconnected.", "Ausgabegerät wurde getrennt.");
             Add("diagnostic.34", "Устройство вывода сменилось. Начните новую запись для нового устройства.", "Output device changed. Start a new recording for the new device.", "Ausgabegerät gewechselt. Neue Aufnahme für das neue Gerät starten.");
             Add("diagnostic.35", "Нет аудиоданных; оставлен временный WAV.", "No audio data; temporary WAV retained.", "Keine Audiodaten; temporäre WAV bleibt erhalten.");
+            Add("startShort", "Начать", "Start", "Start");
+            Add("pauseShort", "Пауза", "Pause", "Pause");
+            Add("stopShort", "Стоп", "Stop", "Stopp");
+            Add("resumeShort", "Продолжить", "Resume", "Fortsetzen");
+            Add("recoverShort", "Собрать", "Recover", "Retten");
+            Add("exportShort", "Создать файл", "Create file", "Neue Datei");
+            Add("logShort", "Журнал", "Log", "Protokoll");
+            Add("wavOnlyShort", "Только WAV", "WAV only", "Nur WAV");
+            Add("captureGroup", "Запись", "Audio", "Audio");
+            Add("filesGroup", "Файлы", "Files", "Dateien");
+            Add("appearanceGroup", "Оформление", "Appearance", "Design");
+            Add("profileInfo", "ⓘ Параметры звука", "ⓘ Audio parameters", "ⓘ Audioparameter");
+            Add("on", "включён", "on", "an");
+            Add("off", "выключен", "off", "aus");
+            Add("previous", "Назад", "Previous", "Zurück");
+            Add("next", "Далее", "Next", "Weiter");
+            Add("revealShort", "В папке", "Folder", "Ordner");
+            Add("convertShort", "Другой формат", "Convert", "Konvertieren");
+            Add("conversionCompact", "Исходник сохранится. Качество не повысится.", "Original retained. Quality will not improve.", "Original bleibt. Qualität wird nicht verbessert.");
             foreach (var entry in entries) foreach (string value in entry.Value) if (!ids.ContainsKey(value)) ids.Add(value, entry.Key);
-            var values = new List<string>(ids.Keys); values.Sort(delegate(string a, string b) { return b.Length.CompareTo(a.Length); });
-            for (int i = 0; i < values.Count; i++) values[i] = Regex.Escape(values[i]);
+            // Short UI labels are translated only as complete strings, never inside diagnostic text.
+            var values = new List<string>(); foreach (string value in ids.Keys) if (value.Length > 3) values.Add(value);
+            values.Sort(delegate(string a, string b) { return b.Length.CompareTo(a.Length); });
+            for (int i = 0; i < values.Count; i++)
+            {
+                string value = values[i];
+                values[i] = (char.IsLetterOrDigit(value[0]) ? @"(?<![\p{L}\p{N}_])" : "") + Regex.Escape(value) +
+                    (char.IsLetterOrDigit(value[value.Length - 1]) ? @"(?![\p{L}\p{N}_])" : "");
+            }
             known = new Regex(string.Join("|", values.ToArray()), RegexOptions.CultureInvariant);
         }
     }
