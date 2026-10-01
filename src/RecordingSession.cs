@@ -9,6 +9,8 @@ using System.Threading;
 namespace Player
 {
     internal enum RecordState { Starting, Recording, Paused, Saving, Stopped, Faulted }
+    internal enum RecordingMode { MkvWithWavBackup, WavOnly }
+    internal enum FinalResultKind { None, Mkv, WavParts }
     internal sealed class SessionUpdate
     {
         internal RecordState State;
@@ -16,6 +18,11 @@ namespace Player
         internal double Seconds;
         internal bool HeardSignal;
         internal string FinalPath;
+        internal string[] FinalPaths = new string[0];
+        internal FinalResultKind ResultKind;
+        internal RecordingMode Mode;
+        internal bool CanRecordWavOnly;
+        internal string Warning;
         internal SessionUpdate(RecordState state, string message, double seconds, bool signal)
         { State = state; Message = message; Seconds = seconds; HeardSignal = signal; }
     }
@@ -43,13 +50,30 @@ namespace Player
         private int stop, pause;
         private readonly Thread worker;
         private readonly Func<IAudioSource> sourceFactory;
+        internal readonly RecordingMode Mode;
+        private readonly string playerRoot;
+        private readonly long segmentBytes;
+        private readonly Func<PreflightResult> preflight;
+        private string preflightWarning;
+        private string[] finalPaths = new string[0];
+        private FinalResultKind resultKind;
         internal RecordingSession(string folder, string ffmpeg, AppLog log, Action<SessionUpdate> update)
-            : this(folder, ffmpeg, log, update, delegate { return new AudioCapture(); }) { }
+            : this(folder, ffmpeg, log, update, RecordingMode.MkvWithWavBackup) { }
+        internal RecordingSession(string folder, string ffmpeg, AppLog log, Action<SessionUpdate> update, RecordingMode mode)
+            : this(folder, ffmpeg, log, update, delegate { return new AudioCapture(); }, mode,
+                AppDomain.CurrentDomain.BaseDirectory, 256L * 1024 * 1024,
+                delegate { return StartupChecks.Check(folder, ffmpeg, mode); }) { }
         internal RecordingSession(string folder, string ffmpeg, AppLog log, Action<SessionUpdate> update,
             Func<IAudioSource> sourceFactory)
+            : this(folder, ffmpeg, log, update, sourceFactory, RecordingMode.MkvWithWavBackup,
+                AppDomain.CurrentDomain.BaseDirectory, 256L * 1024 * 1024, null) { }
+        internal RecordingSession(string folder, string ffmpeg, AppLog log, Action<SessionUpdate> update,
+            Func<IAudioSource> sourceFactory, RecordingMode mode, string playerRoot, long segmentBytes,
+            Func<PreflightResult> preflight)
         {
             this.folder = folder; this.ffmpeg = ffmpeg; this.log = log; this.update = update;
             this.sourceFactory = sourceFactory;
+            Mode = mode; this.playerRoot = playerRoot; this.segmentBytes = segmentBytes; this.preflight = preflight;
             worker = new Thread(Run);
             worker.SetApartmentState(ApartmentState.MTA);
             worker.Name = "Player audio and storage";
@@ -60,10 +84,11 @@ namespace Player
         internal void Pause(bool value) { Interlocked.Exchange(ref pause, value ? 1 : 0); Signal(); }
         internal void Stop() { Interlocked.Exchange(ref stop, 1); Signal(); }
         private void Signal() { try { wake.Set(); } catch (ObjectDisposedException) { } }
-        private void Publish(RecordState state, string text, double duration, bool signal, string finalPath = null)
+        private void Publish(RecordState state, string text, double duration, bool signal, string finalPath = null, bool canWav = false)
         {
             log.TryWrite(state + " " + text);
-            update(new SessionUpdate(state, text, duration, signal) { FinalPath = finalPath });
+            update(new SessionUpdate(state, text, duration, signal) { FinalPath = finalPath, FinalPaths = finalPaths,
+                ResultKind = resultKind, Mode = Mode, CanRecordWavOnly = canWav, Warning = preflightWarning });
         }
         private void Run()
         {
@@ -73,6 +98,18 @@ namespace Player
             string failure = null;
             double seconds = 0;
             string finalPath = null;
+            if (preflight != null)
+            {
+                Publish(RecordState.Starting, "Проверка перед записью", 0, false);
+                PreflightResult readiness;
+                try { readiness = preflight(); }
+                catch (Exception error) { readiness = new PreflightResult { Error = error.Message }; }
+                preflightWarning = readiness.Warning;
+                if (Interlocked.CompareExchange(ref stop, 0, 0) != 0)
+                { wake.Dispose(); Publish(RecordState.Stopped, "Запуск отменён; запись не начата", 0, false); return; }
+                if (!readiness.CanRecord)
+                { wake.Dispose(); Publish(RecordState.Faulted, readiness.Error, 0, false, null, readiness.CanRecordWavOnly); return; }
+            }
             try
             {
                 using (var audio = sourceFactory())
@@ -80,7 +117,7 @@ namespace Player
                     format = audio.Format;
                     log.Write("Device " + audio.DeviceId + "; " + format.SampleRate + " Hz; " +
                         format.Channels + " channels; " + format.Bits + " bits; float=" + format.Float);
-                    sink = new SegmentedWave(folder, format, 256L * 1024 * 1024, ffmpeg);
+                    sink = new SegmentedWave(folder, format, segmentBytes, Mode == RecordingMode.WavOnly ? null : ffmpeg);
                     timeline = new AudioTimeline(sink, format);
                     timeline.Resume(AudioCapture.Clock100ns);
                     audio.Start();
@@ -120,7 +157,7 @@ namespace Player
                             sink.Checkpoint();
                             update(new SessionUpdate(isPaused ? RecordState.Paused : RecordState.Recording,
                                 isPaused ? "Пауза" : (timeline.HeardSignal ? "Запись; звук поступал" : "Запись; пока тишина"),
-                                sink.Frames / (double)format.SampleRate, timeline.HeardSignal));
+                                sink.Frames / (double)format.SampleRate, timeline.HeardSignal) { Mode = Mode, Warning = preflightWarning });
                             lastCheck = now;
                         }
                         wake.WaitOne(10);
@@ -145,40 +182,52 @@ namespace Player
                     seconds = sink.Frames / (double)format.SampleRate;
                     sink.Complete();
                     if (sink.Completed.Count == 0) throw new IOException("Аудиоданные не получены. Временный WAV оставлен.");
-                    foreach (var encoder in sink.Encoders)
+                    if (Mode == RecordingMode.WavOnly)
                     {
-                        string wav = encoder.Wav;
-                        log.TryWrite("WAV saved: " + wav);
-                        encoder.FinishAndVerify(delegate(string phase) { Publish(RecordState.Saving, phase, seconds, timeline.HeardSignal); });
-                        log.TryWrite("MKV verified: " + Path.ChangeExtension(wav, ".mkv"));
-                    }
-                    if (sink.Completed.Count > 1)
-                    {
-                        finalPath = MediaExport.ConcatParts(sink.Completed, ffmpeg,
-                            delegate(string phase) { Publish(RecordState.Saving, phase, seconds, timeline.HeardSignal); });
-                        log.TryWrite("Combined MKV verified: " + finalPath);
-                    }
-                    else finalPath = Path.ChangeExtension(sink.Completed[0], ".mkv");
-                    if (failure == null && !timeline.Discontinuity)
-                    {
-                        foreach (string wav in sink.Completed)
-                        {
-                            File.Delete(wav);
-                            log.TryWrite("Verified backup WAV removed: " + wav);
-                        }
-                        if (sink.Completed.Count > 1)
-                            foreach (string wav in sink.Completed)
-                            {
-                                string part = Path.ChangeExtension(wav, ".mkv");
-                                File.Delete(part);
-                                log.TryWrite("Verified MKV part removed: " + part);
-                            }
+                        Publish(RecordState.Saving, "Проверка WAV и фиксация результата", seconds, timeline.HeardSignal);
+                        foreach (string wav in sink.Completed) DurableWave.ReadInfo(wav, false);
+                        if (failure == null) WavReceipt.Write(playerRoot, sink.Completed);
+                        finalPaths = sink.Completed.ToArray();
+                        finalPath = finalPaths[0];
+                        resultKind = FinalResultKind.WavParts;
                     }
                     else
                     {
-                        MediaExport.ArchiveParts(sink.Completed, AppDomain.CurrentDomain.BaseDirectory,
-                            sink.Completed.Count > 1);
-                        log.TryWrite("Backup parts archived after audio discontinuity or capture fault.");
+                        foreach (var encoder in sink.Encoders)
+                        {
+                            string wav = encoder.Wav;
+                            log.TryWrite("WAV saved: " + wav);
+                            encoder.FinishAndVerify(delegate(string phase) { Publish(RecordState.Saving, phase, seconds, timeline.HeardSignal); });
+                            log.TryWrite("MKV verified: " + Path.ChangeExtension(wav, ".mkv"));
+                        }
+                        if (sink.Completed.Count > 1)
+                        {
+                            finalPath = MediaExport.ConcatParts(sink.Completed, ffmpeg,
+                                delegate(string phase) { Publish(RecordState.Saving, phase, seconds, timeline.HeardSignal); });
+                            log.TryWrite("Combined MKV verified: " + finalPath);
+                        }
+                        else finalPath = Path.ChangeExtension(sink.Completed[0], ".mkv");
+                        finalPaths = new[] { finalPath }; resultKind = FinalResultKind.Mkv;
+                        if (failure == null && !timeline.Discontinuity)
+                        {
+                            foreach (string wav in sink.Completed)
+                            {
+                                File.Delete(wav);
+                                log.TryWrite("Verified backup WAV removed: " + wav);
+                            }
+                            if (sink.Completed.Count > 1)
+                                foreach (string wav in sink.Completed)
+                                {
+                                    string part = Path.ChangeExtension(wav, ".mkv");
+                                    File.Delete(part);
+                                    log.TryWrite("Verified MKV part removed: " + part);
+                                }
+                        }
+                        else
+                        {
+                            MediaExport.ArchiveParts(sink.Completed, playerRoot, sink.Completed.Count > 1);
+                            log.TryWrite("Backup parts archived after audio discontinuity or capture fault.");
+                        }
                     }
                 }
                 else if (failure == null) failure = "Не удалось открыть аудиоустройство.";
@@ -198,7 +247,9 @@ namespace Player
             if (timeline != null && timeline.Discontinuity)
                 warning = "Windows сообщила о разрыве аудиопотока; сохранённый звук стоит проверить.";
             Publish(failure == null ? RecordState.Stopped : RecordState.Faulted,
-                failure ?? warning ?? (signal ? "MKV сохранён и проверен" : "Сохранено; за время записи был только тихий сигнал или тишина"),
+                failure ?? (Mode == RecordingMode.WavOnly ? "WAV сохранён; MKV не создавался. Частей: " + finalPaths.Length +
+                    (warning == null ? "" : Environment.NewLine + warning) :
+                    warning ?? (signal ? "MKV сохранён и проверен" : "Сохранено; за время записи был только тихий сигнал или тишина")),
                 seconds, signal, finalPath);
         }
     }

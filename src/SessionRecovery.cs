@@ -16,11 +16,12 @@ namespace Player
         private static readonly Regex Name = new Regex(
             @"^(?<stem>\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}-[a-f0-9]{12})-(?<part>\d{3,})\.(partial\.)?wav$",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-        internal static List<PendingSession> Find(string root)
+        internal static List<PendingSession> Find(string root, string playerRoot = null)
         {
             var groups = new Dictionary<string, PendingSession>(StringComparer.OrdinalIgnoreCase);
             Scan(root, groups);
             var result = new List<PendingSession>(groups.Values);
+            result.RemoveAll(delegate(PendingSession group) { return WavReceipt.IsCompleted(group, playerRoot); });
             result.Sort(delegate(PendingSession a, PendingSession b) { return string.CompareOrdinal(a.Stem, b.Stem); });
             return result;
         }
@@ -45,6 +46,7 @@ namespace Player
         }
         internal static string Recover(PendingSession session, string playerRoot, string ffmpeg, Action<string> phase)
         {
+            if (WavReceipt.IsCompleted(session, playerRoot)) throw new IOException("Эта WAV-сессия намеренно завершена; автоматическое восстановление запрещено.");
             if (session.Duplicate || session.Parts.Count == 0) throw new IOException("Неоднозначный набор частей; исходники оставлены.");
             int expected = 1;
             foreach (int part in session.Parts.Keys)

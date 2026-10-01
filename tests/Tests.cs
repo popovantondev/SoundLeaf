@@ -66,6 +66,9 @@ namespace Player
         }
         private static int Main(string[] args)
         {
+            if (Process.GetCurrentProcess().ProcessName == "FakeFfmpegHang") { Thread.Sleep(60000); return 0; }
+            if (args.Length == 2 && args[0] == "--crash-completed-wav")
+            { ReadinessTests.WriteCompletedWav(args[1]); Environment.Exit(42); return 42; }
             if (args.Length == 3 && args[0] == "--recover-existing")
             {
                 string folder = Path.GetFullPath(args[1]);
@@ -556,6 +559,7 @@ namespace Player
                     Throws(delegate { SessionRecovery.Recover(SessionRecovery.Find(folder)[0], root, "missing-encoder.exe", null); });
                     Assert(Hash(saved) == before && SessionRecovery.Find(folder).Count == 1, "Failed recovery hid/damaged the pending session.");
                 });
+                ReadinessTests.Run(Case, root, ffmpeg);
                 string resultText = "PASS " + passed + " checks; artifacts: " + root;
                 File.WriteAllText(Path.Combine(root, "result.txt"), resultText);
                 Console.WriteLine(resultText);

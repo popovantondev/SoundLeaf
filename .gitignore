@@ -4,6 +4,7 @@ Backups/
 logs/
 Verification/
 RecoveryWork/
+State/
 artifacts/
 *.bundle
 .ai-dev/

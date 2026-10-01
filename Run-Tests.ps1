@@ -7,7 +7,9 @@ try {
     $options.CompilerOptions = '/target:exe /platform:x64 /optimize+ /main:Player.Tests'
     [void]$options.ReferencedAssemblies.Add('System.dll')
     [void]$options.ReferencedAssemblies.Add('System.Core.dll')
-    $sources = @('src/AudioCapture.cs','src/WaveStorage.cs','src/RecordingSession.cs','src/SessionRecovery.cs','tests/Tests.cs') | ForEach-Object {
+    [void]$options.ReferencedAssemblies.Add('System.Runtime.Serialization.dll')
+    [void]$options.ReferencedAssemblies.Add('System.Xml.dll')
+    $sources = @('src/AudioCapture.cs','src/WaveStorage.cs','src/RecordingSession.cs','src/StartupChecks.cs','src/WavReceipt.cs','src/SessionRecovery.cs','tests/Tests.cs','tests/ReadinessTests.cs') | ForEach-Object {
         Get-Content -LiteralPath (Join-Path $PSScriptRoot $_) -Encoding UTF8 -Raw
     }
     $result = $provider.CompileAssemblyFromSource($options, [string[]]$sources)
