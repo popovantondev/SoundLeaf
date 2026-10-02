@@ -27,6 +27,7 @@ namespace SoundLeaf
         internal event Action<bool> PopupClosed;
         internal float Scale = 1;
         internal bool Dark;
+        internal ToolStripDropDownCloseReason? LastPopupCloseReason { get; private set; }
         internal bool IsOpen { get { return popup != null && popup.Visible; } }
         internal static bool OpenFor(Form form) { return active != null && active.IsOpen && active.FindForm() == form; }
         internal static bool CloseFor(Form form) { if (!OpenFor(form)) return false; var owner = active; owner.ClosePopup(); owner.RestoreFocus(); return true; }
@@ -100,8 +101,10 @@ namespace SoundLeaf
             popup = new ToolStripDropDown { AutoSize = false, Size = new Size(width, height), Padding = new Padding(2), Margin = Padding.Empty, BackColor = BackColor, AutoClose = true };
             var host = new ToolStripControlHost(choices) { AutoSize = false, Size = choices.Size, Margin = Padding.Empty, Padding = Padding.Empty };
             popup.Items.Add(host); active = this;
+            LastPopupCloseReason = null;
             popup.Closed += delegate(object sender, ToolStripDropDownClosedEventArgs e)
             {
+                LastPopupCloseReason = e.CloseReason;
                 if (active == this) active = null; Invalidate();
                 AccessibilityNotifyClients(AccessibleEvents.StateChange, -1);
                 bool outside = e.CloseReason == ToolStripDropDownCloseReason.AppClicked || e.CloseReason == ToolStripDropDownCloseReason.AppFocusChange;

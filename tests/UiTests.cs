@@ -222,7 +222,7 @@ namespace SoundLeaf
                                 Assert(select.AccessibilityObject.Role == AccessibleRole.ComboBox, "Missing combo accessibility.");
                                 if (select.AccessibleName == TextCatalog.T("format")) foreach (object item in select.Items) Assert(item.ToString() == item.ToString().ToLowerInvariant(), "Mixed-case format.");
                                 select.TogglePopup(); Pump(10);
-                                Assert(select.IsOpen && panel.Visible, "Dropdown hid owner.");
+                                Assert(select.IsOpen && panel.Visible, "Dropdown hid owner: " + name + "/" + select.AccessibleName + " open=" + select.IsOpen + " panel=" + panel.Visible + " close=" + select.LastPopupCloseReason + " focus=" + panel.ContainsFocus + " foreground=" + TrayAnchorResolver.GetForegroundWindow());
                                 Assert(Screen.FromRectangle(select.PopupBounds).WorkingArea.Contains(select.PopupBounds), "Dropdown off-screen.");
                                 panel.VerifyEscape(); Assert(!select.IsOpen && panel.Visible, "First Escape should close only dropdown.");
                             }
