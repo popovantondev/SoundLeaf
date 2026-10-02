@@ -7,22 +7,23 @@ if ($LASTEXITCODE -ne 0) { throw 'Git status failed.' }
 & (Join-Path $root 'Test-PublicSource.ps1') -History
 $commit = (& git -C $root rev-parse HEAD).Trim()
 $short = (& git -C $root rev-parse --short HEAD).Trim()
-$check = Get-Content -LiteralPath (Join-Path $root '.ai-dev\verification.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 if ($RuntimeDirectory) {
     $verified = Get-Content -LiteralPath (Join-Path $RuntimeDirectory 'checked-candidate.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     $runtimeCheck = Get-Content -LiteralPath (Join-Path $RuntimeDirectory 'verification.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     $candidate = Join-Path $RuntimeDirectory 'SoundLeaf.exe'
-    if (!$check.ok -or $check.timed_out -or $check.checks.Count -ne 1 -or $check.checks[0].exit_code -ne 0 -or $check.checks[0].command[-1] -ne (Join-Path $root 'Run-ReleaseChecks.ps1')) { throw 'Separate MegaProg release-preparation checks required.' }
+    $check = Get-Content -LiteralPath (Join-Path $root 'artifacts\release-checks.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    if (!$check.Passed -or $check.SourceCommit -ne $commit -or $check.RuntimeSha256 -ne $verified.Sha256) { throw 'Matching direct Run-ReleaseChecks.ps1 receipt required.' }
     & git -C $root diff --exit-code $verified.SourceCommit HEAD -- src Build-Launcher.ps1 Build-Icons.ps1 assets/SoundLeaf.ico
     if ($LASTEXITCODE -ne 0) { throw 'Runtime inputs changed; a new complete runtime verification is required.' }
 } else {
     $verified = Get-Content -LiteralPath (Join-Path $root 'artifacts\checked-candidate.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-    $runtimeCheck = $check
+    $runtimeCheck = $null
     $candidate = Join-Path $root 'SoundLeaf.next.exe'
     if ($verified.SourceCommit -ne $commit) { throw 'A new candidate must match its verified source commit.' }
 }
 $expectedCommand = Join-Path $root 'Run-Checks.ps1'
-if (!$verified.Full -or !$verified.SourceCommit -or !$runtimeCheck.ok -or $runtimeCheck.timed_out -or $runtimeCheck.checks.Count -ne 1 -or $runtimeCheck.checks[0].exit_code -ne 0 -or $runtimeCheck.checks[0].command[-1] -ne $expectedCommand -or $runtimeCheck.checks[0].command -contains '-NoLive') { throw 'Matching full runtime MegaProg verification is required.' }
+if (!$verified.Full -or !$verified.SourceCommit) { throw 'Matching full runtime verification is required.' }
+if ($RuntimeDirectory -and (!$runtimeCheck.ok -or $runtimeCheck.timed_out -or $runtimeCheck.checks.Count -ne 1 -or $runtimeCheck.checks[0].exit_code -ne 0 -or $runtimeCheck.checks[0].command[-1] -ne $expectedCommand -or $runtimeCheck.checks[0].command -contains '-NoLive')) { throw 'Incomplete preserved runtime verification.' }
 if ($verified.Version -ne '3.0.4.0' -or (Get-Item -LiteralPath $candidate).VersionInfo.FileVersion -ne $verified.Version -or (Get-SoundLeafSha256 $candidate) -ne $verified.Sha256) { throw 'Candidate differs from verified release input.' }
 if (!$OutputDirectory) { $OutputDirectory = Join-Path $root 'artifacts' }
 $directory = [IO.Path]::GetFullPath((Join-Path $OutputDirectory ('SoundLeaf-3.0.4-release-'+$short)))

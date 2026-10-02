@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 . (Join-Path $root 'File-Hash.ps1')
 & (Join-Path $root 'Test-PublicSource.ps1') -History
-foreach ($relative in @('Prepare-Release.ps1','Run-PublicChecks.ps1','Run-ReleaseChecks.ps1','Test-PublicSource.ps1','Test-ReleaseArchive.ps1')) {
+foreach ($relative in @('Prepare-Release.ps1','Run-PublicChecks.ps1','Run-ReleaseChecks.ps1','Test-PublicSource.ps1','Test-ReleaseArchive.ps1','Build-Setup.ps1','Test-Setup.ps1','Build-Pages.ps1')) {
     $tokens=$null; $errors=$null
     [void][Management.Automation.Language.Parser]::ParseFile((Join-Path $root $relative),[ref]$tokens,[ref]$errors)
     if ($errors.Count) { throw "Invalid release script syntax: $relative" }
@@ -21,4 +21,6 @@ foreach ($language in @('ru','de','en')) {
 }
 & (Join-Path $PSHOME 'powershell.exe') -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'Run-PublicChecks.ps1')
 if ($LASTEXITCODE -ne 0) { throw 'Public build smoke command failed.' }
-Write-Output "PASS release preparation: source/history audit, five script syntax checks, verified runtime SHA-256 and unchanged runtime inputs, $count embedded images and three-language release materials; local CI-equivalent smoke command passed. Runtime tests are the preserved complete 1 October run; no new live capture, installation or publication."
+Write-Output "PASS release preparation: source/history audit, eight script syntax checks, verified runtime SHA-256 and unchanged runtime inputs, $count embedded images and three-language release materials; local CI-equivalent smoke command passed. Runtime tests are the preserved complete 1 October run; no new live capture, installation or publication."
+$releaseReceipt = [pscustomobject]@{Passed=$true;SourceCommit=(& git -C $root rev-parse HEAD).Trim();RuntimeSha256=$receipt.Sha256;Checked=(Get-Date -Format o)}
+[IO.File]::WriteAllText((Join-Path $root 'artifacts\release-checks.json'),($releaseReceipt | ConvertTo-Json),(New-Object Text.UTF8Encoding($false)))
