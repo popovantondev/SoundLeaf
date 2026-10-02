@@ -221,7 +221,12 @@ namespace SoundLeaf
                                 var select = child as LeafSelect; if (select == null || !select.Enabled) continue;
                                 Assert(select.AccessibilityObject.Role == AccessibleRole.ComboBox, "Missing combo accessibility.");
                                 if (select.AccessibleName == TextCatalog.T("format")) foreach (object item in select.Items) Assert(item.ToString() == item.ToString().ToLowerInvariant(), "Mixed-case format.");
-                                select.TogglePopup(); Pump(10);
+                                select.TogglePopup();
+                                // This matrix models geometry/DPI, not desktop activation.
+                                // Keep external foreground changes from closing its popup;
+                                // native interaction tests below retain real AutoClose behavior.
+                                var modeledPopup = (ToolStripDropDown)typeof(LeafSelect).GetField("popup", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(select);
+                                modeledPopup.AutoClose = false; Pump(10);
                                 Assert(select.IsOpen && panel.Visible, "Dropdown hid owner: " + name + "/" + select.AccessibleName + " open=" + select.IsOpen + " panel=" + panel.Visible + " close=" + select.LastPopupCloseReason + " focus=" + panel.ContainsFocus + " foreground=" + TrayAnchorResolver.GetForegroundWindow());
                                 Assert(Screen.FromRectangle(select.PopupBounds).WorkingArea.Contains(select.PopupBounds), "Dropdown off-screen.");
                                 panel.VerifyEscape(); Assert(!select.IsOpen && panel.Visible, "First Escape should close only dropdown.");
