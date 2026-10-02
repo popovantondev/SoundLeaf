@@ -8,15 +8,16 @@ Strictly an educational Windows system-audio project. This document prepares a G
 - `SoundLeaf-3.0.4-win-x64-no-ffmpeg.zip` and its SHA-256 file: verified x64 EXE, natural leaf, three-language instructions, guides and notices. FFmpeg is explicitly excluded; users provide a compatible build or select WAV-only. The main configured profile remains MKV/AAC 192.
 - `release-manifest.json`: source commit, candidate hash, verification time and archive hashes, with `Uploaded=false`.
 
-The portable package is deliberately not a ready-to-record MKV bundle until its external encoder is supplied. Do not describe it as having all dependencies included. The EXE is unsigned; a SHA-256 file is not a signing certificate. No automatic updating or downloading is introduced.
+The portable package needs an external encoder. The separate `SoundLeaf-3.0.4-Setup-online.exe` candidate installs per-user and offers a consented, pinned FFmpeg download with archive/EXE hash checks. See [setup limitations](SETUP.md). No offline/bundled candidate is cleared; no automatic updating is introduced. EXEs are unsigned; hashes are not signing certificates.
 
 ## Prepare locally
 
 1. Commit the intended files without rewriting existing history.
-2. For a changed runtime, run complete verification through MegaProg, including real loopback and a hash-pinned receipt with its source commit. For documentation/packaging-only changes, an immutable copy of the already fully verified EXE may be reused: retain its complete runner result and source commit, prove that `src`, icon and build inputs are unchanged, and run separate `Run-ReleaseChecks.ps1` through MegaProg. Do not interrupt a current recording just to repackage unchanged bytes. A partial build or `-NoLive` alone cannot authorize a new runtime.
+2. For a changed runtime, run `Run-Checks.ps1` directly. For packaging-only changes, preserve the fully verified EXE and baseline evidence, prove runtime inputs unchanged, and run `Run-ReleaseChecks.ps1` directly. No supervisor is required. Do not interrupt recording just to repackage unchanged bytes. Partial checks cannot authorize a changed runtime.
 3. Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Prepare-Release.ps1`. For a preserved runtime capsule add `-RuntimeDirectory .\artifacts\verified-runtime-3.0.4`. The script refuses a dirty tree, changed runtime/candidate, missing full runtime evidence or release checks, and an existing output directory. Its manifest distinguishes current source commit from the earlier runtime verification commit/time.
 4. Run `Test-ReleaseArchive.ps1 -Directory <created release folder>`. It audits ZIP membership/checksums, local guide links, exact EXE/version/artwork and absence of FFmpeg/runtime data, and performs clean extraction without launching recording. Review the retained extraction and instructions.
-5. Review the GitHub release text below. Repository creation, remote configuration, pushing, tags, uploads and profile-site changes require a separate publication step; no script does them.
+5. Run `Build-Setup.ps1 -ReleaseDirectory <folder>` and `Test-Setup.ps1 -ReleaseDirectory <folder> -EncoderZip <verified vendor ZIP>`. Tests exercise the engine without launching recording, not the full end-user wizard. Run `Build-Pages.ps1`; consult `CATALOG.md` for metadata-generated profile integration.
+6. Review the release text below and describe Setup as online/per-user, not bundled. Repository creation, pushing, tags, uploads and profile changes require a separate publication step; no script does them.
 
 The Windows Actions workflow only audits source and performs a Framework build/hash/icon smoke check. Its equivalent command is checked locally; a hosted GitHub run has not happened before publication. No credentials persist, no release artifacts upload, and permissions are read-only.
 

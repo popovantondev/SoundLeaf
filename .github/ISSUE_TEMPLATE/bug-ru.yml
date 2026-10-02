@@ -15,15 +15,20 @@ body:
   - type: dropdown
     id: profile
     attributes:
-      label: Profile / Profil / Профиль
+      label: Профиль записи
       options:
         - mkv / aac
         - ogg / opus
         - mp3
         - m4a / aac
         - aac / adts
-        - WAV-only
-        - Not recording / Keine Aufnahme / Без записи
+        - Только WAV
+        - Без записи
+  - type: textarea
+    id: setup
+    attributes:
+      label: Способ установки, версия FFmpeg и этап сбоя
+      description: Online-установщик или portable; кодировщик есть или отсутствует; запись, пауза, сохранение или конвертация. Уберите личные пути.
   - type: textarea
     id: steps
     attributes:

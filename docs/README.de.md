@@ -1,5 +1,7 @@
 # SoundLeaf
 
+[Benutzer-Setup und Deinstallation](SETUP.md). Der lokale Online-Installer bietet einen geprüften FFmpeg-9.0.1-Download. Setup startet keine Aufnahme; der spätere App-Start nimmt nach Prüfungen auf. Noch kein veröffentlichter Download.
+
 Deutsch · [Русский](README.ru.md) · [English](../README.md)
 
 **Reines Lernprojekt · Windows 11 · x64 · Vorabversion 3.0.4**

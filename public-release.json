@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "name": "SoundLeaf",
+  "repo": "SoundLeaf",
+  "version": "3.0.4",
+  "platform": "Windows 11 · x64",
+  "source_url": "https://github.com/popovantondev/SoundLeaf",
+  "status": "source",
+  "tag": "",
+  "release_url": "",
+  "assets": [],
+  "downloads": [],
+  "checksums": [],
+  "description": {
+    "ru": "Учебный проект записи системного звука Windows: управление в трее, резервный WAV и проверка итоговых файлов.",
+    "de": "Lernprojekt zur Aufnahme von Windows-Systemaudio mit Tray-Steuerung, WAV-Sicherung und Prüfung fertiger Dateien.",
+    "en": "Educational Windows system-audio recording project with tray controls, WAV backup and verified final files."
+  },
+  "requirements": {
+    "ru": "Windows 11 x64, доступная для записи папка и устройство вывода. Установщик на пользователя загружает FFmpeg 9.0.1 через интернет; portable не включает FFmpeg. Выпуск пока не опубликован.",
+    "de": "Windows 11 x64, beschreibbarer Ordner und Ausgabegerät. Benutzer-Setup lädt FFmpeg 9.0.1 über das Internet; Portable enthält keinen FFmpeg. Noch keine veröffentlichte Version.",
+    "en": "Windows 11 x64, a writable folder and output device. Per-user setup downloads FFmpeg 9.0.1 online; portable excludes FFmpeg. No release has been published yet."
+  },
+  "start": {
+    "ru": "После публикации проверьте SHA-256 и запустите установщик без администратора. Он не запускает запись; последующий запуск SoundLeaf из «Пуска» начинает запись после проверок.",
+    "de": "Nach Veröffentlichung SHA-256 prüfen und Setup ohne Administratorrechte öffnen. Setup startet keine Aufnahme; der spätere Start im Startmenü nimmt nach Prüfungen auf.",
+    "en": "After publication, verify SHA-256 and run setup without administrator rights. Setup does not start capture; launching SoundLeaf from Start later begins recording after checks."
+  },
+  "readmes": {"en": ["README.md"], "de": ["docs/README.de.md"], "ru": ["docs/README.ru.md"]},
+  "guides": {"ru": "docs/Guide-ru.html", "de": "docs/Guide-de.html", "en": "docs/Guide-en.html"},
+  "help_url": "https://popovantondev.github.io/SoundLeaf/Guide-{lang}.html",
+  "feedback_url": "https://github.com/popovantondev/SoundLeaf/issues/new/choose"
+}

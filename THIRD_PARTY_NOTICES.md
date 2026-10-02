@@ -1,5 +1,7 @@
 # Third-party components
 
+The online per-user Setup offers a user-visible download of GyanD FFmpeg 9.0.1 directly from its GitHub release. It checks pinned ZIP and EXE SHA-256 values and retains the vendor's license and README. FFmpeg is not embedded or redistributed in the Setup candidate. This does not clear a future bundled distribution; matching corresponding source and build materials remain to be reviewed. Original SoundLeaf restrictions do not apply to FFmpeg's independently licensed files.
+
 SoundLeaf uses the Windows .NET Framework libraries, Windows Forms, System.Drawing and Windows WASAPI. The current executable relies on the system runtime rather than bundling a separate runtime.
 
 FFmpeg is invoked as a separate process. Its executable is not included in the source repository/archive. The locally tested binary identifies itself as `9.0.1-essentials_build-www.gyan.dev`, built with `--enable-gpl --enable-version3`; `ffmpeg -L` reports GPL version 3 or later. These terms apply independently to that component, not the project's RIGHTS text.

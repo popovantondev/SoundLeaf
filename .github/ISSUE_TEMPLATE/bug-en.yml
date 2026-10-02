@@ -15,7 +15,7 @@ body:
   - type: dropdown
     id: profile
     attributes:
-      label: Profile / Profil / Профиль
+      label: Recording profile
       options:
         - mkv / aac
         - ogg / opus
@@ -23,7 +23,12 @@ body:
         - m4a / aac
         - aac / adts
         - WAV-only
-        - Not recording / Keine Aufnahme / Без записи
+        - Not recording
+  - type: textarea
+    id: setup
+    attributes:
+      label: Installation method, FFmpeg version and failure stage
+      description: Online Setup or portable; encoder present or missing; capture, pause, saving or conversion. Redact personal paths.
   - type: textarea
     id: steps
     attributes:

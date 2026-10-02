@@ -8,6 +8,10 @@
 
 SoundLeaf is a C# learning project exploring Windows system audio, background processing, durable file storage and a system-tray interface. It is not a professional recording solution.
 
+## Setup preview
+
+The local `SoundLeaf-3.0.4-Setup-online.exe` candidate installs for the current user under `%LOCALAPPDATA%\Programs\SoundLeaf` without administrator rights. It offers a pinned FFmpeg 9.0.1 download with SHA-256 verification. Setup does not start recording or enable startup. Launch SoundLeaf from Start later: recording begins after successful checks. [Setup and removal](docs/SETUP.md). No download is published yet.
+
 ## Features
 
 - Capture the default Windows output device through WASAPI loopback; microphone capture is not implemented.
@@ -40,7 +44,7 @@ The library loads in the background, newest first, with size, format and known d
 
 “Save in another format” creates a separate verified file from a selected recording, retaining the original. Choose its format, bitrate and destination. Re-encoding compressed audio cannot restore quality. Existing target names and wrong extensions are refused. A completed WAV session is read as one PCM stream.
 
-Local candidate installation uses `Install-Verified.ps1` only after a full MegaProg run and matching candidate hash receipt. Partial `-NoLive` checks cannot authorize installation. The installer refuses a running recorder, preserves the old EXE in a unique backup, notifies the changed EXE/ICO paths and invalidates shell artwork once. It never deletes cache files, restarts Explorer or moves recordings.
+The legacy local update helper `Install-Verified.ps1` is not the public Setup. Public Setup performs a fresh per-user installation only; nonempty destinations are refused. Partial checks cannot authorize a changed runtime. Existing recordings are never migrated or deleted; the current recorder is not replaced during release preparation.
 
 Additional formats use one live encoder across WAV boundaries, with a bounded queue. If it fails, the final output is rebuilt directly from verified WAV PCM. Full decoding and a maximum 250 ms duration mismatch precede durable, no-overwrite publication and backup deletion. Each new session commits its profile before capture; recovery uses that profile, or MKV/AAC 192 for older sessions without one.
 
@@ -56,7 +60,7 @@ Demonstration panel renders with synthetic level data, not recordings of real pe
 
 ## Release preparation
 
-See [release notes and preparation](docs/RELEASE.md). `Prepare-Release.ps1` requires a clean committed tree and complete runtime evidence for the exact verified EXE. Reusing unchanged runtime bytes additionally requires matching runtime inputs and separate MegaProg release-preparation checks; the manifest records both source commits. It creates local archives and checksums only: no publishing, Git tags, upload or automatic recorder launch. The Windows workflow performs limited build/source/icon smoke checks, not full recording verification. Rights remain unchanged.
+See [release preparation](docs/RELEASE.md). `Prepare-Release.ps1` requires a clean committed tree and complete runtime evidence for the exact EXE. Reusing unchanged bytes requires matching inputs and a direct `Run-ReleaseChecks.ps1` receipt. `Build-Setup.ps1` compiles the online installer; `Test-Setup.ps1` checks its engine using disposable fixtures. No script publishes, creates tags or launches recording. Windows CI performs limited build/source/icon smoke checks, not full recording verification. Rights remain unchanged.
 
 Files are stored beside the executable: `Recordings`, `logs`, `Backups`, `State/Sessions`, and temporary `RecoveryWork`. Keep the entire application folder together, including WAV completion markers. Re-enable startup after moving the folder so the saved path is updated. WAV-only mode does not run FFmpeg: long recordings remain multiple verified parts of up to 256 MiB, not one unlimited WAV. After stopping, the result lists all paths and provides a folder-opening command; MKV was not created. A completion-marker failure keeps the audio and reports an error.
 
