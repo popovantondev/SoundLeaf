@@ -1,0 +1,29 @@
+SoundLeaf: FFmpeg setup / Einrichtung / Установка
+
+FFmpeg is not included in this package. SoundLeaf invokes it as a separate process.
+Official download page: https://ffmpeg.org/download.html#build-windows
+Official license information: https://ffmpeg.org/legal.html
+Use a Windows x64 build from a source you trust. Check that build's checksum and license.
+
+English:
+Extract the downloaded FFmpeg package. Copy ffmpeg.exe from its bin folder into
+this tools folder. Do not rename or replace SoundLeaf.exe. The required location
+is tools/ffmpeg.exe beside SoundLeaf.exe, not another tools folder elsewhere.
+AAC profiles need the aac encoder; Ogg/Opus needs libopus; MP3 needs libmp3lame.
+SoundLeaf checks the selected profile before recording. ffprobe is not required.
+When FFmpeg is absent, choose WAV-only explicitly; there is no silent fallback.
+Default output remains MKV/AAC 192 kbit/s after setup. No automatic download occurs.
+
+Deutsch:
+Das FFmpeg-Archiv entpacken und bin/ffmpeg.exe in diesen tools-Ordner kopieren.
+SoundLeaf.exe nicht ersetzen. AAC benötigt aac, Opus libopus, MP3 libmp3lame.
+Das gewählte Profil wird vor der Aufnahme geprüft. ffprobe ist nicht erforderlich.
+Ohne FFmpeg nur ausdrücklich WAV wählen; kein automatischer Wechsel/Download.
+Das Standardprofil bleibt MKV/AAC 192 kbit/s.
+
+Русский:
+Распакуйте FFmpeg и скопируйте bin/ffmpeg.exe в эту папку tools.
+Не заменяйте SoundLeaf.exe. Нужен tools/ffmpeg.exe рядом с программой.
+AAC требует aac, OGG/Opus — libopus, MP3 — libmp3lame; профиль проверяется
+перед записью. ffprobe не нужен. Без FFmpeg явно выберите только WAV.
+Автоматической загрузки или перехода на WAV нет. Основной профиль — MKV/AAC 192.

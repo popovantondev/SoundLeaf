@@ -10,4 +10,4 @@ After publication:
 4. For the SoundLeaf documentation site, publish the contents of `docs/` at the site root and copy `assets/` to the site root's `assets/`. Change guide references from `../assets/` to `assets/` as part of the deployment step, and replace README links with published documentation/repository links. Current HTML files are local guides, not a completed deployment.
 5. Verify all download/source, guide and issue links in all languages; configure an issue template before using `/issues/new/choose`.
 
-The initial card is source-only. Do not change its main button to Download until a tested binary package and release actually exist. Public binary packaging remains gated by the FFmpeg distribution review.
+The initial card is source-only. Do not change its main button to Download until the tested package is actually uploaded and its URL is verified. Local preparation now supports a portable package without FFmpeg, with explicit setup instructions. A package bundling FFmpeg still requires the separate distribution review; a no-encoder ZIP must never be advertised as including all dependencies.

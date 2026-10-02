@@ -1,0 +1,38 @@
+name: Fehler — Deutsch
+description: Fehler oder unerwartetes Verhalten von SoundLeaf.
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: 'Keine Audiodateien, Teilnehmernamen, persönlichen Pfade oder unbearbeiteten Protokolle anhängen. Nur bereinigte Fehlermeldungen teilen.'
+  - type: input
+    id: version
+    attributes:
+      label: SoundLeaf- und Windows-Version
+      placeholder: 'SoundLeaf 3.0.4; Windows 11; x64; 150% DPI'
+    validations:
+      required: true
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Profile / Profil / Профиль
+      options:
+        - mkv / aac
+        - ogg / opus
+        - mp3
+        - m4a / aac
+        - aac / adts
+        - WAV-only
+        - Not recording / Keine Aufnahme / Без записи
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zur Wiederholung
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Erwartetes und tatsächliches Verhalten
+    validations:
+      required: true

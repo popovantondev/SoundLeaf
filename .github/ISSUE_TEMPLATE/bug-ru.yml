@@ -1,0 +1,38 @@
+name: Ошибка — Русский
+description: Ошибка или неожиданное поведение SoundLeaf.
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: 'Не прикладывайте аудио, имена участников, личные пути или необработанный журнал. Пишите только обезличенный фрагмент ошибки.'
+  - type: input
+    id: version
+    attributes:
+      label: Версия SoundLeaf и Windows
+      placeholder: 'SoundLeaf 3.0.4; Windows 11; x64; 150% DPI'
+    validations:
+      required: true
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Profile / Profil / Профиль
+      options:
+        - mkv / aac
+        - ogg / opus
+        - mp3
+        - m4a / aac
+        - aac / adts
+        - WAV-only
+        - Not recording / Keine Aufnahme / Без записи
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги воспроизведения
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Ожидаемый и фактический результат
+    validations:
+      required: true

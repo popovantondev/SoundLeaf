@@ -1,0 +1,11 @@
+name: Suggestion / Vorschlag / Предложение
+description: Small, focused improvement to the educational project.
+title: '[Suggestion] '
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea / Idee / Идея
+      description: Explain the problem and desired behavior in German, Russian or English. Do not attach private recordings or unredacted logs.
+    validations:
+      required: true

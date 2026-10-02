@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $folder = $PSScriptRoot
 . (Join-Path $folder 'File-Hash.ps1')
 $shell = Join-Path $PSHOME 'powershell.exe'
-foreach ($script in @('tests\FileHashTests.ps1','Build-Launcher.ps1','Run-Tests.ps1','Run-IconTests.ps1','Run-UiTests.ps1')) {
+foreach ($script in @('Test-PublicSource.ps1','tests\FileHashTests.ps1','Build-Launcher.ps1','Run-Tests.ps1','Run-IconTests.ps1','Run-UiTests.ps1')) {
     & $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $folder $script)
     if ($LASTEXITCODE -ne 0) { throw "Failed: $script" }
 }
@@ -32,6 +32,6 @@ try {
 }
 Write-Output 'PASS build, storage/readiness/profiles/WAV tests, icons, panel and genuine MKV/Opus/WAV loopback lifecycles using an inaudible digital-silence renderer.'
 $candidate = Join-Path $folder 'SoundLeaf.next.exe'
-$checked = [pscustomobject]@{Full=$true; Version=(Get-Item -LiteralPath $candidate).VersionInfo.FileVersion; Sha256=(Get-SoundLeafSha256 $candidate); Checked=(Get-Date -Format o)}
+$checked = [pscustomobject]@{Full=$true; SourceCommit=(& git -C $folder rev-parse HEAD).Trim(); Version=(Get-Item -LiteralPath $candidate).VersionInfo.FileVersion; Sha256=(Get-SoundLeafSha256 $candidate); Checked=(Get-Date -Format o)}
 [void][IO.Directory]::CreateDirectory((Join-Path $folder 'artifacts'))
 $checked | ConvertTo-Json | Out-File -LiteralPath (Join-Path $folder 'artifacts\checked-candidate.json') -Encoding utf8

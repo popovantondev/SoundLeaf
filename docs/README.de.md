@@ -50,10 +50,16 @@ Zusatzformate verwenden einen Encoder über WAV-Grenzen hinweg und eine begrenzt
 
 ## Build und Prüfungen
 
-Noch kein öffentliches Binärpaket. `Build-Launcher.ps1` unter Windows PowerShell 5.1 erzeugt `SoundLeaf.next.exe`. Für MKV muss ein kompatibles `tools/ffmpeg.exe` neben der EXE liegen; ausdrücklich gewähltes WAV benötigt keinen Encoder. Einen beschreibbaren Ordner verwenden; beim Umzug den gesamten Ordner mitnehmen und Autostart neu aktivieren.
+GitHub-Veröffentlichung steht noch aus. Die lokale Vorbereitung erstellt Quelltext- und portable x64-ZIPs mit SHA-256; FFmpeg ist ausdrücklich nicht enthalten. Das portable ZIP vollständig entpacken und dessen README lesen. Für Quelltext-Builds erzeugt `Build-Launcher.ps1` unter Windows PowerShell 5.1 die `SoundLeaf.next.exe`. Für MKV muss ein kompatibles `tools/ffmpeg.exe` neben der EXE liegen; ausdrücklich gewähltes WAV benötigt keinen Encoder. Einen beschreibbaren Ordner verwenden; beim Umzug den gesamten Ordner mitnehmen und Autostart neu aktivieren.
 
 `Run-Checks.ps1` führt Build, synthetische Tests, Symbolprüfungen und echte MKV-/WAV-Loopback-Tests aus. Die letzten Tests zeichnen Systemaudio im separaten Ordner `Verification` auf. Für SoundLeaf-Builds sind Python und ein separates SDK nicht erforderlich.
 
-Praktisch nur auf einem Windows-Rechner geprüft. Stromausfall, voller echter Datenträger und mehrstündiger Dauerbetrieb wurden nicht getestet. Keine absolute Datensicherheitsgarantie. Bei Wechsel/Trennung des Ausgabegeräts eine neue Sitzung beginnen. Private Aufnahmen und persönliche Pfade nicht öffentlich teilen.
+Praktisch nur auf einem Windows-Rechner geprüft. Der Besitzer bestätigt normalen Ton der letzten Aufnahme und funktionierende lange Sitzungen; dies ist kein eigenständiger instrumentierter Lasttest. Stromausfall und voller echter Datenträger wurden nicht getestet. Keine absolute Datensicherheitsgarantie. Bei Wechsel/Trennung des Ausgabegeräts eine neue Sitzung beginnen. Private Aufnahmen und persönliche Pfade nicht öffentlich teilen.
+
+## Bilder und Release
+
+![Steuerung](../assets/screenshots/de-control-light.png)
+
+Testpanel mit Beispielsitzungen und synthetischen Pegeln, keine echten Gespräche. [Release-Vorbereitung](RELEASE.md). `Prepare-Release.ps1` verlangt vollständige MegaProg-Prüfung, passenden Commit/EXE-Hash und sauberen Git-Stand. Nur lokale Archive/Prüfsummen; keine Veröffentlichung, Tags oder automatische Aufnahme. Der Windows-Workflow prüft nur Quelltext/Build/Symbole, nicht echte Aufnahme. Rechte bleiben unverändert.
 
 [Anleitung](Guide-de.html) · [Architektur](ARCHITECTURE.md) · [Prüfungen](VERIFICATION.md) · [Änderungen](../CHANGELOG.md) · [Rechte](../RIGHTS.md) · [Drittanbieter](../THIRD_PARTY_NOTICES.md)

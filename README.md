@@ -40,13 +40,23 @@ The library loads in the background, newest first, with size, format and known d
 
 “Save in another format” creates a separate verified file from a selected recording, retaining the original. Choose its format, bitrate and destination. Re-encoding compressed audio cannot restore quality. Existing target names and wrong extensions are refused. A completed WAV session is read as one PCM stream.
 
-Local candidate installation uses `Install-Verified.ps1` only after a full MegaProg run and matching candidate hash receipt. Partial `-NoLive` checks cannot authorize installation. The installer refuses a running recorder, preserves the old EXE in a unique backup and refreshes only the installed EXE/ICO paths in the shell. It never restarts Explorer or moves recordings.
+Local candidate installation uses `Install-Verified.ps1` only after a full MegaProg run and matching candidate hash receipt. Partial `-NoLive` checks cannot authorize installation. The installer refuses a running recorder, preserves the old EXE in a unique backup, notifies the changed EXE/ICO paths and invalidates shell artwork once. It never deletes cache files, restarts Explorer or moves recordings.
 
 Additional formats use one live encoder across WAV boundaries, with a bounded queue. If it fails, the final output is rebuilt directly from verified WAV PCM. Full decoding and a maximum 250 ms duration mismatch precede durable, no-overwrite publication and backup deletion. Each new session commits its profile before capture; recovery uses that profile, or MKV/AAC 192 for older sessions without one.
 
 ## Running the source build
 
-The current package is source-only; no public binary release is available yet. Build `SoundLeaf.next.exe`, place a compatible AAC-enabled FFmpeg at `tools/ffmpeg.exe` beside it, then launch the EXE from a writable folder. FFmpeg must provide AAC, libopus and libmp3lame for the respective profiles. For normal use, rename the tested candidate to `SoundLeaf.exe`.
+Public GitHub publication is pending. Local release preparation produces source and portable x64 archives with SHA-256 files; the portable package explicitly excludes FFmpeg. Extract the whole portable ZIP and follow its three-language README. For a source build, create `SoundLeaf.next.exe`, provide compatible FFmpeg at `tools/ffmpeg.exe` beside it, then launch from a writable folder. FFmpeg must provide AAC, libopus and libmp3lame for the respective profiles. For normal use, rename the tested candidate to `SoundLeaf.exe`.
+
+## Screenshots
+
+Demonstration panel renders with synthetic level data, not recordings of real people. German and Russian screenshots are linked from the corresponding README files.
+
+![SoundLeaf control panel](assets/screenshots/en-control-light.png)
+
+## Release preparation
+
+See [release notes and preparation](docs/RELEASE.md). `Prepare-Release.ps1` requires a clean committed tree, a complete MegaProg result and the exact verified candidate/source commit. It creates local archives and checksums only: no publishing, Git tags, upload or automatic recorder launch. The Windows workflow performs limited build/source/icon smoke checks, not full recording verification. Rights remain unchanged.
 
 Files are stored beside the executable: `Recordings`, `logs`, `Backups`, `State/Sessions`, and temporary `RecoveryWork`. Keep the entire application folder together, including WAV completion markers. Re-enable startup after moving the folder so the saved path is updated. WAV-only mode does not run FFmpeg: long recordings remain multiple verified parts of up to 256 MiB, not one unlimited WAV. After stopping, the result lists all paths and provides a folder-opening command; MKV was not created. A completion-marker failure keeps the audio and reports an error.
 

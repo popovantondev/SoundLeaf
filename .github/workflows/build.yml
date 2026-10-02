@@ -1,0 +1,24 @@
+name: Windows build smoke checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 5
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Source, hash helpers, Framework build and embedded artwork
+        shell: powershell
+        run: ./Run-PublicChecks.ps1
+      - name: Coverage boundary
+        shell: powershell
+        run: Write-Output 'This job does not verify real recording, FFmpeg, tray behavior or release readiness. Full local verification is separate.'
