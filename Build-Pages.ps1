@@ -5,6 +5,7 @@ if(Test-Path -LiteralPath $OutputDirectory){throw 'Pages output exists; overwrit
 [void][IO.Directory]::CreateDirectory($OutputDirectory)
 [void][IO.Directory]::CreateDirectory((Join-Path $OutputDirectory 'assets'))
 [IO.File]::Copy((Join-Path $root 'assets\SoundLeaf.ico'),(Join-Path $OutputDirectory 'assets\SoundLeaf.ico'),$false)
+[IO.File]::Copy((Join-Path $root 'assets\tray-preview.png'),(Join-Path $OutputDirectory 'assets\tray-preview.png'),$false)
 [IO.File]::Copy((Join-Path $root 'docs\guide.css'),(Join-Path $OutputDirectory 'guide.css'),$false)
 $utf8=New-Object Text.UTF8Encoding($false)
 foreach($lang in @('ru','de','en')){
@@ -12,6 +13,7 @@ foreach($lang in @('ru','de','en')){
     $html=$html.Replace('../assets/','assets/')
     foreach($file in @('README.ru.md','README.de.md','VERIFICATION.md')){$html=$html.Replace('href="'+$file+'"','href="https://github.com/popovantondev/SoundLeaf/blob/main/docs/'+$file+'"')}
     $html=$html.Replace('href="../README.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/README.md"').Replace('href="../RIGHTS.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/RIGHTS.md"')
+    $html=$html.Replace('href="../THIRD_PARTY_NOTICES.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/THIRD_PARTY_NOTICES.md"')
     [IO.File]::WriteAllText((Join-Path $OutputDirectory ('Guide-'+$lang+'.html')),$html,$utf8)
 }
 foreach($lang in @('ru','de','en')){

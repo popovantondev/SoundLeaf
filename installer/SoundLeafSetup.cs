@@ -118,7 +118,7 @@ namespace SoundLeafSetup
             {
                 Extract(payload,stage);
                 if(!File.Exists(Path.Combine(stage,"SoundLeaf.exe")) || Hash(Path.Combine(stage,"SoundLeaf.exe"))!=RuntimeExeHash) throw new IOException("Verified application hash mismatch.");
-                if(encoderZip!=null) AddEncoder(encoderZip,stage);
+                if(!string.IsNullOrEmpty(encoderZip)) AddEncoder(encoderZip,stage);
                 File.Copy(uninstaller,Path.Combine(stage,"Uninstall.exe"),false);
                 var receipt=new Receipt{Root=root};
                 foreach(string file in Directory.GetFiles(stage,"*",SearchOption.AllDirectories)) receipt.Files.Add(file.Substring(stage.Length+1),Hash(file));
