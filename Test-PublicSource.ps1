@@ -14,7 +14,7 @@ foreach ($relative in $tracked) {
     $path = [IO.Path]::GetFullPath((Join-Path $root $relative))
     if (!$path.StartsWith($root+'\',[StringComparison]::OrdinalIgnoreCase)) { throw 'Tracked path escapes source root.' }
     if ((Get-Item -LiteralPath $path).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Reparse source file: $relative" }
-    if ($relative -match '\.(cs|ps1|md|html|css|yml|yaml|json|txt|iss)$' -or $relative -match '^\.(gitignore|gitattributes|editorconfig)$') {
+    if ($relative -match '\.(cs|ps1|sh|md|html|css|yml|yaml|json|txt|iss)$' -or $relative -match '^\.(gitignore|gitattributes|editorconfig)$') {
         $content = [IO.File]::ReadAllText($path,$utf8)
         if ($content -match $excludedText) { throw "Out-of-scope naming or development attribution in $relative" }
         if ($content -match $credentials) { throw "Possible credential material in $relative; review before publication." }
