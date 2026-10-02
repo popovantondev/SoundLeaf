@@ -4,7 +4,7 @@
 
 Deutsch · [Русский](README.ru.md) · [English](../README.md)
 
-**Reines Lernprojekt · Windows 11 · x64 · Vorabversion 3.0.4**
+**Reines Lernprojekt · Windows 11 · x64 · Vorabversion 3.0.5**
 
 SoundLeaf ist ein C#-Lernprojekt zu Windows-Systemaudio, Hintergrundverarbeitung, sicherer Dateispeicherung und Bedienung im Infobereich. Es ist keine professionelle Aufnahmelösung. Oberfläche und Dokumentation sind deutsch, russisch und englisch; die Sprache ändert sich sofort.
 

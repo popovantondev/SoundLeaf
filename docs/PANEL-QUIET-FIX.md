@@ -16,8 +16,10 @@ This is a visual noise floor, not proof that a particular application is playing
 - 114 artwork checks and six shell-cache checks passed. The separate recording/saving tray states remain intact.
 - The application candidate compiled successfully.
 
-## Not yet verified or installed
+## Follow-up — complete run and installation
 
-The installed recorder was running during these checks and was not interrupted or replaced. Genuine post-change recording cycles, a manual muted-desktop/listening test and user acceptance of the new behavior remain pending until it has saved and exited. Simulated DPI/layout checks are not a claim of physical testing on three different monitors. The former runtime verification receipt does not authorize publishing this changed candidate.
+After the recorder exited, the complete direct run passed with version 3.0.5 and the minimal encoder: 74 core checks, 114 artwork checks, six shell-cache checks, 42,408 UI assertions, 252 panel renders and genuine MKV/Opus/WAV capture lifecycles. The fixture rendered inaudible digital silence, not a conversation. A manual muted-desktop/listening test and user acceptance remain separate from this run. Simulated DPI/layout checks are not a claim of physical testing on three different monitors.
 
-The separate minimal encoder build and offline installer are still in preparation; they are not declared ready by this UI report.
+The first complete attempt stopped at a popup check. Diagnostics identified external application focus loss with `AppFocusChange` while the panel itself stayed visible. Modeled geometry checks now disable popup autoclose only in the test matrix; native functional checks retain normal autoclose and focus behavior. Another attempt passed its checks but was correctly denied a complete receipt because its source commit changed during execution. Only the final unchanged-input run authorized installation.
+
+The installed EXE and encoder match the final receipt. The previous executable and encoder are preserved in a local backup; all 23 recording/state metadata entries and the exact settings hash stayed unchanged. Embedded artwork and fresh shell readback match the natural leaf. No application was automatically launched and nothing was uploaded. The separate offline installer remains pending.

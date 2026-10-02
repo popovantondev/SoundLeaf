@@ -1,6 +1,18 @@
-# Local verification — 2026-10-01
+# Local verification — 2026-10-02
 
-SoundLeaf 3.0.4, Windows x64, Windows PowerShell 5.1.
+SoundLeaf 3.0.5, Windows x64, Windows PowerShell 5.1.
+
+## 3.0.5 — complete direct verification; installed at 11:44 CEST
+
+- The final unchanged-input `Run-Checks.ps1` run completed at 11:43 CEST: 74 audio/storage/profile checks, three portable hash checks, 114 artwork checks, six shell-cache checks, 42,408 UI assertions and 252 panel renders. Genuine MKV/Opus/WAV capture lifecycles used an inaudible digital-silence renderer. No external supervisor was used.
+- Tested source commit: `0a0d93ca3ebc25f9fdca67f66487451c6a22b4b7`. Application 3.0.5.0 SHA-256: `9D616651CB8729CF47C884DA6F36CEC101A69409DB31606AA538B0D2754B6723`. Minimal FFmpeg 9.0.2 SHA-256: `3F375EDD024FF119A0919E1B12E7D5DFD9A77B208A773CBDBC777850F0477F6F`.
+- An initial attempt failed at a dropdown. Subsequent diagnostics confirmed external foreground focus and `AppFocusChange`; the panel remained visible. Only the modeled geometry matrix disables dropdown autoclose in the harness. Native interaction tests retain actual Escape, outside-focus and default autoclose behavior. A further attempt was denied a receipt because the source commit changed during execution. These attempts are not counted as successful complete runs.
+- Coverage remains three languages, two themes, modeled 100/150/200% scales and short screens, plus native checks on the current monitor. Noise/hysteresis, isolated peaks and positive meter levels use deterministic input. This is not a physical multi-monitor, human-speech latency or endurance claim.
+- Installed application and encoder hashes match the complete receipt. The old 3.0.4 application and 9.0.1 encoder are preserved in `Backups/BeforeSoundLeaf-3.0.5.0-20261002-114407-8785ef`. The original application hash remains `BB2E3DED749FE456FC3D0418D2596B59303975C98340933E3FAE8ECC6B44E7A3`; original encoder hash remains `72A489ECCD008C2EC2C0A5856C5C75BC3D8BBFA90166C4566865C246445E6AA3`.
+- All 23 before/after recording/state entries match path, size and modification time; the settings file hash matches exactly. This is a recording metadata audit, not hashing every audio file. Source ZIP and license inventory were installed beside the encoder; its ZIP hash matches the bundle manifest.
+- Installed natural leaf shell readback passed at four sizes. Windows received an artwork refresh without restarting Explorer or deleting cache files. No recording, startup launch, registry setting, folder relocation or upload was initiated by the update. Public offline Setup remains in preparation; local application verification does not certify its installer.
+
+Earlier sections below are historical evidence.
 
 ## 3.0.4 — complete verification passed; installed at 21:54 CEST
 
