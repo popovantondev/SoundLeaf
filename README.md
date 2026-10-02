@@ -56,7 +56,7 @@ Demonstration panel renders with synthetic level data, not recordings of real pe
 
 ## Release preparation
 
-See [release notes and preparation](docs/RELEASE.md). `Prepare-Release.ps1` requires a clean committed tree, a complete MegaProg result and the exact verified candidate/source commit. It creates local archives and checksums only: no publishing, Git tags, upload or automatic recorder launch. The Windows workflow performs limited build/source/icon smoke checks, not full recording verification. Rights remain unchanged.
+See [release notes and preparation](docs/RELEASE.md). `Prepare-Release.ps1` requires a clean committed tree and complete runtime evidence for the exact verified EXE. Reusing unchanged runtime bytes additionally requires matching runtime inputs and separate MegaProg release-preparation checks; the manifest records both source commits. It creates local archives and checksums only: no publishing, Git tags, upload or automatic recorder launch. The Windows workflow performs limited build/source/icon smoke checks, not full recording verification. Rights remain unchanged.
 
 Files are stored beside the executable: `Recordings`, `logs`, `Backups`, `State/Sessions`, and temporary `RecoveryWork`. Keep the entire application folder together, including WAV completion markers. Re-enable startup after moving the folder so the saved path is updated. WAV-only mode does not run FFmpeg: long recordings remain multiple verified parts of up to 256 MiB, not one unlimited WAV. After stopping, the result lists all paths and provides a folder-opening command; MKV was not created. A completion-marker failure keeps the audio and reports an error.
 
