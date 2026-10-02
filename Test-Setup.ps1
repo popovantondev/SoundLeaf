@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$ReleaseDirectory,[string]$EncoderZip)
+param([Parameter(Mandatory=$true)][string]$ReleaseDirectory,[string]$EncoderZip,[switch]$DownloadEncoder)
 $ErrorActionPreference='Stop'
 $root=$PSScriptRoot
 . (Join-Path $root 'File-Hash.ps1')
@@ -10,6 +10,8 @@ Add-Type -TypeDefinition ([IO.File]::ReadAllText((Join-Path $root 'installer\Sou
 $assembly=[Reflection.Assembly]::LoadFile($setup)
 $test=Join-Path $ReleaseDirectory ('SetupTests-'+[Guid]::NewGuid().ToString('N'))
 [void][IO.Directory]::CreateDirectory($test)
+if([Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){throw 'Run installer fixtures from a non-elevated shell.'}
+if($DownloadEncoder){$EncoderZip=[SoundLeafSetup.Engine]::Download($test,[Action[string]]{param($message)})}
 $uninstaller=Join-Path $test 'Uninstall.exe'
 $input=$assembly.GetManifestResourceStream('uninstaller.exe');$output=[IO.File]::Create($uninstaller)
 try{$input.CopyTo($output)}finally{$input.Dispose();$output.Dispose()}
@@ -34,6 +36,27 @@ $blocked=$false;try{[SoundLeafSetup.Engine]::Uninstall($target,$false)}catch{$bl
 if(!$blocked -or !(Test-Path $record)){throw 'Locked-app uninstall safety failed.'}
 [SoundLeafSetup.Engine]::Uninstall($target,$false)
 if(!(Test-Path $record) -or !(Test-Path $changed) -or (Test-Path (Join-Path $target 'SoundLeaf.exe'))){throw 'Uninstall preservation failed.'}
+$key=[Microsoft.Win32.Registry]::CurrentUser.OpenSubKey([SoundLeafSetup.Engine]::RegistryPath)
+$shortcut=Join-Path ([Environment]::GetFolderPath('StartMenu')) 'Programs\SoundLeaf.lnk'
+$integrationTested=$false
+if(!$key -and !(Test-Path -LiteralPath $shortcut)){
+    $integration=Join-Path $test 'Integrated'
+    $stream=$assembly.GetManifestResourceStream('payload.zip')
+    try{[SoundLeafSetup.Engine]::Install($integration,$stream,$uninstaller,$null,$true)}finally{$stream.Dispose()}
+    try{
+        $installedKey=[Microsoft.Win32.Registry]::CurrentUser.OpenSubKey([SoundLeafSetup.Engine]::RegistryPath)
+        try{if(!$installedKey -or $installedKey.GetValue('InstallLocation') -ne $integration -or !(Test-Path $shortcut)){throw 'Per-user integration missing.'}}finally{if($installedKey){$installedKey.Dispose()}}
+    }finally{[SoundLeafSetup.Engine]::Uninstall($integration,$true)}
+    $integrationTested=$true
+}elseif($key){$key.Dispose()}
+foreach($lang in 0,1,2){
+    $form=New-Object SoundLeafSetup.SetupForm($false)
+    try{
+        foreach($control in $form.Controls){if($control -is [Windows.Forms.ComboBox]){$control.SelectedIndex=$lang}}
+        $image=New-Object Drawing.Bitmap($form.Width,$form.Height)
+        try{$form.DrawToBitmap($image,$form.ClientRectangle);$image.Save((Join-Path $test ('wizard-'+$lang+'.png')),[Drawing.Imaging.ImageFormat]::Png)}finally{$image.Dispose()}
+    }finally{$form.Dispose()}
+}
 # The compiler uses the asInvoker manifest; also inspect the emitted setup PE bytes.
 $bytes=[IO.File]::ReadAllBytes($setup)
 $text=[Text.Encoding]::UTF8.GetString($bytes)
@@ -42,6 +65,6 @@ Add-Type -TypeDefinition (Get-Content -LiteralPath (Join-Path $root 'tests\Embed
 $icons=[SoundLeaf.EmbeddedIconTests]::Verify($setup,(Join-Path $root 'assets\SoundLeaf.ico'))
 $manifest.Tested=$true
 $manifest | Add-Member -NotePropertyName Checked -NotePropertyValue (Get-Date -Format o) -Force
-$manifest | Add-Member -NotePropertyName Scope -NotePropertyValue ('Non-elevated engine install/uninstall fixtures, active-file refusal, data preservation, unsafe paths, corrupt ZIP refusal, asInvoker and '+$icons+' icons. No real application launch or end-user wizard interaction. Encoder extraction tested: '+[bool]$EncoderZip) -Force
+$manifest | Add-Member -NotePropertyName Scope -NotePropertyValue ('Non-elevated engine install/uninstall fixtures, active-file refusal, data preservation, unsafe paths, corrupt ZIP refusal, asInvoker and '+$icons+' icons; three offscreen wizard renders. No real application launch or end-user wizard interaction. Encoder extraction tested: '+[bool]$EncoderZip+'; actual pinned download tested: '+[bool]$DownloadEncoder+'; per-user shortcut/registry integration tested: '+$integrationTested) -Force
 [IO.File]::WriteAllText((Join-Path $ReleaseDirectory 'setup-manifest.json'),($manifest|ConvertTo-Json),(New-Object Text.UTF8Encoding($false)))
 Write-Output "PASS setup engine fixtures, data preservation, safety refusals, asInvoker and $icons icons. Not a real end-user wizard run. Fixtures retained: $test"

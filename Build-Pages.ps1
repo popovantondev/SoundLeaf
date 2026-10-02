@@ -13,6 +13,9 @@ foreach($lang in @('ru','de','en')){
     foreach($file in @('README.ru.md','README.de.md','VERIFICATION.md')){$html=$html.Replace('href="'+$file+'"','href="https://github.com/popovantondev/SoundLeaf/blob/main/docs/'+$file+'"')}
     $html=$html.Replace('href="../README.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/README.md"').Replace('href="../RIGHTS.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/RIGHTS.md"')
     [IO.File]::WriteAllText((Join-Path $OutputDirectory ('Guide-'+$lang+'.html')),$html,$utf8)
+}
+foreach($lang in @('ru','de','en')){
+    $html=[IO.File]::ReadAllText((Join-Path $OutputDirectory ('Guide-'+$lang+'.html')),[Text.Encoding]::UTF8)
     foreach($match in [regex]::Matches($html,'(?:href|src)="([^"]+)"')){
         $url=$match.Groups[1].Value;if($url -match '^(https://|#)'){continue}
         $target=[IO.Path]::GetFullPath((Join-Path $OutputDirectory $url.Split('#')[0]))
