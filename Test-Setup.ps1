@@ -52,10 +52,13 @@ if(!$key -and !(Test-Path -LiteralPath $shortcut)){
 foreach($lang in 0,1,2){
     $form=New-Object SoundLeafSetup.SetupForm($false)
     try{
+        $form.Icon=[Drawing.Icon]::ExtractAssociatedIcon($setup)
+        $form.ShowInTaskbar=$false; $form.Opacity=0; $form.Show()
+        [Windows.Forms.Application]::DoEvents()
         foreach($control in $form.Controls){if($control -is [Windows.Forms.ComboBox]){$control.SelectedIndex=$lang}}
         $image=New-Object Drawing.Bitmap($form.Width,$form.Height)
-        try{$form.DrawToBitmap($image,$form.ClientRectangle);$image.Save((Join-Path $test ('wizard-'+$lang+'.png')),[Drawing.Imaging.ImageFormat]::Png)}finally{$image.Dispose()}
-    }finally{$form.Dispose()}
+        try{$form.DrawToBitmap($image,(New-Object Drawing.Rectangle(0,0,$form.Width,$form.Height)));$image.Save((Join-Path $test ('wizard-'+$lang+'.png')),[Drawing.Imaging.ImageFormat]::Png)}finally{$image.Dispose()}
+    }finally{$form.Hide();$form.Dispose()}
 }
 # The compiler uses the asInvoker manifest; also inspect the emitted setup PE bytes.
 $bytes=[IO.File]::ReadAllBytes($setup)
