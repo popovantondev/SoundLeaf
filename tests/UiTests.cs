@@ -26,6 +26,18 @@ namespace SoundLeaf
             using (var meter = new AudioLevelView { Size = new Size(280, 130), Dark = true, BackColor = Color.Black, ForeColor = Color.White })
             {
                 meter.CreateControl(); meter.SetLevel(loud);
+                meter.SetLevel(new SessionUpdate(RecordState.Recording, "", 1, true) { DeviceAvailable = true });
+                for (int i = 0; i < 100; i++)
+                {
+                    meter.SetLevel(new SessionUpdate(RecordState.Recording, "", 1, true) { DeviceAvailable = true, Peak = 1, Rms = i % 2 == 0 ? .001f : .0035f });
+                    Assert(!meter.HasCurrentSignal && meter.AccessibleName.EndsWith(TextCatalog.T("meterQuiet")), "Noise or isolated peak changed quiet caption.");
+                }
+                meter.SetLevel(loud);
+                meter.SetLevel(new SessionUpdate(RecordState.Recording, "", 1, true) { DeviceAvailable = true, Peak = .003f, Rms = .003f });
+                Assert(meter.HasCurrentSignal, "Hysteresis failed to retain actual sound.");
+                meter.SetLevel(new SessionUpdate(RecordState.Recording, "", 1, true) { DeviceAvailable = true, Peak = .001f, Rms = .001f });
+                Assert(!meter.HasCurrentSignal, "Noise remained audible after crossing quiet threshold.");
+                meter.SetLevel(loud);
                 var samples = new float[25]; for (int i = 0; i < samples.Length; i++) samples[i] = AudioLevelView.Expressiveness;
                 meter.SeedHistory(samples);
                 Assert(meter.CurrentEnvelope == 0 && meter.Activity == 0 && meter.DisplayedBar(10) == 0, "Telemetry/history seed snapped the histogram.");
@@ -286,9 +298,9 @@ namespace SoundLeaf
                         nativeSettings.Theme = "dark"; panel.ApplyTheme(); ComposedCorners(panel, resolved, root); nativeSettings.Theme = "light"; panel.ApplyTheme();
                         Assert(Math.Abs(TrayAnchorResolver.GetDpiForWindow(panel.Handle) / 96f - resolved.Scale) < .01, "Native monitor scale mismatch.");
                         var stable = panel.Bounds; panel.HidePanel(); panel.Open(resolved, false); Assert(panel.Bounds == stable, "Repeated open moved window.");
-                        panel.HidePanel(); panel.Open(resolved, true); Assert(panel.Animating && panel.SnapshotAllocated, "Animation did not allocate frame.");
+                        panel.HidePanel(); panel.Open(resolved, true); Assert(panel.Visible && !panel.Animating && !panel.SnapshotAllocated && panel.Opacity == 1, "Native open allocated animation or hid real window.");
                         var motionBounds = panel.Bounds; Pump(60); Assert(panel.Bounds == motionBounds, "Opening animation resized real controls.");
-                        using (var image = panel.CaptureMotionForVerification()) { Assert(image != null && image.GetPixel(0, 0).A == 0, "Motion corners are opaque."); image.Save(Path.Combine(root, "native-opening-frame.png")); }
+                        using (var image = panel.CaptureMotionForVerification()) { Assert(image == null, "Disabled motion allocated an image."); }
                         panel.VerifyEscape(); Pump(350); Assert(!panel.Visible && !panel.Animating && !panel.SnapshotAllocated, "Animation cancellation leaked.");
                         panel.Open(resolved, true); Pump(300); Assert(panel.Visible && !panel.Animating && !panel.SnapshotAllocated && panel.Bounds == stable, "Animation finish incorrect."); Layout(panel);
                         panel.HidePanel(); panel.Open(resolved, true); panel.Toggle(resolved);
@@ -316,7 +328,7 @@ namespace SoundLeaf
                         panel.HidePanel();
                         Pump(350);
                         panel.Open(resolved, true); Pump(300); panel.HidePanel(); Pump(60);
-                        Assert(panel.Animating && panel.Bounds == stable, "Closing has no smooth fixed-bounds motion.");
+                        Assert(!panel.Visible && !panel.Animating && !panel.SnapshotAllocated && panel.Bounds == stable, "Native close retained animation resources.");
                         panel.Toggle(resolved); Pump(350); Assert(panel.Visible && !panel.Animating && !panel.SnapshotAllocated, "Closing reversal failed.");
                         panel.HidePanel(); Pump(350);
                     }

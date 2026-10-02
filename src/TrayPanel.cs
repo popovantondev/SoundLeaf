@@ -102,13 +102,6 @@ namespace SoundLeaf
         private readonly Panel nav = new Panel();
         private readonly LeafHeader header = new LeafHeader();
         private readonly ToolTip tips = new ToolTip { AutoPopDelay = 10000, InitialDelay = 400 };
-        private readonly System.Windows.Forms.Timer growthTimer = new System.Windows.Forms.Timer { Interval = 16 };
-        private readonly Stopwatch growthWatch = new Stopwatch();
-        private PanelMotionSurface growth;
-        private Rectangle growthBounds;
-        private bool shrinking;
-        private double motionFrom, motionProgress = 1;
-        private double motionDuration;
         private readonly System.Windows.Forms.Timer focusTimer = new System.Windows.Forms.Timer { Interval = 45 };
         private TrayAnchor anchor;
         private float scale = 1;
@@ -125,8 +118,8 @@ namespace SoundLeaf
         private readonly List<Font> ownedFonts = new List<Font>();
         private RecordingEntry conversionEntry;
         internal Func<TrayAnchor> AnchorProvider;
-        internal bool Animating { get { return growthTimer.Enabled; } }
-        internal bool SnapshotAllocated { get { return growth != null; } }
+        internal bool Animating { get { return false; } }
+        internal bool SnapshotAllocated { get { return false; } }
         internal Rectangle Viewport { get { return page.RectangleToScreen(page.ClientRectangle); } }
         private bool HasLiveRecording { get { return !string.IsNullOrEmpty(update.SessionId) && (update.State == RecordState.Recording || update.State == RecordState.Paused || update.State == RecordState.Saving); } }
         private List<RecordingEntry> FinishedRecords { get { return records.FindAll(delegate(RecordingEntry entry) { return !HasLiveRecording || !entry.Id.StartsWith(update.SessionId, StringComparison.OrdinalIgnoreCase); }); } }
@@ -166,7 +159,6 @@ namespace SoundLeaf
             };
             VisibleChanged += delegate { if (!Visible) { CancelGrowth(); LeafSelect.CloseFor(this); } };
             FormClosing += delegate(object sender, FormClosingEventArgs e) { if (e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; HidePanel(); } };
-            growthTimer.Tick += delegate { GrowthTick(); };
             Rebuild();
         }
         private void SetScale(float value)
@@ -180,7 +172,7 @@ namespace SoundLeaf
         {
             // Preserve compositor frame styles without exposing a caption or resize border.
             if (message.Msg == 0x0083) { message.Result = IntPtr.Zero; return; }
-            if (message.Msg == 0x0084) { message.Result = new IntPtr(growth == null ? 1 : -1); return; }
+            if (message.Msg == 0x0084) { message.Result = new IntPtr(1); return; }
             base.WndProc(ref message);
             if (message.Msg == 0x02E0 && initialized && !verificationScale && AnchorProvider != null)
             {
@@ -195,21 +187,15 @@ namespace SoundLeaf
         }
         internal static Rectangle Placement(Point point, Size desired, Rectangle work)
         { return TrayAnchorResolver.Place(new TrayAnchor { Icon = new Rectangle(point, new Size(1, 1)), Work = work, Monitor = work }, desired); }
-        internal void Toggle(TrayAnchor value) { if (Visible && !shrinking) HidePanel(); else Open(value, TrayAnchorResolver.AnimationsEnabled()); }
+        internal void Toggle(TrayAnchor value) { if (Visible) HidePanel(); else Open(value, false); }
         internal void Open(TrayAnchor value, bool animate)
         {
+            // Native composition only: snapshot swapping caused stutter and a late shadow.
             IntPtr createdHandle = Handle;
             focusTimer.Stop();
-            if (growth != null && shrinking) { shrinking = false; BeginMotion(true, motionProgress); Activate(); return; }
             CancelGrowth(); anchor = value; SetScale(value.Scale);
             Bounds = TrayAnchorResolver.Place(value, new Size(Px(430), Px(520))); Rebuild();
-            Opacity = animate ? 0 : 1; Show(); Activate(); PerformLayout();
-            if (animate)
-            {
-                var image = CapturePanel();
-                try { growthBounds = Bounds; growth = new PanelMotionSurface(Handle, growthBounds, image); BeginMotion(true, 0); }
-                catch { image.Dispose(); CancelGrowth(); }
-            }
+            Opacity = 1; Show(); Activate(); PerformLayout();
         }
         internal void HidePanel()
         {
@@ -217,55 +203,16 @@ namespace SoundLeaf
             try
             {
                 focusTimer.Stop(); LeafSelect.CloseFor(this);
-                if (!Visible) { CancelGrowth(); return; }
-                if (!verificationScale && !modal && TrayAnchorResolver.AnimationsEnabled())
-                {
-                    if (growth == null)
-                    {
-                        Bitmap image = CapturePanel();
-                        try { growthBounds = Bounds; growth = new PanelMotionSurface(Handle, growthBounds, image); }
-                        catch { image.Dispose(); CancelGrowth(); Hide(); return; }
-                    }
-                    if (!shrinking) BeginMotion(false, motionProgress);
-                }
-                else { Hide(); CancelGrowth(); }
+                Hide(); CancelGrowth();
             }
             finally { hiding = false; }
         }
         internal void CancelGrowth()
         {
-            growthTimer.Stop(); growthWatch.Reset();
-            if (growth != null) { growth.Dispose(); growth = null; }
-            shrinking = false; motionProgress = 1;
             host.Visible = true; if (!IsDisposed) { Opacity = 1; ApplyCorners(); }
         }
         internal static double Ease(double t) { return 1 - Math.Pow(1 - Math.Max(0, Math.Min(1, t)), 3); }
-        private void BeginMotion(bool opening, double from)
-        {
-            shrinking = !opening; motionFrom = from; motionDuration = Math.Max(80, (opening ? 280 : 220) * Math.Abs((opening ? 1 : 0) - from));
-            Opacity = 0; growthWatch.Restart(); SetGrowthFrame(from); growthTimer.Start();
-        }
-        private void SetGrowthFrame(double t)
-        {
-            if (growth == null) return; double ease = Math.Max(0, Math.Min(1, t)); motionProgress = ease;
-            int width = Math.Max(1, (int)(Px(24) + (growthBounds.Width - Px(24)) * ease)), height = Math.Max(1, (int)(Px(24) + (growthBounds.Height - Px(24)) * ease));
-            Point origin = new Point(anchor.Center.X - growthBounds.Left, anchor.Center.Y - growthBounds.Top);
-            int x = (int)(Math.Max(0, Math.Min(growthBounds.Width, origin.X)) * (1 - width / (double)growthBounds.Width)), y = growthBounds.Height - height;
-            if (anchor.Edge == TrayEdge.Top) y = 0;
-            if (anchor.Edge == TrayEdge.Left || anchor.Edge == TrayEdge.Right) { x = anchor.Edge == TrayEdge.Left ? 0 : growthBounds.Width - width; y = (int)(Math.Max(0, Math.Min(growthBounds.Height, origin.Y)) * (1 - height / (double)growthBounds.Height)); }
-            growth.Draw(new RectangleF(x, y, width, height), (float)Math.Min(1, ease * 2.5), 8 * scale);
-        }
-        private void GrowthTick()
-        {
-            try
-            {
-                double t = Math.Min(1, growthWatch.Elapsed.TotalMilliseconds / motionDuration);
-                SetGrowthFrame(motionFrom + ((shrinking ? 0 : 1) - motionFrom) * Ease(t));
-                if (t >= 1) { if (shrinking) Hide(); else Opacity = 1; CancelGrowth(); }
-            }
-            catch { bool close = shrinking; if (close) Hide(); CancelGrowth(); }
-        }
-        internal Bitmap CaptureMotionForVerification() { return growth == null ? null : growth.Capture(); }
+        internal Bitmap CaptureMotionForVerification() { return null; }
         internal void ConfigureForVerification(float value, Size logical)
         { verificationScale = true; IntPtr createdHandle = Handle; CancelGrowth(); SetScale(value); Size = new Size(Px(logical.Width), Px(logical.Height)); Rebuild(); }
         internal Bitmap CapturePanel()
@@ -300,7 +247,6 @@ namespace SoundLeaf
         private static void DisposeChildren(Control parent) { while (parent.Controls.Count > 0) parent.Controls[0].Dispose(); }
         internal void Rebuild()
         {
-            if (growth != null) CancelGrowth();
             DisposeChildren(nav); DisposeChildren(page); ++scanVersion;
             int headerHeight = Px(ClientSize.Height / scale < 350 ? 44 : 60), navHeight = Px(34);
             header.Bounds = new Rectangle(0, 0, ClientSize.Width, headerHeight);
@@ -553,7 +499,7 @@ namespace SoundLeaf
         }
         protected override void Dispose(bool disposing)
         {
-            if (disposing) { focusTimer.Stop(); focusTimer.Dispose(); CancelGrowth(); growthTimer.Dispose(); tips.Dispose(); }
+            if (disposing) { focusTimer.Stop(); focusTimer.Dispose(); CancelGrowth(); tips.Dispose(); }
             base.Dispose(disposing);
             if (disposing) { foreach (var font in ownedFonts) font.Dispose(); ownedFonts.Clear(); }
         }

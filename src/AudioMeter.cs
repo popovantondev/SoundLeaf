@@ -2,6 +2,19 @@ using System;
 
 namespace SoundLeaf
 {
+    // Display-only Schmitt trigger. Never alters captured or stored samples.
+    internal sealed class AudioPresenceGate
+    {
+        internal const float StartRms = .004f, StopRms = .002f;
+        internal bool Present { get; private set; }
+        internal bool Observe(float rms, bool available)
+        {
+            if (!available || float.IsNaN(rms) || float.IsInfinity(rms) || rms < StopRms) Present = false;
+            else if (rms >= StartRms) Present = true;
+            return Present;
+        }
+        internal void Reset() { Present = false; }
+    }
     // Observation only: never changes or buffers the PCM passed to durable storage.
     internal sealed class AudioMeter
     {

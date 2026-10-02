@@ -10,6 +10,16 @@ namespace SoundLeaf
         private static void Assert(bool value, string message) { if (!value) throw new Exception(message); }
         internal static void Run(Action<string, Action> test, string root)
         {
+            test("Presentation threshold rejects noise and isolated peaks without changing samples", delegate
+            {
+                var gate = new AudioPresenceGate();
+                for (int i = 0; i < 100; i++) Assert(!gate.Observe(i % 2 == 0 ? .001f : .0035f, true), "Background toggled sound on.");
+                Assert(gate.Observe(.01f, true), "Playing sound not detected.");
+                for (int i = 0; i < 100; i++) Assert(gate.Observe(i % 2 == 0 ? .003f : .0041f, true), "Near-threshold sound flickered.");
+                Assert(!gate.Observe(0, true) && !gate.Observe(.003f, true), "Silence did not reset hysteresis.");
+                Assert(!gate.Observe(float.NaN, true) && !gate.Observe(float.PositiveInfinity, true), "Nonfinite signal accepted.");
+                Assert(!gate.Observe(1, false), "Unavailable device shown as sound.");
+            });
             foreach (int bits in new[] { 16, 24, 32 })
             {
                 int depth = bits;

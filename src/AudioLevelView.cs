@@ -21,6 +21,7 @@ namespace SoundLeaf
         private readonly Stopwatch frameClock = new Stopwatch();
         private float level, envelope, activity;
         private bool active;
+        private readonly AudioPresenceGate presence = new AudioPresenceGate();
         private string caption = "";
         internal bool Mini, Dark;
         internal float Scale = 1;
@@ -58,6 +59,7 @@ namespace SoundLeaf
         {
             if (!HasCurrentSignal)
             {
+                presence.Reset();
                 level = 0; Array.Clear(targets, 0, targets.Length);
                 if (active) { caption = TextCatalog.T("meterQuiet"); AccessibleName = TextCatalog.T("meterLabel") + ": " + caption; }
             }
@@ -71,7 +73,7 @@ namespace SoundLeaf
         internal void SetLevel(SessionUpdate update)
         {
             active = update.State == RecordState.Recording && update.DeviceAvailable;
-            level = DisplayLevel(update);
+            level = presence.Observe(update.Rms, active) ? ScaleLevel(update) : 0;
             freshness.Restart();
             for (int i = 0; i < history.Length - 1; i++) history[i] = history[i + 1];
             history[history.Length - 1] = level;
@@ -88,6 +90,11 @@ namespace SoundLeaf
         internal static float DisplayLevel(SessionUpdate update)
         {
             if (update.State != RecordState.Recording || !update.DeviceAvailable) return 0;
+            if (float.IsNaN(update.Rms) || float.IsInfinity(update.Rms) || update.Rms < AudioPresenceGate.StopRms) return 0;
+            return ScaleLevel(update);
+        }
+        private static float ScaleLevel(SessionUpdate update)
+        {
             float value = Math.Max(update.Rms, update.Peak * .35f);
             if (float.IsNaN(value) || float.IsInfinity(value) || value <= 0) return 0;
             // Presentation floor only: faint background must not inflate the histogram.
