@@ -1,17 +1,25 @@
+param([string]$EncoderBundle)
 $ErrorActionPreference = 'Stop'
 $installRoot = 'C:\Users\Public\Player'
 $projectRoot = $PSScriptRoot
 . (Join-Path $projectRoot 'File-Hash.ps1')
-$check = Get-Content -LiteralPath (Join-Path $projectRoot '.ai-dev\verification.json') -Raw | ConvertFrom-Json
-if (!$check.ok -or $check.timed_out -or $check.checks[0].exit_code -ne 0 -or $check.checks[0].command -contains '-NoLive') { throw 'Complete MegaProg verification required; partial checks cannot authorize installation.' }
 $receiptPath = Join-Path $projectRoot 'artifacts\checked-candidate.json'
 if (!(Test-Path -LiteralPath $receiptPath)) { throw 'Full-check candidate receipt missing.' }
 $verified = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
 $candidate = Join-Path $projectRoot 'SoundLeaf.next.exe'
 $expectedHash = $verified.Sha256
-if (!$verified.Full -or $verified.Version -ne '3.0.4.0' -or (Get-SoundLeafSha256 $candidate) -ne $expectedHash) { throw 'Candidate does not match completed verification.' }
-if ((Get-Item -LiteralPath $candidate).VersionInfo.FileVersion -ne '3.0.4.0') { throw 'Wrong candidate version.' }
-if ((Get-SoundLeafSha256 (Join-Path $installRoot 'tools\ffmpeg.exe')) -ne (Get-SoundLeafSha256 (Join-Path $projectRoot 'tools\ffmpeg.exe'))) { throw 'Installed encoder differs from verified encoder.' }
+if (!$verified.Full -or $verified.Runner -ne 'Run-Checks.ps1' -or !$verified.EncoderSha256 -or $verified.LiveScenarios.Count -ne 3 -or (Get-SoundLeafSha256 $candidate) -ne $expectedHash) { throw 'Candidate does not match complete direct verification.' }
+if ((Get-Item -LiteralPath $candidate).VersionInfo.FileVersion -ne $verified.Version) { throw 'Wrong candidate version.' }
+if (@(& git -C $projectRoot status --porcelain).Count) { throw 'Commit source changes before installation.' }
+& git -C $projectRoot diff --exit-code $verified.SourceCommit HEAD -- src tests Build-Launcher.ps1 Build-Icons.ps1 Run-Checks.ps1 Run-Tests.ps1 Run-IconTests.ps1 Run-UiTests.ps1 assets/SoundLeaf.ico
+if ($LASTEXITCODE -ne 0) { throw 'Tested inputs changed; complete verification required again.' }
+if ((Get-SoundLeafSha256 (Join-Path $projectRoot 'tools\ffmpeg.exe')) -ne $verified.EncoderSha256) { throw 'Project encoder differs from verified encoder.' }
+$encoderChanged = (Get-SoundLeafSha256 (Join-Path $installRoot 'tools\ffmpeg.exe')) -ne $verified.EncoderSha256
+if ($EncoderBundle) {
+    $EncoderBundle = [IO.Path]::GetFullPath($EncoderBundle)
+    $bundle = Get-Content -LiteralPath (Join-Path $EncoderBundle 'Runtime\tools\encoder-bundle.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($bundle.Sha256 -ne $verified.EncoderSha256 -or (Get-SoundLeafSha256 (Join-Path $EncoderBundle 'Runtime\tools\ffmpeg.exe')) -ne $verified.EncoderSha256 -or (Get-SoundLeafSha256 (Join-Path $EncoderBundle 'Runtime\tools\ffmpeg-9.0.2-corresponding-source.zip')) -ne $bundle.SourceKitSha256) { throw 'Encoder bundle differs from verified binary/source materials.' }
+} elseif ($encoderChanged) { throw 'Provide the matching encoder bundle to update a different installed encoder.' }
 if ((Get-Item -LiteralPath $installRoot).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Installation root is a reparse point.' }
 $first = $false
 $updateMutex = New-Object Threading.Mutex($true, 'Local\PlayerCaptureSingle', [ref]$first)
@@ -23,7 +31,7 @@ try {
         $oldPath = Join-Path $installRoot $relative
         if (Test-Path -LiteralPath $oldPath) { $oldIcons += [SoundLeaf.ShellIconRefresh]::Capture($oldPath) }
     }
-    $backupRoot = Join-Path $installRoot ('Backups\BeforeSoundLeaf304-' + (Get-Date -Format yyyyMMdd-HHmmss) + '-' + [Guid]::NewGuid().ToString('N').Substring(0,6))
+    $backupRoot = Join-Path $installRoot ('Backups\BeforeSoundLeaf-' + $verified.Version + '-' + (Get-Date -Format yyyyMMdd-HHmmss) + '-' + [Guid]::NewGuid().ToString('N').Substring(0,6))
     if (![IO.Path]::GetFullPath($backupRoot).StartsWith($installRoot + '\Backups\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Unsafe backup target.' }
     [void][IO.Directory]::CreateDirectory($backupRoot)
     $pairs = @(
@@ -37,6 +45,12 @@ try {
         @{Source=(Join-Path $projectRoot 'THIRD_PARTY_NOTICES.md'); Relative='THIRD_PARTY_NOTICES.md'}
     )
     foreach ($relative in (& git -C $projectRoot ls-files -- docs assets)) { $pairs += @{Source=(Join-Path $projectRoot $relative); Relative=$relative} }
+    if ($EncoderBundle) {
+        foreach ($file in Get-ChildItem -LiteralPath (Join-Path $EncoderBundle 'Runtime\tools') -Recurse -File) {
+            if ($file.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Encoder bundle contains a reparse file.' }
+            $pairs += @{Source=$file.FullName; Relative=$file.FullName.Substring((Join-Path $EncoderBundle 'Runtime').Length+1)}
+        }
+    }
     foreach ($pair in $pairs) {
         $target = [IO.Path]::GetFullPath((Join-Path $installRoot $pair.Relative))
         $backup = [IO.Path]::GetFullPath((Join-Path $backupRoot $pair.Relative))
@@ -58,11 +72,12 @@ try {
     }
     $installedHash = Get-SoundLeafSha256 (Join-Path $installRoot 'SoundLeaf.exe')
     if ($installedHash -ne $expectedHash) { throw 'Installed executable hash mismatch.' }
+    if ((Get-SoundLeafSha256 (Join-Path $installRoot 'tools\ffmpeg.exe')) -ne $verified.EncoderSha256) { throw 'Installed encoder hash mismatch.' }
     # Notify the changed files, then invalidate shell artwork once. No Explorer restart,
     # icon-cache file deletion, file associations or registry writes.
     foreach ($oldIcon in $oldIcons) { [SoundLeaf.ShellIconRefresh]::Refresh($oldIcon) }
     [SoundLeaf.ShellIconRefresh]::InvalidateShellArtwork()
-    $receipt = [pscustomobject]@{Version='3.0.4'; Commit=(& git -C $projectRoot rev-parse HEAD).Trim(); Sha256=$installedHash; Backup=$backupRoot; Updated=(Get-Date -Format o); EncoderUnchanged=$true; RecordingsMoved=$false; ShellIconsRefreshed=$oldIcons.Count; ShellArtworkInvalidated=$true; ExplorerRestarted=$false; CacheFilesDeleted=$false}
-    $receipt | ConvertTo-Json | Out-File -LiteralPath (Join-Path $projectRoot 'artifacts\install-3.0.4.json') -Encoding utf8
+    $receipt = [pscustomobject]@{Version=$verified.Version; Commit=(& git -C $projectRoot rev-parse HEAD).Trim(); TestedSourceCommit=$verified.SourceCommit; Sha256=$installedHash; EncoderSha256=$verified.EncoderSha256; Backup=$backupRoot; Updated=(Get-Date -Format o); EncoderUnchanged=(!$encoderChanged); RecordingsMoved=$false; ShellIconsRefreshed=$oldIcons.Count; ShellArtworkInvalidated=$true; ExplorerRestarted=$false; CacheFilesDeleted=$false}
+    $receipt | ConvertTo-Json | Out-File -LiteralPath (Join-Path $projectRoot ('artifacts\install-'+$verified.Version+'.json')) -Encoding utf8
     $receipt | ConvertTo-Json
 } finally { if ($first) { $updateMutex.ReleaseMutex() }; $updateMutex.Dispose() }

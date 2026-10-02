@@ -8,8 +8,8 @@ using Microsoft.Win32;
 
 [assembly: System.Reflection.AssemblyTitle("SoundLeaf")]
 [assembly: System.Reflection.AssemblyProduct("SoundLeaf")]
-[assembly: System.Reflection.AssemblyVersion("3.0.4.0")]
-[assembly: System.Reflection.AssemblyFileVersion("3.0.4.0")]
+[assembly: System.Reflection.AssemblyVersion("3.0.5.0")]
+[assembly: System.Reflection.AssemblyFileVersion("3.0.5.0")]
 
 namespace SoundLeaf
 {

@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.5 — immediate panel and quiet indication, 2026-10-02
+
+- Remove snapshot-based opening/closing and its late shadow handoff. Keep native rounded corners, focus behavior and separate saving tray animation.
+- Use display-only RMS hysteresis (approximately −48 dBFS on / −54 dBFS off) to suppress background noise and isolated peaks without filtering recorded audio.
+- Build a separate minimal FFmpeg 9.0.2 with pinned unmodified Opus/LAME sources, no network protocols, matching source kit and upstream/runtime notices. Main MKV/AAC 192 parameters remain unchanged.
+- Require complete direct verification and matching application/encoder hashes for local updates; retain the old installation in a backup. No external supervisor is needed.
+- Offline public Setup remains a separate preparation task, not a completed release in this changelog.
+
 ## 3.0.4 — smooth histogram and compact quiet transition, 2026-10-01
 
 - Replace the main contour with 21 separated rounded level columns, retaining 95% expressiveness and real PCM telemetry. Smooth each column rather than scrolling a jagged path.
