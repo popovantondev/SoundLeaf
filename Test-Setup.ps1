@@ -1,6 +1,7 @@
 param([Parameter(Mandatory=$true)][string]$ReleaseDirectory,[string]$EncoderZip,[switch]$DownloadEncoder)
 $ErrorActionPreference='Stop'
 $root=$PSScriptRoot
+$ReleaseDirectory=[IO.Path]::GetFullPath($ReleaseDirectory)
 . (Join-Path $root 'File-Hash.ps1')
 $manifest=Get-Content -LiteralPath (Join-Path $ReleaseDirectory 'setup-manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $setup=Join-Path $ReleaseDirectory $manifest.File
@@ -58,8 +59,30 @@ if(!$key -and !(Test-Path -LiteralPath $shortcut)){
     }finally{[SoundLeafSetup.Engine]::Uninstall($integration,$true)}
     $integrationTested=$true
 }elseif($key){$key.Dispose()}
+if($manifest.EncoderIncluded -and $integrationTested){
+    # Exercise the actual published assembly and its asynchronous button handler.
+    $wizardRoot=Join-Path $test 'WizardInstalled'
+    $form=[Activator]::CreateInstance($assembly.GetType('SoundLeafSetup.SetupForm'),[object[]]@($false))
+    $flags=[Reflection.BindingFlags]'Instance,NonPublic'
+    try{
+        $form.ShowInTaskbar=$false;$form.Opacity=0;$form.Show()
+        $type=$form.GetType()
+        $type.GetField('folder',$flags).GetValue($form).Text=$wizardRoot
+        if($type.GetField('encoder',$flags).GetValue($form).Enabled){throw 'Offline encoder checkbox must be fixed.'}
+        $type.GetField('action',$flags).GetValue($form).PerformClick()
+        $deadline=[DateTime]::UtcNow.AddSeconds(40)
+        while($type.GetField('busy',$flags).GetValue($form) -and [DateTime]::UtcNow -lt $deadline){[Windows.Forms.Application]::DoEvents();Start-Sleep -Milliseconds 20}
+        if(!$type.GetField('completed',$flags).GetValue($form)){throw ('Actual wizard failed: '+$type.GetField('status',$flags).GetValue($form).Text)}
+        if((Get-SoundLeafSha256 (Join-Path $wizardRoot 'tools\ffmpeg.exe')) -ne $manifest.EncoderSha256){throw 'Actual wizard installed wrong encoder.'}
+        $installedKey=[Microsoft.Win32.Registry]::CurrentUser.OpenSubKey([SoundLeafSetup.Engine]::RegistryPath)
+        try{if($installedKey.GetValue('DisplayVersion') -ne '3.0.5.0'){throw 'Actual installer version mismatch.'}}finally{$installedKey.Dispose()}
+    }finally{
+        $form.Hide();$form.Dispose()
+        if(Test-Path -LiteralPath (Join-Path $wizardRoot 'installation.json')){[SoundLeafSetup.Engine]::Uninstall($wizardRoot,$true)}
+    }
+}
 foreach($lang in 0,1,2){
-    $form=New-Object SoundLeafSetup.SetupForm($false)
+    $form=[Activator]::CreateInstance($assembly.GetType('SoundLeafSetup.SetupForm'),[object[]]@($false))
     try{
         $form.Icon=[Drawing.Icon]::ExtractAssociatedIcon($setup)
         $form.ShowInTaskbar=$false; $form.Opacity=0; $form.Show()
@@ -77,6 +100,6 @@ Add-Type -TypeDefinition (Get-Content -LiteralPath (Join-Path $root 'tests\Embed
 $icons=[SoundLeaf.EmbeddedIconTests]::Verify($setup,(Join-Path $root 'assets\SoundLeaf.ico'))
 $manifest.Tested=$true
 $manifest | Add-Member -NotePropertyName Checked -NotePropertyValue (Get-Date -Format o) -Force
-$manifest | Add-Member -NotePropertyName Scope -NotePropertyValue ('Non-elevated engine install/uninstall fixtures, active-file refusal, data preservation, unsafe paths, corrupt ZIP refusal, asInvoker and '+$icons+' icons; three offscreen wizard renders. No real application launch or end-user wizard interaction. Encoder extraction tested: '+[bool]$EncoderZip+'; actual pinned download tested: '+[bool]$DownloadEncoder+'; per-user shortcut/registry integration tested: '+$integrationTested) -Force
+$manifest | Add-Member -NotePropertyName Scope -NotePropertyValue ('Non-elevated install/uninstall fixtures, active-file refusal, data preservation, unsafe paths, corrupt ZIP refusal, asInvoker and '+$icons+' icons; three actual-assembly offscreen wizard renders. Actual offline asynchronous wizard handler tested: '+[bool]($manifest.EncoderIncluded -and $integrationTested)+'. No recording application launch, manual end-user wizard or clean-machine deployment. Offline encoder/source hashes tested: '+[bool]$manifest.EncoderIncluded+'; pinned online download tested: '+[bool]$DownloadEncoder+'; per-user integration tested: '+$integrationTested) -Force
 [IO.File]::WriteAllText((Join-Path $ReleaseDirectory 'setup-manifest.json'),($manifest|ConvertTo-Json),(New-Object Text.UTF8Encoding($false)))
 Write-Output "PASS setup engine fixtures, data preservation, safety refusals, asInvoker and $icons icons. Not a real end-user wizard run. Fixtures retained: $test"
