@@ -9,7 +9,7 @@ body:
     id: version
     attributes:
       label: Версия SoundLeaf и Windows
-      placeholder: 'SoundLeaf 3.0.4; Windows 11; x64; 150% DPI'
+      placeholder: 'SoundLeaf 3.0.5; Windows 11; x64; 150% DPI'
     validations:
       required: true
   - type: dropdown

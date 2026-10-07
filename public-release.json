@@ -2,7 +2,7 @@
   "schema_version": 1,
   "name": "SoundLeaf",
   "repo": "SoundLeaf",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "platform": "Windows 11 · x64",
   "source_url": "https://github.com/popovantondev/SoundLeaf",
   "status": "source",
@@ -17,9 +17,9 @@
     "en": "Educational Windows system-audio recording project with tray controls, WAV backup and verified final files."
   },
   "requirements": {
-    "ru": "Windows 11 x64, доступная для записи папка и устройство вывода. Установщик на пользователя загружает FFmpeg 9.0.1 через интернет; portable не включает FFmpeg. Выпуск пока не опубликован.",
-    "de": "Windows 11 x64, beschreibbarer Ordner und Ausgabegerät. Benutzer-Setup lädt FFmpeg 9.0.1 über das Internet; Portable enthält keinen FFmpeg. Noch keine veröffentlichte Version.",
-    "en": "Windows 11 x64, a writable folder and output device. Per-user setup downloads FFmpeg 9.0.1 online; portable excludes FFmpeg. No release has been published yet."
+    "ru": "Windows 11 x64, .NET Framework 4.8, доступная для записи папка и устройство вывода. Автономный Setup и portable включают FFmpeg, исходники и лицензии. Без администратора.",
+    "de": "Windows 11 x64, .NET Framework 4.8, beschreibbarer Ordner und Ausgabegerät. Offline-Setup und Portable enthalten FFmpeg, Quellen und Lizenzen. Ohne Administratorrechte.",
+    "en": "Windows 11 x64, .NET Framework 4.8, a writable folder and output device. Offline Setup and portable include FFmpeg, sources and notices. No administrator rights."
   },
   "start": {
     "ru": "После публикации проверьте SHA-256 и запустите установщик без администратора. Он не запускает запись; последующий запуск SoundLeaf из «Пуска» начинает запись после проверок.",
