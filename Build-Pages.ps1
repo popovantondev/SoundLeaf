@@ -8,6 +8,7 @@ if(Test-Path -LiteralPath $OutputDirectory){throw 'Pages output exists; overwrit
 [IO.File]::Copy((Join-Path $root 'assets\tray-preview.png'),(Join-Path $OutputDirectory 'assets\tray-preview.png'),$false)
 Copy-Item -LiteralPath (Join-Path $root 'assets\screenshots') -Destination (Join-Path $OutputDirectory 'assets\screenshots') -Recurse
 [IO.File]::Copy((Join-Path $root 'docs\guide.css'),(Join-Path $OutputDirectory 'guide.css'),$false)
+[IO.File]::Copy((Join-Path $root 'docs\guide-theme.js'),(Join-Path $OutputDirectory 'guide-theme.js'),$false)
 $utf8=New-Object Text.UTF8Encoding($false)
 foreach($lang in @('ru','de','en')){
     $html=[IO.File]::ReadAllText((Join-Path $root ('docs\Guide-'+$lang+'.html')),[Text.Encoding]::UTF8)

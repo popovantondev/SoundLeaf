@@ -10,4 +10,6 @@ Archive checks verify portable runtime/source hashes, original FFmpeg/Opus/LAME 
 
 Website checks use the rendered DE/RU/EN pages in a browser. Desktop and 390-pixel emulated viewport were inspected; language switches work, images load and no horizontal overflow was detected at that narrow viewport. This is browser viewport emulation, not testing on a physical phone. Existing app UI and capture/storage behavior are unchanged.
 
+Both website themes were checked across DE/RU/EN at the narrow viewport. Theme choices persist across language switches; the application screenshot switches to the matching light/dark view. System preference is the default; no external scripts or analytics are loaded.
+
 Unsigned educational preview. Checksum verification is not signing, legal advice, patent clearance or a guarantee against every undiscovered defect. RIGHTS.md retains the application restrictions; only the encoder build script has the expressly approved LGPL exception.

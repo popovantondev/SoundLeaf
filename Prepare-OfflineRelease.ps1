@@ -23,7 +23,7 @@ Copy-Item -LiteralPath $candidate -Destination (Join-Path $portable 'SoundLeaf.e
 foreach($file in @('RIGHTS.md','THIRD_PARTY_NOTICES.md')){Copy-Item -LiteralPath (Join-Path $root $file) -Destination $portable}
 Copy-Item -LiteralPath (Join-Path $root 'distribution\README.md') -Destination (Join-Path $portable 'README.md')
 foreach($relative in (& git -C $root ls-files -- docs assets)){
-    if($relative -match '^docs/(Guide-(ru|de|en)\.html|guide\.css)$' -or $relative -match '^assets/(SoundLeaf\.ico|tray-preview\.png|screenshots/[^/]+\.png|soundleaf-[^/]+\.(png|svg))$'){
+    if($relative -match '^docs/(Guide-(ru|de|en)\.html|guide\.css|guide-theme\.js)$' -or $relative -match '^assets/(SoundLeaf\.ico|tray-preview\.png|screenshots/[^/]+\.png|soundleaf-[^/]+\.(png|svg))$'){
         $destination=Join-Path $portable $relative;[void][IO.Directory]::CreateDirectory((Split-Path -Parent $destination));Copy-Item -LiteralPath (Join-Path $root $relative) -Destination $destination
     }
 }
