@@ -1,12 +1,30 @@
-<p align="center"><img src="assets/screenshots/en-control-light.png" width="360" alt="SoundLeaf — actual application interface, example view"></p>
-
 # SoundLeaf
 
-[Deutsch](docs/README.de.md) · [Русский](docs/README.ru.md) · English
+[Deutsch](docs/README.de.md) · [Русский](docs/README.ru.md) · [English](README.md)
 
-**Strictly an educational project · Windows 11 · x64 · Preview 3.0.5**
+Educational Windows system-audio recording application with tray controls, WAV backup and checks before files are marked complete.
 
-SoundLeaf is a C# learning project exploring Windows system audio, background processing, durable file storage and a system-tray interface. It is not a professional recording solution.
+**Windows 11 · x64 · Preview 3.0.5**
+
+**[Download 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Website](https://popovantondev.github.io/SoundLeaf/index-en.html)** · **[User guide](https://popovantondev.github.io/SoundLeaf/Guide-en.html)**
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/en-control-dark.png">
+  <img src="assets/screenshots/en-control-light.png" width="360" alt="SoundLeaf">
+</picture>
+
+*Actual interface with demonstration data; no recordings of real conversations.*
+
+## First steps
+
+Verify SHA-256. Install Setup or extract the complete portable folder: FFmpeg, corresponding sources and notices are included. No administrator rights needed. Setup does not start capture; launching the application later begins recording after checks. Capture uses the default Windows output device, not the microphone.
+
+[Rights](https://popovantondev.github.io/SoundLeaf/rights-en.html) · [Components](https://popovantondev.github.io/SoundLeaf/notices-en.html) · [Report a problem](https://github.com/popovantondev/SoundLeaf/issues/new/choose)
+
+**Limitations:** unsigned educational Preview; practical testing is limited to one Windows computer. This is not a professional recording product. Original application rights and third-party licenses are separate.
+
+<details>
+<summary>Technical details</summary>
 
 ## Download and installation
 
@@ -28,7 +46,7 @@ The offline `SoundLeaf-3.0.5-Setup.exe` installs for the current user under `%LO
 - Background checks before capture: durable folder write/rename, free space, and a short selected-profile encode/decode with a three-second limit per FFmpeg process.
 - Explicit WAV-only recording when FFmpeg is unavailable; verified WAV parts and an atomic completion marker prevent deliberate WAV results being mistaken for crashes.
 
-Recording starts automatically when SoundLeaf is launched only after its checks pass. Below 256 MiB free, capture is blocked. From 256 MiB to 1 GiB, or when space cannot be measured, the menu warns; these initial checks cannot guarantee enough space for the entire session. An FFmpeg failure offers “Начать запись только в WAV” but never switches modes automatically. Only capture audio you are entitled to record, with any required participant consent. Silence is normal and is not treated as a fault.
+Recording starts automatically when SoundLeaf is launched only after its checks pass. Below 256 MiB free, capture is blocked. From 256 MiB to 1 GiB, or when space cannot be measured, the menu warns; these initial checks cannot guarantee enough space for the entire session. An FFmpeg failure offers “Start WAV-only recording” but never switches modes automatically. Only capture audio you are entitled to record, with any required participant consent. Silence is normal and is not treated as a fault.
 
 ## Profiles, panel and recording library
 
@@ -54,7 +72,7 @@ Additional formats use one live encoder across WAV boundaries, with a bounded qu
 
 ## Running the source build
 
-Public GitHub publication is pending. Local release preparation produces source and portable x64 archives with SHA-256 files; the portable package explicitly excludes FFmpeg. Extract the whole portable ZIP and follow its three-language README. For a source build, create `SoundLeaf.next.exe`, provide compatible FFmpeg at `tools/ffmpeg.exe` beside it, then launch from a writable folder. FFmpeg must provide AAC, libopus and libmp3lame for the respective profiles. For normal use, rename the tested candidate to `SoundLeaf.exe`.
+Release 3.0.5 is published on GitHub. Local release preparation produces source and portable x64 archives with SHA-256 files; the published 3.0.5 portable package includes FFmpeg. Extract the whole portable ZIP and follow its three-language README. For a source build, create `SoundLeaf.next.exe`, provide compatible FFmpeg at `tools/ffmpeg.exe` beside it, then launch from a writable folder. FFmpeg must provide AAC, libopus and libmp3lame for the respective profiles. For normal use, rename the tested candidate to `SoundLeaf.exe`.
 
 ## Screenshots
 
@@ -89,8 +107,10 @@ No cloud upload or telemetry is implemented. Recordings, logs and local paths ar
 
 ## Documentation
 
-- User guide: [English](docs/Guide-en.html) · [Deutsch](docs/Guide-de.html) · [Русский](docs/Guide-ru.html)
+- User guide: [English](https://popovantondev.github.io/SoundLeaf/Guide-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Русский](https://popovantondev.github.io/SoundLeaf/Guide-ru.html)
 - [Architecture](docs/ARCHITECTURE.md) · [Verification](docs/VERIFICATION.md) · [Changelog](CHANGELOG.md)
-- [Catalog integration](docs/CATALOG.md) · [Rights](RIGHTS.md) · [Third-party components](THIRD_PARTY_NOTICES.md)
+- [Catalog integration](docs/CATALOG.md) · [Rights](https://popovantondev.github.io/SoundLeaf/rights-en.html) · [Third-party components](https://popovantondev.github.io/SoundLeaf/notices-en.html)
 
-Public source visibility is for educational/portfolio inspection, not an open-source license. Original code rights and third-party component terms are separate. A binary release will require an additional distribution review, especially for FFmpeg.
+Public source visibility is for educational/portfolio inspection, not an open-source license. Original code rights and third-party component terms are separate. The published 3.0.5 release includes FFmpeg and its corresponding sources and notices.
+
+</details>
