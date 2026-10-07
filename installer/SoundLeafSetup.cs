@@ -16,7 +16,8 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 
 [assembly: AssemblyTitle("SoundLeaf Setup")]
-[assembly: AssemblyFileVersion("3.0.4.0")]
+[assembly: AssemblyVersion("3.0.5.0")]
+[assembly: AssemblyFileVersion("3.0.5.0")]
 namespace SoundLeafSetup
 {
     [DataContract] public sealed class Receipt
@@ -28,6 +29,9 @@ namespace SoundLeafSetup
     }
     public static class Engine
     {
+        public const bool BundledEncoder = false;
+        public const string BundledEncoderHash = "";
+        public const string BundledSourceHash = "";
         public const string EncoderUrl = "https://github.com/GyanD/codexffmpeg/releases/download/9.0.1/ffmpeg-9.0.1-essentials_build.zip";
         public const string EncoderZipHash = "FEC81AE03971D9DD4BE3EBE02E263BD2EC1D789483F931BDBA5F5715E65DA2E9";
         public const string EncoderExeHash = "72A489ECCD008C2EC2C0A5856C5C75BC3D8BBFA90166C4566865C246445E6AA3";
@@ -118,6 +122,12 @@ namespace SoundLeafSetup
             {
                 Extract(payload,stage);
                 if(!File.Exists(Path.Combine(stage,"SoundLeaf.exe")) || Hash(Path.Combine(stage,"SoundLeaf.exe"))!=RuntimeExeHash) throw new IOException("Verified application hash mismatch.");
+                if(BundledEncoder)
+                {
+                    if(!string.IsNullOrEmpty(encoderZip)) throw new IOException("Offline setup does not accept an external encoder archive.");
+                    if(Hash(Path.Combine(stage,"tools","ffmpeg.exe"))!=BundledEncoderHash || Hash(Path.Combine(stage,"tools","ffmpeg-9.0.2-corresponding-source.zip"))!=BundledSourceHash)
+                        throw new IOException("Bundled encoder or corresponding source hash mismatch.");
+                }
                 if(!string.IsNullOrEmpty(encoderZip)) AddEncoder(encoderZip,stage);
                 File.Copy(uninstaller,Path.Combine(stage,"Uninstall.exe"),false);
                 var receipt=new Receipt{Root=root};
@@ -138,7 +148,7 @@ namespace SoundLeafSetup
                     Save(receipt,Path.Combine(root,"installation.json"));
                     if(integrate) using(var key=Registry.CurrentUser.CreateSubKey(RegistryPath))
                     {
-                        key.SetValue("DisplayName","SoundLeaf"); key.SetValue("DisplayVersion","3.0.4"); key.SetValue("Publisher","popovantondev"); key.SetValue("InstallLocation",root);
+                        key.SetValue("DisplayName","SoundLeaf"); key.SetValue("DisplayVersion",typeof(Engine).Assembly.GetName().Version.ToString()); key.SetValue("Publisher","popovantondev"); key.SetValue("InstallLocation",root);
                         key.SetValue("DisplayIcon",Path.Combine(root,"SoundLeaf.exe")); key.SetValue("UninstallString","\""+Path.Combine(root,"Uninstall.exe")+"\"");
                         key.SetValue("NoModify",1,RegistryValueKind.DWord); key.SetValue("NoRepair",1,RegistryValueKind.DWord);
                     }
@@ -207,14 +217,14 @@ namespace SoundLeafSetup
             folder.Text=uninstall?AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\'):Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Programs","SoundLeaf");
             encoder.SetBounds(20,108,560,32); explanation.SetBounds(20,150,560,90); status.SetBounds(20,245,440,65); action.SetBounds(465,260,115,35);
             Controls.AddRange(new Control[]{language,folder,browse,encoder,explanation,status,action});
-            folder.ReadOnly=uninstall; browse.Enabled=!uninstall; encoder.Visible=!uninstall;
+            folder.ReadOnly=uninstall; browse.Enabled=!uninstall; encoder.Visible=!uninstall; encoder.Enabled=!Engine.BundledEncoder;
             language.SelectedIndexChanged+=(s,e)=>Translate(); string lang=CultureInfo.CurrentUICulture.TwoLetterISOLanguageName; language.SelectedIndex=lang=="de"?1:lang=="ru"?2:0;
             browse.Click+=(s,e)=>{using(var dialog=new FolderBrowserDialog()) if(dialog.ShowDialog(this)==DialogResult.OK) folder.Text=dialog.SelectedPath;};
             action.Click+=async(s,e)=>
             {
                 if(completed) { Close(); return; }
                 busy=true; action.Enabled=browse.Enabled=language.Enabled=folder.Enabled=encoder.Enabled=false;
-                string root=folder.Text; bool fetch=encoder.Checked;
+                string root=folder.Text; bool fetch=encoder.Checked && !Engine.BundledEncoder;
                 try
                 {
                     await System.Threading.Tasks.Task.Run(()=>
@@ -233,7 +243,7 @@ namespace SoundLeafSetup
                     completed=true; action.Text=T("Close","Schließen","Закрыть");
                 }
                 catch(Exception error) { status.Text=T("Failed: ","Fehler: ","Ошибка: ")+error.Message; }
-                finally { busy=false; action.Enabled=true; if(!completed) { browse.Enabled=!uninstall; language.Enabled=encoder.Enabled=true; folder.Enabled=!uninstall; } }
+                finally { busy=false; action.Enabled=true; if(!completed) { browse.Enabled=!uninstall; language.Enabled=true; encoder.Enabled=!Engine.BundledEncoder; folder.Enabled=!uninstall; } }
             };
             FormClosing+=(s,e)=>{if(busy)e.Cancel=true;};
         }
@@ -241,8 +251,10 @@ namespace SoundLeafSetup
         {
             browse.Text="…";
             encoder.Text=T("Download FFmpeg 9.0.1 (109 MB, SHA-256 verified)","FFmpeg 9.0.1 laden (109 MB, SHA-256 geprüft)","Скачать FFmpeg 9.0.1 (109 МБ, проверка SHA-256)");
+            if(Engine.BundledEncoder) encoder.Text=T("FFmpeg 9.0.2 included — no download needed", "FFmpeg 9.0.2 enthalten — kein Download nötig", "FFmpeg 9.0.2 включён — скачивание не нужно");
             explanation.Text=uninstall?T("Only unchanged installed program files are removed. Recordings, settings, logs and changed files remain. Close SoundLeaf first.","Nur unveränderte Programmdateien werden entfernt. Aufnahmen, Einstellungen, Protokolle und geänderte Dateien bleiben. SoundLeaf zuerst schließen.","Удаляются только неизменённые файлы программы. Записи, настройки, журналы и изменённые файлы остаются. Сначала закройте SoundLeaf."):
                 T("Educational project. Current-user installation, no administrator rights. FFmpeg downloads from GyanD/GitHub under separate GPL terms. Without it, select WAV-only explicitly. Start SoundLeaf from the Start menu; it begins recording after checks. Existing folders are not overwritten.","Lernprojekt. Installation für den aktuellen Benutzer ohne Administratorrechte. FFmpeg wird von GyanD/GitHub unter separaten GPL-Bedingungen geladen. Ohne FFmpeg WAV ausdrücklich wählen. SoundLeaf im Startmenü starten; Aufnahme nach Prüfungen. Vorhandene Ordner werden nicht überschrieben.","Учебный проект. Установка для текущего пользователя без прав администратора. FFmpeg загружается с GyanD/GitHub, условия GPL отдельные. Без него режим WAV выбирается явно. Запуск из меню «Пуск» начинает запись после проверок. Существующие папки не перезаписываются.");
+            if(!uninstall && Engine.BundledEncoder) explanation.Text=T("Educational project. Offline installation for the current user; no administrator rights. FFmpeg is included under separate LGPL terms with source and licenses. Setup never starts recording or enables startup. Launching SoundLeaf later begins recording after checks. Existing folders are not overwritten.", "Lernprojekt. Offline-Installation ohne Administratorrechte für den aktuellen Benutzer. FFmpeg mit Quellcode und Lizenzen unter separaten LGPL-Bedingungen enthalten. Setup startet keine Aufnahme und aktiviert keinen Autostart. Ein späterer Programmstart beginnt die Aufnahme nach Prüfungen. Bestehende Ordner werden nicht überschrieben.", "Учебный проект. Офлайн-установка для текущего пользователя без прав администратора. FFmpeg, исходники и лицензии включены; условия LGPL отдельные. Установщик не начинает запись и не включает автозапуск. Запуск программы позже начинает запись после проверок. Существующие папки не перезаписываются.");
             action.Text=uninstall?T("Uninstall","Entfernen","Удалить"):T("Install","Installieren","Установить");
         }
     }

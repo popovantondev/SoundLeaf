@@ -6,7 +6,12 @@ $manifest=Get-Content -LiteralPath (Join-Path $ReleaseDirectory 'setup-manifest.
 $setup=Join-Path $ReleaseDirectory $manifest.File
 if((Get-SoundLeafSha256 $setup) -ne $manifest.Sha256){throw 'Setup SHA mismatch.'}
 $assemblies=@('System.dll','System.Core.dll','System.Drawing.dll','System.Windows.Forms.dll','System.Runtime.Serialization.dll','System.Xml.dll','System.IO.Compression.dll','System.IO.Compression.FileSystem.dll','Microsoft.CSharp.dll')
-Add-Type -TypeDefinition ([IO.File]::ReadAllText((Join-Path $root 'installer\SoundLeafSetup.cs'),[Text.Encoding]::UTF8)) -ReferencedAssemblies $assemblies
+$code=[IO.File]::ReadAllText((Join-Path $root 'installer\SoundLeafSetup.cs'),[Text.Encoding]::UTF8)
+if($manifest.EncoderIncluded){
+    if($EncoderZip -or $DownloadEncoder){throw 'Offline tests must not fetch external encoder.'}
+    $code=$code.Replace('public const bool BundledEncoder = false;','public const bool BundledEncoder = true;').Replace('public const string BundledEncoderHash = "";','public const string BundledEncoderHash = "'+$manifest.EncoderSha256+'";').Replace('public const string BundledSourceHash = "";','public const string BundledSourceHash = "'+$manifest.EncoderSourceSha256+'";').Replace('public const string RuntimeExeHash = "BB2E3DED749FE456FC3D0418D2596B59303975C98340933E3FAE8ECC6B44E7A3";','public const string RuntimeExeHash = "'+$manifest.RuntimeSha256+'";')
+}
+Add-Type -TypeDefinition $code -ReferencedAssemblies $assemblies
 $assembly=[Reflection.Assembly]::LoadFile($setup)
 $test=Join-Path $ReleaseDirectory ('SetupTests-'+[Guid]::NewGuid().ToString('N'))
 [void][IO.Directory]::CreateDirectory($test)
@@ -19,6 +24,10 @@ $target=Join-Path $test 'Installed'
 $stream=$assembly.GetManifestResourceStream('payload.zip')
 try{[SoundLeafSetup.Engine]::Install($target,$stream,$uninstaller,$EncoderZip,$false)}finally{$stream.Dispose()}
 if((Get-SoundLeafSha256 (Join-Path $target 'SoundLeaf.exe')) -ne $manifest.RuntimeSha256){throw 'Installed app differs.'}
+if($manifest.EncoderIncluded){
+    if((Get-SoundLeafSha256 (Join-Path $target 'tools\ffmpeg.exe')) -ne $manifest.EncoderSha256 -or (Get-SoundLeafSha256 (Join-Path $target 'tools\ffmpeg-9.0.2-corresponding-source.zip')) -ne $manifest.EncoderSourceSha256){throw 'Offline installed encoder/source mismatch.'}
+    foreach($file in @('ffmpeg/COPYING.LGPLv2.1','opus/COPYING','lame/COPYING','crt/COPYING','libgcc/COPYING.RUNTIME','winpthreads/COPYING')){if(!(Test-Path -LiteralPath (Join-Path $target ('tools\licenses\'+$file)))){throw 'Missing bundled license.'}}
+}
 if($EncoderZip -and (Get-SoundLeafSha256 (Join-Path $target 'tools\ffmpeg.exe')) -ne [SoundLeafSetup.Engine]::EncoderExeHash){throw 'Installed encoder differs.'}
 $record=Join-Path $target 'Recordings\preserve-test.txt'
 [void][IO.Directory]::CreateDirectory((Split-Path -Parent $record));[IO.File]::WriteAllText($record,'Synthetic preservation fixture. Not audio.')
