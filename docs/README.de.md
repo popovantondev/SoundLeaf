@@ -62,6 +62,6 @@ Praktisch nur auf einem Windows-Rechner geprüft. Der Besitzer bestätigt normal
 
 ![Steuerung](../assets/screenshots/de-control-light.png)
 
-Testpanel mit Beispielsitzungen und synthetischen Pegeln, keine echten Gespräche. [Release-Vorbereitung](RELEASE.md). `Prepare-Release.ps1` verlangt vollständige MegaProg-Prüfung, passenden Commit/EXE-Hash und sauberen Git-Stand. Nur lokale Archive/Prüfsummen; keine Veröffentlichung, Tags oder automatische Aufnahme. Der Windows-Workflow prüft nur Quelltext/Build/Symbole, nicht echte Aufnahme. Rechte bleiben unverändert.
+Testpanel mit Beispielsitzungen und synthetischen Pegeln, keine echten Gespräche. [Release-Vorbereitung](RELEASE.md). Aktuell: `Prepare-OfflineRelease.ps1` mit vollständig geprüftem Lauf, unveränderten Eingaben und App-/Encoder-Hashes. `Test-Setup.ps1` prüft Offline-Setup, `Test-OfflineRelease.ps1` Archive und Prüfsummen. Der Windows-Workflow prüft Quelltext, Build und Symbole, nicht vollständige Aufnahme. App-Rechte bleiben unverändert; die LGPL-Ausnahme betrifft nur das FFmpeg-Buildskript.
 
 [Anleitung](Guide-de.html) · [Architektur](ARCHITECTURE.md) · [Prüfungen](VERIFICATION.md) · [Änderungen](../CHANGELOG.md) · [Rechte](../RIGHTS.md) · [Drittanbieter](../THIRD_PARTY_NOTICES.md)

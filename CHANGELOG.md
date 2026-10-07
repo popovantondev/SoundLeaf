@@ -1,12 +1,19 @@
 # Changelog
 
+## 3.0.5 — public offline preview, 2026-10-07
+
+- Publish offline current-user Setup, complete portable runtime, application source, corresponding FFmpeg source kit and SHA256SUMS.txt. Administrator rights and installation-time downloads are not required. All five public downloads were rechecked by size and SHA-256.
+- Verify non-elevated installation/removal, safety/data-preservation fixtures, the actual asynchronous wizard handler and 402 archive assertions. This is not a clean-machine deployment or manual end-user walkthrough.
+- Publish matching light/dark leaf-themed guides for Deutsch / Русский / English with persistent theme selection, system default and theme-matched actual interface screenshots. Browser checks include emulated narrow layouts.
+- Preserve application and encoder bytes from the fully checked runtime, existing recordings, Git history and application rights. Grant LGPL-2.1-or-later only for the encoder build script; component licenses remain independent.
+
 ## 3.0.5 — immediate panel and quiet indication, 2026-10-02
 
 - Remove snapshot-based opening/closing and its late shadow handoff. Keep native rounded corners, focus behavior and separate saving tray animation.
 - Use display-only RMS hysteresis (approximately −48 dBFS on / −54 dBFS off) to suppress background noise and isolated peaks without filtering recorded audio.
 - Build a separate minimal FFmpeg 9.0.2 with pinned unmodified Opus/LAME sources, no network protocols, matching source kit and upstream/runtime notices. Main MKV/AAC 192 parameters remain unchanged.
 - Require complete direct verification and matching application/encoder hashes for local updates; retain the old installation in a backup. No external supervisor is needed.
-- Offline public Setup remains a separate preparation task, not a completed release in this changelog.
+- At the time of this 2 October runtime entry, public offline Setup remained a separate preparation task; see the 7 October publication entry above.
 
 ## 3.0.4 — smooth histogram and compact quiet transition, 2026-10-01
 

@@ -6,7 +6,7 @@ The corresponding source kit `ffmpeg-9.0.2-corresponding-source.zip` is included
 
 See `tools/licenses`: FFmpeg LGPL, Opus BSD-style terms, LAME LGPL, MinGW-w64 runtime/headers, winpthreads and GCC runtime terms including the Runtime Library Exception. Independently licensed components are not governed by SoundLeaf's original-source restrictions.
 
-The system .NET Framework, Windows Forms, System.Drawing and WASAPI are used; no separate .NET runtime is bundled. The application source archive excludes the encoder binary. [FFmpeg licensing](https://ffmpeg.org/legal.html) · [Build instructions](encoder/README.md). This inventory is not legal advice or patent clearance.
+The system .NET Framework, Windows Forms, System.Drawing and WASAPI are used; no separate .NET runtime is bundled. The application source archive excludes the encoder binary. [FFmpeg licensing](https://ffmpeg.org/legal.html) · [Build instructions](https://github.com/popovantondev/SoundLeaf/blob/main/encoder/README.md). This inventory is not legal advice or patent clearance.
 
 Deutsch: FFmpeg, passende Quellen und unveränderte Lizenztexte sind enthalten. Ihre Lizenzen gelten unabhängig von den Rechten an SoundLeaf; die App selbst hat keine Open-Source-Lizenz.
 
