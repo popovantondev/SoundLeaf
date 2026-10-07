@@ -1,5 +1,13 @@
 # Third-party components / Drittanbieter / Сторонние компоненты
 
+[Deutsch — Komponenten](https://popovantondev.github.io/SoundLeaf/notices-de.html) · [Русский — Компоненты](https://popovantondev.github.io/SoundLeaf/notices-ru.html) · [English — Components](https://popovantondev.github.io/SoundLeaf/notices-en.html)
+
+| Component / Komponente / Компонент | Distribution / Lieferumfang / Поставка |
+|---|---|
+| FFmpeg 9.0.2 · Opus 1.6.1 · LAME 3.100 | Offline Setup / portable 3.0.5 |
+| Corresponding sources / Quellen / Исходники | `ffmpeg-9.0.2-corresponding-source.zip` |
+| License texts / Lizenztexte / Лицензии | [DE](https://popovantondev.github.io/SoundLeaf/licenses-de.html) · [RU](https://popovantondev.github.io/SoundLeaf/licenses-ru.html) · [EN](https://popovantondev.github.io/SoundLeaf/licenses-en.html) |
+
 SoundLeaf invokes FFmpeg as a separate process; it does not link to its libraries. Offline 3.0.5 includes minimal FFmpeg **9.0.2**, Opus **1.6.1** and LAME **3.100**, built from unmodified upstream sources. GPL, version3 and nonfree options are disabled. FFmpeg reports **LGPL 2.1 or later**. Network protocols are disabled.
 
 The corresponding source kit `ffmpeg-9.0.2-corresponding-source.zip` is included under `tools` and separately available on the [same release page](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5). It contains original source archives, build script/instructions, configuration evidence and unmodified component notices. Only `encoder/build-minimal.sh` has an additional LGPL-2.1-or-later permission; SoundLeaf's application rights remain unchanged.

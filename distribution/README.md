@@ -8,7 +8,7 @@ Launching SoundLeaf starts recording automatically after folder, free-space and 
 
 Strictly a learning project, not a professional recording solution. Tested on one Windows computer; screen/DPI matrices include modeled tests, not a claim of testing every display or a clean machine. Below 256 MiB free recording is blocked; low/unknown space warns. This is not a capacity guarantee. The quiet threshold changes only the level display, never captured audio. After changing output device start a new session. Before updates stop, wait, exit and back up Recordings and State. Uninstall retains user files; upgrades and automatic migration are not implemented.
 
-[User guide](docs/Guide-en.html) · [Rights](RIGHTS.md)
+[User guide](https://popovantondev.github.io/SoundLeaf/Guide-en.html) · [Rights](https://popovantondev.github.io/SoundLeaf/rights-en.html)
 
 ## Deutsch
 
@@ -18,7 +18,7 @@ Beim Start beginnt die Aufnahme nach Prüfung von Ordner, freiem Platz und Audio
 
 Reines Lernprojekt, keine professionelle Aufnahmelösung. Auf einem Windows-Rechner getestet; Bildschirm-/DPI-Matrizen enthalten Simulationen, keine Zusage für alle Displays oder Neuinstallationen. Unter 256 MiB frei wird blockiert, bei wenig/unbekanntem Platz gewarnt. Keine Platzgarantie. Ruhe-Schwelle betrifft nur die Pegelanzeige, niemals aufgenommenes Audio. Nach Gerätewechsel neue Sitzung beginnen. Vor Updates stoppen, warten, beenden und Recordings/State sichern. Deinstallation behält Benutzerdaten; automatische Updates und Migration sind nicht implementiert.
 
-[Anleitung](docs/Guide-de.html) · [Rechte](RIGHTS.md)
+[Anleitung](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Rechte](https://popovantondev.github.io/SoundLeaf/rights-de.html)
 
 ## Русский
 
@@ -28,7 +28,7 @@ Reines Lernprojekt, keine professionelle Aufnahmelösung. Auf einem Windows-Rech
 
 Сугубо учебный проект, не профессиональное средство записи. Проверен на одном компьютере Windows; матрицы экранов/DPI включают моделирование, а не проверку всех мониторов и чистой системы. Ниже 256 МиБ свободного места запись запрещена, при малом или неизвестном месте есть предупреждение. Это не гарантия места на всю запись. Порог тишины влияет только на индикатор, не на звук в файле. После смены устройства начните новую сессию. Перед обновлением остановите запись, дождитесь сохранения, выйдите и сделайте копию Recordings и State. Удаление оставляет пользовательские данные; автоматическое обновление и перенос не реализованы.
 
-[Руководство](docs/Guide-ru.html) · [Права](RIGHTS.md)
+[Руководство](https://popovantondev.github.io/SoundLeaf/Guide-ru.html) · [Права](https://popovantondev.github.io/SoundLeaf/rights-ru.html)
 
 ## SHA-256
 

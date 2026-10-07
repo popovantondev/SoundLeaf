@@ -1,30 +1,36 @@
 # SoundLeaf
 
-[Version 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5) · [Anleitung](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Setup und Deinstallation](SETUP.md). Offline-Setup ohne Administratorrechte enthält FFmpeg 9.0.2, passende Quellen und Lizenzen. Setup startet die App nicht; beim späteren App-Start beginnt die Aufnahme nach erfolgreichen Prüfungen. Unsignierte Lernprojekt-Vorschau, keine professionelle Aufnahmelösung.
+[Deutsch](../docs/README.de.md) · [Русский](../docs/README.ru.md) · [English](../README.md)
 
-Deutsch · [Русский](README.ru.md) · [English](../README.md)
+Lernprojekt zur Aufnahme von Windows-Systemaudio mit Tray-Steuerung, WAV-Sicherung und Prüfung fertiger Dateien.
 
-**Reines Lernprojekt · Windows 11 · x64 · Vorabversion 3.0.5**
+**Windows 11 · x64 · Vorabversion 3.0.5**
 
-SoundLeaf ist ein C#-Lernprojekt zu Windows-Systemaudio, Hintergrundverarbeitung, sicherer Dateispeicherung und Bedienung im Infobereich. Es ist keine professionelle Aufnahmelösung. Oberfläche und Dokumentation sind deutsch, russisch und englisch; die Sprache ändert sich sofort.
+**[3.0.5 herunterladen](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Website](https://popovantondev.github.io/SoundLeaf/index-de.html)** · **[Anleitung](https://popovantondev.github.io/SoundLeaf/Guide-de.html)**
 
-![Demonstration der Statussymbole](../assets/tray-preview.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../assets/screenshots/de-control-dark.png">
+  <img src="../assets/screenshots/de-control-light.png" width="360" alt="SoundLeaf">
+</picture>
 
-Die Aufnahme startet automatisch beim Öffnen der EXE. Das Symbolmenü bietet Start, Pause/Fortsetzen, Stoppen und Speichern, Ergebnis, Öffnen der geprüften Datei, Wiederherstellung unvollständiger Sitzungen und Autostart für den aktuellen Benutzer ohne Administratorrechte.
+*Echte Oberfläche mit Demonstrationsdaten; keine Aufnahmen realer Gespräche.*
 
-- Grünes Dreieck: Aufnahme. Gelbe Balken: Pause. Schwarzes Quadrat: gestoppt.
-- Dickerer drehender Bogen um ein festes grünes Dreieck genau in der Mitte: Verarbeitung, keine Prozentanzeige. 24 vorbereitete Bilder, jeweils 80 ms.
-- Rot: Fehler oder frühere unvollständige Sitzungen im gestoppten Zustand.
+## Erste Schritte
 
-Die Quelle ist das standardmäßige Windows-Ausgabegerät, nicht das Mikrofon. Stille ist kein Fehler. Nur erlaubte Inhalte aufnehmen und erforderliche Zustimmung einholen.
+SHA-256 prüfen. Setup installieren oder Portable vollständig entpacken: FFmpeg, passende Quellen und Lizenzen sind enthalten. Keine Administratorrechte nötig. Setup startet keine Aufnahme; der spätere App-Start beginnt sie nach Prüfungen. Aufgenommen wird das Windows-Standardausgabegerät, nicht das Mikrofon.
 
-Vor Aufnahmebeginn prüft ein Hintergrund-Thread Schreiben, Datenträger-Flush und Umbenennen einer eigenen Testdatei sowie kurzes Kodieren des gewählten Profils und Dekodieren mit jeweils drei Sekunden Prozesslimit. Unter 256 MiB freiem Speicher wird die Aufnahme gesperrt; zwischen 256 MiB und 1 GiB wird gewarnt. Nicht messbarer Speicher erlaubt den Start nur nach erfolgreicher Ordnerprüfung mit Warnung. Die Anfangsprüfung garantiert keinen Platz für die gesamte Aufnahme.
+[Rechte](https://popovantondev.github.io/SoundLeaf/rights-de.html) · [Komponenten](https://popovantondev.github.io/SoundLeaf/notices-de.html) · [Fehler melden](https://github.com/popovantondev/SoundLeaf/issues/new/choose)
+
+**Grenzen:** unsignierte Lernprojekt-Vorabversion; praktische Prüfung bisher auf einem Windows-PC. Keine professionelle Aufnahmelösung. App-Rechte und Drittanbieter-Lizenzen gelten getrennt.
+
+<details>
+<summary>Technische Details</summary>
 
 ## Speicherung und Wiederherstellung
 
 Zunächst wird eine WAV-Sicherung mit regelmäßiger Aktualisierung und Datenträger-Flush geschrieben. Parallel entsteht AAC mit 192 kbit/s. Interne Teile werden nach dem Stoppen zu einer MKV zusammengeführt; vor dem Entfernen der WAV-Sicherung werden Dekodierung und Dauer geprüft. Die Oberfläche zeigt Verarbeitungsschritte und den geprüften Ausgabepfad. Frühere offene Sitzungen werden separat gezählt.
 
-Bei fehlgeschlagener FFmpeg-Prüfung startet keine automatische Aufnahme. Der Menüpunkt „Начать запись только в WAV“ bietet ausdrücklich WAV ohne Encoder an. Menü und Tooltip kennzeichnen diesen Modus. Nach dem Stoppen werden geprüfte Pfade und der Ordnerbefehl angezeigt: WAV gespeichert, keine MKV erstellt. Lange Aufnahmen bleiben Teile bis 256 MiB, keine unbegrenzt große WAV. Ein atomarer Abschlussvermerk in `State/Sessions` verhindert die Einstufung abgeschlossener WAV-Sitzungen als Absturz. Bei Vermerkfehler bleibt Audio erhalten und der Status meldet einen Fehler. `State` beim Umzug mitnehmen.
+Bei fehlgeschlagener FFmpeg-Prüfung startet keine automatische Aufnahme. Der Menüpunkt „WAV-Aufnahme starten“ bietet ausdrücklich WAV ohne Encoder an. Menü und Tooltip kennzeichnen diesen Modus. Nach dem Stoppen werden geprüfte Pfade und der Ordnerbefehl angezeigt: WAV gespeichert, keine MKV erstellt. Lange Aufnahmen bleiben Teile bis 256 MiB, keine unbegrenzt große WAV. Ein atomarer Abschlussvermerk in `State/Sessions` verhindert die Einstufung abgeschlossener WAV-Sitzungen als Absturz. Bei Vermerkfehler bleibt Audio erhalten und der Status meldet einen Fehler. `State` beim Umzug mitnehmen.
 
 Die Wiederherstellung nutzt vollständige und unvollständige WAV-Teile derselben Sitzung. Fehlende/mehrdeutige Teile, aktive Schreiber, unterschiedliche Formate und vorhandene Zieldateien werden abgelehnt. Nach erfolgreicher Prüfung werden Originale nach `Backups/RecoveredSessions` verschoben; die automatische 24-Stunden-Bereinigung betrifft diesen Ordner nicht. Bei Fehlern bleiben Originale erhalten, Arbeitsdateien können in `RecoveryWork` verbleiben.
 
@@ -52,7 +58,7 @@ Zusatzformate verwenden einen Encoder über WAV-Grenzen hinweg und eine begrenzt
 
 ## Build und Prüfungen
 
-GitHub-Veröffentlichung steht noch aus. Die lokale Vorbereitung erstellt Quelltext- und portable x64-ZIPs mit SHA-256; FFmpeg ist ausdrücklich nicht enthalten. Das portable ZIP vollständig entpacken und dessen README lesen. Für Quelltext-Builds erzeugt `Build-Launcher.ps1` unter Windows PowerShell 5.1 die `SoundLeaf.next.exe`. Für MKV muss ein kompatibles `tools/ffmpeg.exe` neben der EXE liegen; ausdrücklich gewähltes WAV benötigt keinen Encoder. Einen beschreibbaren Ordner verwenden; beim Umzug den gesamten Ordner mitnehmen und Autostart neu aktivieren.
+Version 3.0.5 ist auf GitHub veröffentlicht. Die lokale Vorbereitung erstellt Quelltext- und portable x64-ZIPs mit SHA-256; Das veröffentlichte 3.0.5-Paket enthält FFmpeg 9.0.2. Das portable ZIP vollständig entpacken und dessen README lesen. Für Quelltext-Builds erzeugt `Build-Launcher.ps1` unter Windows PowerShell 5.1 die `SoundLeaf.next.exe`. Für MKV muss ein kompatibles `tools/ffmpeg.exe` neben der EXE liegen; ausdrücklich gewähltes WAV benötigt keinen Encoder. Einen beschreibbaren Ordner verwenden; beim Umzug den gesamten Ordner mitnehmen und Autostart neu aktivieren.
 
 `Run-Checks.ps1` führt Build, synthetische Tests, Symbolprüfungen und echte MKV-/WAV-Loopback-Tests aus. Die letzten Tests zeichnen Systemaudio im separaten Ordner `Verification` auf. Für SoundLeaf-Builds sind Python und ein separates SDK nicht erforderlich.
 
@@ -64,4 +70,6 @@ Praktisch nur auf einem Windows-Rechner geprüft. Der Besitzer bestätigt normal
 
 Testpanel mit Beispielsitzungen und synthetischen Pegeln, keine echten Gespräche. [Release-Vorbereitung](RELEASE.md). Aktuell: `Prepare-OfflineRelease.ps1` mit vollständig geprüftem Lauf, unveränderten Eingaben und App-/Encoder-Hashes. `Test-Setup.ps1` prüft Offline-Setup, `Test-OfflineRelease.ps1` Archive und Prüfsummen. Der Windows-Workflow prüft Quelltext, Build und Symbole, nicht vollständige Aufnahme. App-Rechte bleiben unverändert; die LGPL-Ausnahme betrifft nur das FFmpeg-Buildskript.
 
-[Anleitung](Guide-de.html) · [Architektur](ARCHITECTURE.md) · [Prüfungen](VERIFICATION.md) · [Änderungen](../CHANGELOG.md) · [Rechte](../RIGHTS.md) · [Drittanbieter](../THIRD_PARTY_NOTICES.md)
+[Anleitung](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Architektur](ARCHITECTURE.md) · [Prüfungen](VERIFICATION.md) · [Änderungen](../CHANGELOG.md) · [Rechte](https://popovantondev.github.io/SoundLeaf/rights-de.html) · [Drittanbieter](https://popovantondev.github.io/SoundLeaf/notices-de.html)
+
+</details>
