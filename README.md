@@ -12,6 +12,8 @@ SoundLeaf is a C# learning project exploring Windows system audio, background pr
 
 [Release 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5) · [English guide](https://popovantondev.github.io/SoundLeaf/Guide-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Русский](https://popovantondev.github.io/SoundLeaf/Guide-ru.html)
 
+[Website — English](https://popovantondev.github.io/SoundLeaf/index-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/index-de.html) · [Русский](https://popovantondev.github.io/SoundLeaf/index-ru.html). Homepages and guides share light and dark leaf-inspired themes with matching localized application screenshots and a remembered theme choice.
+
 The offline `SoundLeaf-3.0.5-Setup.exe` installs for the current user under `%LOCALAPPDATA%\Programs\SoundLeaf` without administrator rights. FFmpeg 9.0.2, corresponding sources and notices are included; installation does not need a download. The portable ZIP includes the same runtime. Setup does not launch the application or enable startup. Launching SoundLeaf later starts recording after successful checks. [Setup and removal](docs/SETUP.md). This is an unsigned educational preview, not a professional recording product. Check `SHA256SUMS.txt`; a checksum is not code signing.
 
 ## Features
