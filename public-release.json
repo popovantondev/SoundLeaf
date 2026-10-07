@@ -5,12 +5,48 @@
   "version": "3.0.5",
   "platform": "Windows 11 · x64",
   "source_url": "https://github.com/popovantondev/SoundLeaf",
-  "status": "source",
-  "tag": "",
-  "release_url": "",
-  "assets": [],
-  "downloads": [],
-  "checksums": [],
+  "status": "preview",
+  "tag": "v3.0.5",
+  "release_url": "https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5",
+  "assets": [
+    {
+      "name": "ffmpeg-9.0.2-corresponding-source.zip",
+      "size": 24548869,
+      "sha256": "99d9704cd20ddb6658139af3f411fccfdfbd5758ffe3daba745644f9fca59289",
+      "url": "https://github.com/popovantondev/SoundLeaf/releases/download/v3.0.5/ffmpeg-9.0.2-corresponding-source.zip"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size": 383,
+      "sha256": "4276db1348a3107d56b2edf3089016a77fdcc48b8ab1919f9214d9eefd514ae3",
+      "url": "https://github.com/popovantondev/SoundLeaf/releases/download/v3.0.5/SHA256SUMS.txt"
+    },
+    {
+      "name": "SoundLeaf-3.0.5-Setup.exe",
+      "size": 27994112,
+      "sha256": "e74e88b5638f175e97796d59d44b6ae677ff8da2fa2a312a08a67d45d5c76268",
+      "url": "https://github.com/popovantondev/SoundLeaf/releases/download/v3.0.5/SoundLeaf-3.0.5-Setup.exe"
+    },
+    {
+      "name": "SoundLeaf-3.0.5-source.zip",
+      "size": 442580,
+      "sha256": "6591aac2d910ceb3a38c9206a9c483dcb6da2a6758e38160fb1c9624f7315fc7",
+      "url": "https://github.com/popovantondev/SoundLeaf/releases/download/v3.0.5/SoundLeaf-3.0.5-source.zip"
+    },
+    {
+      "name": "SoundLeaf-3.0.5-win-x64.zip",
+      "size": 27797540,
+      "sha256": "0b88fff1985858d467e14c316c66702353159320a6a5a77d0dda711b1cf6097e",
+      "url": "https://github.com/popovantondev/SoundLeaf/releases/download/v3.0.5/SoundLeaf-3.0.5-win-x64.zip"
+    }
+  ],
+  "downloads": [
+    "SoundLeaf-3.0.5-Setup.exe",
+    "SoundLeaf-3.0.5-win-x64.zip"
+  ],
+  "checksums": [
+    "SHA256SUMS.txt"
+  ],
   "description": {
     "ru": "Учебный проект записи системного звука Windows: управление в трее, резервный WAV и проверка итоговых файлов.",
     "de": "Lernprojekt zur Aufnahme von Windows-Systemaudio mit Tray-Steuerung, WAV-Sicherung und Prüfung fertiger Dateien.",
@@ -22,12 +58,26 @@
     "en": "Windows 11 x64, .NET Framework 4.8, a writable folder and output device. Offline Setup and portable include FFmpeg, sources and notices. No administrator rights."
   },
   "start": {
-    "ru": "После публикации проверьте SHA-256 и запустите установщик без администратора. Он не запускает запись; последующий запуск SoundLeaf из «Пуска» начинает запись после проверок.",
-    "de": "Nach Veröffentlichung SHA-256 prüfen und Setup ohne Administratorrechte öffnen. Setup startet keine Aufnahme; der spätere Start im Startmenü nimmt nach Prüfungen auf.",
-    "en": "After publication, verify SHA-256 and run setup without administrator rights. Setup does not start capture; launching SoundLeaf from Start later begins recording after checks."
+    "ru": "Проверьте SHA-256 и запустите установщик без администратора. Он не запускает запись; последующий запуск SoundLeaf из «Пуска» начинает запись после проверок.",
+    "de": "SHA-256 prüfen und Setup ohne Administratorrechte öffnen. Setup startet keine Aufnahme; der spätere Start im Startmenü nimmt nach Prüfungen auf.",
+    "en": "Verify SHA-256 and run setup without administrator rights. Setup does not start capture; launching SoundLeaf from Start later begins recording after checks."
   },
-  "readmes": {"en": ["README.md"], "de": ["docs/README.de.md"], "ru": ["docs/README.ru.md"]},
-  "guides": {"ru": "docs/Guide-ru.html", "de": "docs/Guide-de.html", "en": "docs/Guide-en.html"},
+  "readmes": {
+    "en": [
+      "README.md"
+    ],
+    "de": [
+      "docs/README.de.md"
+    ],
+    "ru": [
+      "docs/README.ru.md"
+    ]
+  },
+  "guides": {
+    "ru": "Guide-ru.html",
+    "de": "Guide-de.html",
+    "en": "Guide-en.html"
+  },
   "help_url": "https://popovantondev.github.io/SoundLeaf/Guide-{lang}.html",
   "feedback_url": "https://github.com/popovantondev/SoundLeaf/issues/new/choose"
 }
