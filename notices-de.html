@@ -1,0 +1,38 @@
+<!doctype html><html lang="de" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#e9f0e4"><meta name="description" content="Komponenten der Offline-Version SoundLeaf 3.0.5."><title>SoundLeaf — Drittanbieter</title><link rel="icon" href="assets/SoundLeaf.ico"><link rel="stylesheet" href="site.css"></head><body><div class="page"><div class="forest" aria-hidden="true"><div class="forest-photo forest-day"></div><div class="forest-photo forest-night"></div><div class="forest-wash"></div></div><header class="site-header" id="header">
+    <div class="shell header-inner">
+
+      <a href="index-de.html" class="brand">
+        <img src="assets/SoundLeaf.ico" alt="">
+        <span>SoundLeaf</span>
+      </a>
+
+      <nav aria-label="Navigation"><a href="index-de.html">Startseite</a><a href="Guide-de.html">Anleitung</a><a href="rights-de.html">Rechte</a></nav>
+
+      <div class="header-actions"><div class="language-links" aria-label="Language / Sprache / Язык"><a href="notices-ru.html" lang="ru" hreflang="ru">RU</a><a href="notices-de.html" lang="de" hreflang="de" aria-current="page">DE</a><a href="notices-en.html" lang="en" hreflang="en">EN</a></div>
+
+        <button
+          class="icon-button"
+          id="theme-toggle"
+          type="button"
+          aria-label="Design wechseln"
+          title="Design wechseln">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a9 9 0 1 0 9 9c0-.45-.03-.88-.1-1.3A7 7 0 0 1 12 3Z"/>
+          </svg>
+        </button>
+
+        <a
+          class="icon-button github-header"
+          href="https://github.com/popovantondev/SoundLeaf"
+          aria-label="SoundLeaf auf GitHub"
+          title="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 .7a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.23c-3.34.73-4.04-1.42-4.04-1.42-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.53.12-3.18 0 0 1.01-.32 3.3 1.23A11.45 11.45 0 0 1 12 6.5c1.02 0 2.04.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.8 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.3c0 .32.22.7.83.58A12 12 0 0 0 12 .7Z"/>
+          </svg>
+        </a>
+
+      </div>
+
+    </div>
+  </header><main class="shell legal-main" id="top"><section class="guide-panel legal-heading"><div class="eyebrow">SoundLeaf · Nutzungsbedingungen</div><h1>Drittanbieter</h1><p>Komponenten der Offline-Version SoundLeaf 3.0.5.</p></section><section class="guide-panel"><h2>FFmpeg und Audiocodecs</h2><p>SoundLeaf startet FFmpeg als separaten Prozess und bindet dessen Bibliotheken nicht ein. Die Offline-Version 3.0.5 enthält minimales FFmpeg <strong>9.0.2</strong>, Opus <strong>1.6.1</strong> und LAME <strong>3.100</strong>, gebaut aus unveränderten Originalquellen. Die Optionen GPL, version3 und nonfree sind deaktiviert. FFmpeg meldet <strong>LGPL 2.1 oder später</strong>. Netzwerkprotokolle sind deaktiviert.</p></section><section class="guide-panel"><h2>Zugehöriger Quelltext</h2><p>Das zugehörige Quelltextpaket <code>ffmpeg-9.0.2-corresponding-source.zip</code> liegt unter <code>tools</code> und ist separat auf der <a href="https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5">gleichen Versionsseite</a> verfügbar. Es enthält Original-Quellarchive, Build-Skript und Anleitungen, Konfigurationsnachweise und unveränderte Komponentenhinweise. Nur <code>encoder/build-minimal.sh</code> hat eine zusätzliche LGPL-2.1-or-later-Erlaubnis; die Rechte an der SoundLeaf-Anwendung bleiben unverändert.</p></section><section class="guide-panel"><h2>Komponentenlizenzen</h2><p>Siehe <code>tools/licenses</code>: FFmpeg LGPL, Opus BSD-artige Bedingungen, LAME LGPL, MinGW-w64-Laufzeit und Header, winpthreads sowie GCC-Laufzeitbedingungen einschließlich Runtime Library Exception. Unabhängig lizenzierte Komponenten unterliegen nicht den Beschränkungen des eigenen SoundLeaf-Quelltexts.</p></section><section class="guide-panel"><h2>Systemtechnologien</h2><p>Verwendet werden das systemeigene .NET Framework, Windows Forms, System.Drawing und WASAPI; eine separate .NET-Laufzeit wird nicht mitgeliefert. Das Quelltextarchiv der Anwendung enthält keine Encoder-Binärdatei. <a href="https://ffmpeg.org/legal.html">FFmpeg-Lizenzierung</a> · <a href="https://github.com/popovantondev/SoundLeaf/blob/main/encoder/README.md">Build-Anleitung</a>. Diese Aufstellung ist keine Rechtsberatung oder Bestätigung patentrechtlicher Unbedenklichkeit.</p></section><section class="guide-panel"><p>FFmpeg, passende Quellen und unveränderte Lizenztexte sind enthalten. Ihre Lizenzen gelten unabhängig von den Rechten an SoundLeaf; die App selbst hat keine Open-Source-Lizenz.</p></section><section class="guide-panel"><a href="licenses-de.html">Original-Lizenztexte →</a></section></main><footer><div class="shell footer-inner"><a href="index-de.html">← Zur Startseite</a><div class="footer-links"><a href="rights-de.html">Rechte</a><a href="notices-de.html">Drittanbieter</a><a href="Guide-de.html">Anleitung</a></div></div></footer></div><script src="site.js"></script></body></html>
