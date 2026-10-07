@@ -1,13 +1,13 @@
-# Third-party components
+# Third-party components / Drittanbieter / Сторонние компоненты
 
-The online per-user Setup offers a user-visible download of GyanD FFmpeg 9.0.1 directly from its GitHub release. It checks pinned ZIP and EXE SHA-256 values and retains the vendor's license and README. FFmpeg is not embedded or redistributed in the Setup candidate. This does not clear a future bundled distribution; matching corresponding source and build materials remain to be reviewed. Original SoundLeaf restrictions do not apply to FFmpeg's independently licensed files.
+SoundLeaf invokes FFmpeg as a separate process; it does not link to its libraries. Offline 3.0.5 includes minimal FFmpeg **9.0.2**, Opus **1.6.1** and LAME **3.100**, built from unmodified upstream sources. GPL, version3 and nonfree options are disabled. FFmpeg reports **LGPL 2.1 or later**. Network protocols are disabled.
 
-SoundLeaf uses the Windows .NET Framework libraries, Windows Forms, System.Drawing and Windows WASAPI. The current executable relies on the system runtime rather than bundling a separate runtime.
+The corresponding source kit `ffmpeg-9.0.2-corresponding-source.zip` is included under `tools` and separately available on the [same release page](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5). It contains original source archives, build script/instructions, configuration evidence and unmodified component notices. Only `encoder/build-minimal.sh` has an additional LGPL-2.1-or-later permission; SoundLeaf's application rights remain unchanged.
 
-FFmpeg is invoked as a separate process. Its executable is not included in the source repository/archive. The locally tested binary identifies itself as `9.0.1-essentials_build-www.gyan.dev`, built with `--enable-gpl --enable-version3`; `ffmpeg -L` reports GPL version 3 or later. These terms apply independently to that component, not the project's RIGHTS text.
+See `tools/licenses`: FFmpeg LGPL, Opus BSD-style terms, LAME LGPL, MinGW-w64 runtime/headers, winpthreads and GCC runtime terms including the Runtime Library Exception. Independently licensed components are not governed by SoundLeaf's original-source restrictions.
 
-Before distributing a binary package containing FFmpeg, verify the exact build's licenses, corresponding-source availability and notices, and include the required materials. The prepared portable package excludes FFmpeg; users provide their own compatible build. See the [official license information](https://ffmpeg.org/legal.html) and [download page](https://ffmpeg.org/download.html). A successful local test does not establish distribution compliance for a bundled encoder.
+The system .NET Framework, Windows Forms, System.Drawing and WASAPI are used; no separate .NET runtime is bundled. The application source archive excludes the encoder binary. [FFmpeg licensing](https://ffmpeg.org/legal.html) · [Build instructions](encoder/README.md). This inventory is not legal advice or patent clearance.
 
-Die Drittanbieterbedingungen gelten unabhängig von den Projekt-Rechten. FFmpeg ist nicht im Quelltextpaket enthalten. Vor einem Binärpaket die konkrete Build-Version und ihre Verteilungsvoraussetzungen prüfen.
+Deutsch: FFmpeg, passende Quellen und unveränderte Lizenztexte sind enthalten. Ihre Lizenzen gelten unabhängig von den Rechten an SoundLeaf; die App selbst hat keine Open-Source-Lizenz.
 
-Условия сторонних компонентов не заменяются правами проекта. FFmpeg не включён в исходники. Перед выпуском пакета с FFmpeg требуется отдельная проверка конкретной сборки и материалов для её распространения.
+Русский: FFmpeg, соответствующие исходники и неизменённые лицензии вложены. Их условия независимы от прав на SoundLeaf; само приложение не под открытой лицензией.

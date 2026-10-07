@@ -1,5 +1,7 @@
 # Minimal Windows encoder build
 
+Only `build-minimal.sh` is additionally licensed under LGPL-2.1-or-later, copyright 2026 popovantondev. It may be used, modified and redistributed under those terms, without warranty. The full license is retained as `licenses/ffmpeg/COPYING.LGPLv2.1` in the source kit. This narrow permission does not change `RIGHTS.md` or license any other original SoundLeaf source. Upstream materials retain their own licenses.
+
 This builds a separate `ffmpeg.exe` process for SoundLeaf. SoundLeaf does not link to its libraries. FFmpeg 9.0.2, Opus 1.6.1 and LAME 3.100 are built from unmodified pinned upstream archives. No GPL, version3 or nonfree configure option is enabled. FFmpeg reports LGPL 2.1 or later. Upstream notices and component terms remain independent of SoundLeaf's original-source rights.
 
 ## Build environment

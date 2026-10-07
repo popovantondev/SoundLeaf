@@ -1,40 +1,30 @@
-# SoundLeaf 3.0.4 — local release preparation
+# SoundLeaf 3.0.5 — offline release
 
-Strictly an educational Windows system-audio project. This document prepares a GitHub release; it does not announce an upload or a published download.
+Strictly an educational Windows system-audio project. Preview tag: `v3.0.5`; app/file version: 3.0.5 / 3.0.5.0. EXEs are unsigned.
 
-## Intended assets
+## Assets
 
-- `SoundLeaf-3.0.4-source.zip` and its SHA-256 file: committed source, documentation, tests and repository assets; no encoder, runtime data or Git internals.
-- `SoundLeaf-3.0.4-win-x64-no-ffmpeg.zip` and its SHA-256 file: verified x64 EXE, natural leaf, three-language instructions, guides and notices. FFmpeg is explicitly excluded; users provide a compatible build or select WAV-only. The main configured profile remains MKV/AAC 192.
-- `release-manifest.json`: source commit, candidate hash, verification time and archive hashes, with `Uploaded=false`.
+- `SoundLeaf-3.0.5-Setup.exe`: offline, current-user installation without administrator rights; no app launch or startup enablement.
+- `SoundLeaf-3.0.5-win-x64.zip`: complete portable runtime, FFmpeg 9.0.2, matching sources and notices.
+- `SoundLeaf-3.0.5-source.zip`: committed application source without private data or binaries.
+- `ffmpeg-9.0.2-corresponding-source.zip`: separately downloadable corresponding-source kit, also embedded in the runtime.
+- `SHA256SUMS.txt`: exact hashes, not code signing.
 
-The portable package needs an external encoder. The separate `SoundLeaf-3.0.4-Setup-online.exe` candidate installs per-user and offers a consented, pinned FFmpeg download with archive/EXE hash checks. See [setup limitations](SETUP.md). No offline/bundled candidate is cleared; no automatic updating is introduced. EXEs are unsigned; hashes are not signing certificates.
+## Preparation and checks
 
-## Prepare locally
+1. Commit intended changes without rewriting history. Run `Test-PublicSource.ps1 -History`.
+2. For changed runtime inputs run the complete `Run-Checks.ps1` including genuine MKV/Opus/WAV capture. Do not interrupt active recording. Packaging-only releases may reuse an exact fully checked 3.0.5 capsule; `Prepare-OfflineRelease.ps1` rejects changed runtime/test inputs or encoder bytes.
+3. Build the encoder source/runtime kit with `encoder/Build-Bundle.ps1`; retain licenses and the narrow build-script permission. This does not change the application's restrictive rights.
+4. In Windows PowerShell run `Prepare-OfflineRelease.ps1 -EncoderBundle <verified bundle>`. Run `Test-Setup.ps1 -ReleaseDirectory <output>` without online flags, then `Test-OfflineRelease.ps1 -ReleaseDirectory <output>`.
+5. Review three-language wizard renders, retained fixtures and the website. Run `Run-PublicChecks.ps1` and `Build-Pages.ps1`. Root Pages files are generated from `docs/Guide-*.html` and `docs/guide.css`; keep them synchronized.
+6. Upload only the five named assets, not the private artifact folder. Verify downloaded release assets against SHA-256 before publishing. Enable GitHub Pages from main, root. Only then add catalog metadata and exact asset sizes/hashes with the profile generator.
 
-1. Commit the intended files without rewriting existing history.
-2. For a changed runtime, run `Run-Checks.ps1` directly. For packaging-only changes, preserve the fully verified EXE and baseline evidence, prove runtime inputs unchanged, and run `Run-ReleaseChecks.ps1` directly. No supervisor is required. Do not interrupt recording just to repackage unchanged bytes. Partial checks cannot authorize a changed runtime.
-3. Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Prepare-Release.ps1`. For a preserved runtime capsule add `-RuntimeDirectory .\artifacts\verified-runtime-3.0.4`. The script refuses a dirty tree, changed runtime/candidate, missing full runtime evidence or release checks, and an existing output directory. Its manifest distinguishes current source commit from the earlier runtime verification commit/time.
-4. Run `Test-ReleaseArchive.ps1 -Directory <created release folder>`. It audits ZIP membership/checksums, local guide links, exact EXE/version/artwork and absence of FFmpeg/runtime data, and performs clean extraction without launching recording. Review the retained extraction and instructions.
-5. Run `Build-Setup.ps1 -ReleaseDirectory <folder>` and `Test-Setup.ps1 -ReleaseDirectory <folder> -EncoderZip <verified vendor ZIP>`. Tests exercise the engine without launching recording, not the full end-user wizard. Run `Build-Pages.ps1`; consult `CATALOG.md` for metadata-generated profile integration.
-6. Review the release text below and describe Setup as online/per-user, not bundled. Repository creation, pushing, tags, uploads and profile changes require a separate publication step; no script does them.
+The hosted Windows workflow runs source/hash/build/icon smoke checks, not audio capture or full release validation. Local installer checks include non-elevated engine fixtures and the actual asynchronous offline wizard handler, not a human end-user walkthrough or clean-machine deployment. Existing recordings and installation are not migrated.
 
-The Windows Actions workflow only audits source and performs a Framework build/hash/icon smoke check. Its equivalent command is checked locally; a hosted GitHub run has not happened before publication. No credentials persist, no release artifacts upload, and permissions are read-only.
+## Release description
 
-## Release text — Deutsch
+Deutsch: Lernprojekt für Windows-Systemaudio. Tray-Steuerung, geprüfte Ausgaben, MKV/AAC 192 als Standard; optional OGG/Opus 24, MP3, M4A/AAC und AAC. Offline-Setup und portable Version enthalten FFmpeg, passende Quellen und Lizenzen. Keine Administratorrechte. Deutsch / Русский / English. Unsignierte Vorschau; keine professionelle Aufnahmelösung.
 
-SoundLeaf 3.0.4 ist ein reines Lernprojekt zur Aufnahme von Windows-Systemaudio. Tray-Steuerung, sichere WAV-Sicherung und Prüfung fertiger Dateien, MKV/AAC 192 als Standard, optionale OGG/Opus-, MP3-, M4A/AAC- und AAC-Profile, wählbarer Ordner und Konvertierung ohne Änderung des Originals. Deutsch / Русский / English, helles/dunkles Design und echte Pegelanzeigen. Das portable x64-Paket enthält keinen FFmpeg-Encoder: Einrichtungshinweise beachten oder ausdrücklich WAV wählen. ZIP vollständig entpacken, SHA-256 prüfen; EXE nicht signiert. Nur erlaubte Inhalte mit notwendiger Zustimmung aufnehmen.
+Русский: Учебное приложение для записи системного звука Windows. Управление из трея и проверка готовых файлов; основной MKV/AAC 192, дополнительные OGG/Opus 24, MP3, M4A/AAC и AAC. Автономный установщик и portable включают FFmpeg, соответствующие исходники и лицензии. Без администратора. Deutsch / Русский / English. Неподписанная предварительная версия, не профессиональное средство записи.
 
-## Release text — Русский
-
-SoundLeaf 3.0.4 — сугубо учебный проект записи системного звука Windows. Управление из трея, резервный WAV и проверка готового результата; основной профиль MKV/AAC 192, дополнительные OGG/Opus, MP3, M4A/AAC и AAC. Выбор папки и пересохранение без изменения оригинала. Deutsch / Русский / English, светлая/тёмная темы и индикаторы реального уровня. В переносимом x64-пакете FFmpeg отсутствует: выполните инструкцию установки или явно выберите только WAV. Распакуйте ZIP целиком и проверьте SHA-256; EXE не подписан. Записывайте только разрешённые материалы с необходимым согласием участников.
-
-## Release text — English
-
-SoundLeaf 3.0.4 is strictly an educational Windows system-audio project. Tray controls, WAV backup and verified final output; MKV/AAC 192 by default with optional OGG/Opus, MP3, M4A/AAC and AAC profiles. Select a save folder and convert completed recordings without changing originals. Deutsch / Русский / English, light/dark themes and real level indicators. The portable x64 package excludes FFmpeg: follow setup instructions or explicitly select WAV-only. Extract the whole ZIP and verify SHA-256; the EXE is unsigned. Record only permitted material with required consent.
-
-## Verification boundaries
-
-Runtime baseline: complete 3.0.4 checks on 1 October 2026 (73 core checks, 114 icon checks, six shell-cache checks, 42,306 UI assertions and three loopback modes). On 2 October the owner reported that the latest MKV and long recordings were normal. This is useful user feedback, not an instrumented multi-hour stress test or proof that every Windows discontinuity flag is false. Decode/duration checks do not independently prove completeness against an original conversation. Power loss, an actually full disk and another Windows computer remain outside the tested baseline.
-
-Do not publish private recordings or raw user logs. Repository screenshots are simulated panel renders with demonstration sessions and synthetic level input, not a real recording or measured spectrum. Existing rights remain in `RIGHTS.md`; public source visibility is not an open-source license. Encoder bundling would require a separate review against the exact component's [official license information](https://ffmpeg.org/legal.html).
+English: Educational Windows system-audio application. Tray controls and verified output; MKV/AAC 192 by default, optional OGG/Opus 24, MP3, M4A/AAC and AAC. Offline Setup and portable runtime include FFmpeg, corresponding sources and notices. No administrator rights. Deutsch / Русский / English. Unsigned preview, not a professional recording solution.

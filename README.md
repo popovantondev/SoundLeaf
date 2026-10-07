@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/tray-preview.png" width="640" alt="SoundLeaf recording, pause, stop, error and saving icons"></p>
+<p align="center"><img src="assets/screenshots/en-control-light.png" width="360" alt="SoundLeaf — actual application interface, example view"></p>
 
 # SoundLeaf
 
@@ -8,9 +8,11 @@
 
 SoundLeaf is a C# learning project exploring Windows system audio, background processing, durable file storage and a system-tray interface. It is not a professional recording solution.
 
-## Setup preview
+## Download and installation
 
-The local `SoundLeaf-3.0.4-Setup-online.exe` candidate installs for the current user under `%LOCALAPPDATA%\Programs\SoundLeaf` without administrator rights. It offers a pinned FFmpeg 9.0.1 download with SHA-256 verification. Setup does not start recording or enable startup. Launch SoundLeaf from Start later: recording begins after successful checks. [Setup and removal](docs/SETUP.md). No download is published yet.
+[Release 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5) · [English guide](https://popovantondev.github.io/SoundLeaf/Guide-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Русский](https://popovantondev.github.io/SoundLeaf/Guide-ru.html)
+
+The offline `SoundLeaf-3.0.5-Setup.exe` installs for the current user under `%LOCALAPPDATA%\Programs\SoundLeaf` without administrator rights. FFmpeg 9.0.2, corresponding sources and notices are included; installation does not need a download. The portable ZIP includes the same runtime. Setup does not launch the application or enable startup. Launching SoundLeaf later starts recording after successful checks. [Setup and removal](docs/SETUP.md). This is an unsigned educational preview, not a professional recording product. Check `SHA256SUMS.txt`; a checksum is not code signing.
 
 ## Features
 

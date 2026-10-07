@@ -1,33 +1,35 @@
-# SoundLeaf 3.0.4 — Windows x64
-
-Deutsch · Русский · English
-
-## Русский
-
-Сугубо учебный проект работы с системным звуком Windows, не профессиональное средство записи. Распакуйте архив целиком в доступную для записи папку, например `C:\Users\Public\SoundLeaf`. Запустите `SoundLeaf.exe`. Консоль и отдельное главное окно не появляются; управление находится в трее. При исправном кодировщике запись начинается автоматически после проверок. Записывайте только разрешённые материалы с необходимым согласием участников.
-
-**FFmpeg в архив не включён.** Для MKV/AAC, OGG/Opus, MP3, M4A/AAC и AAC положите совместимый `ffmpeg.exe` в `tools` рядом с программой: инструкции в `tools/README.txt`. Пока его нет, автоматическая запись не начинается; можно явно выбрать «Начать запись только в WAV» в меню трея. Не обещается один WAV неограниченного размера.
-
-Левый щелчок открывает панель, правый — резервное меню. При остановке дождитесь проверки результата. Файлы по умолчанию сохраняются в `Recordings` рядом с EXE; папка выбирается в настройках. Не запускайте из ZIP, OneDrive или `Program Files`, если папка недоступна для записи. Администратор не требуется. Перед обновлением остановите запись, дождитесь сохранения и выйдите из программы; не заменяйте EXE во время записи. Сохраняйте `Recordings`, `State` и резервные копии вместе; при переносе заново включите автозапуск.
-
-[Руководство](docs/Guide-ru.html) · [Права](RIGHTS.md) · [Сторонние компоненты](THIRD_PARTY_NOTICES.md)
-
-## Deutsch
-
-Reines Lernprojekt zu Windows-Systemaudio, keine professionelle Aufnahmelösung. Das gesamte ZIP in einen beschreibbaren Ordner entpacken und `SoundLeaf.exe` öffnen. Nur Tray-Steuerung, kein Konsolen-/Hauptfenster. Bei verfügbarer Kodierung startet die Aufnahme nach der Prüfung automatisch. Nur erlaubte Inhalte mit notwendiger Zustimmung aufnehmen.
-
-**FFmpeg ist nicht enthalten.** Eine kompatible `ffmpeg.exe` nach `tools` kopieren; siehe `tools/README.txt`. Ohne Encoder startet keine automatische Aufnahme; ausdrücklich „Nur WAV aufnehmen“ im Tray-Menü wählen. Lange WAV-Aufnahmen bleiben mehrere Teile. Einstellungen erlauben einen Speicherordner; vorhandene Dateien werden nicht verschoben. Zum Aktualisieren erst stoppen, Speicherung abwarten und die App beenden. `Recordings`, `State` und Sicherungen behalten; Autostart nach einem Umzug neu aktivieren. Keine Administratorrechte erforderlich.
-
-[Anleitung](docs/Guide-de.html) · [Rechte](RIGHTS.md) · [Drittanbieter](THIRD_PARTY_NOTICES.md)
+# SoundLeaf 3.0.5 — Windows x64
 
 ## English
 
-Strictly an educational Windows system-audio project, not a professional recording solution. Extract the entire ZIP to a writable folder and run `SoundLeaf.exe`. Controls live in the tray; there is no console or main window. Recording starts automatically after successful preflight when an encoder is available. Record only permitted material with required consent.
+Educational application for recording Windows system audio. Windows 11 x64 · .NET Framework 4.8. Download Offline Setup or the portable ZIP from the release page. Setup installs for the current user without administrator rights; FFmpeg 9.0.2, corresponding source and licenses are included. No Internet is needed during installation. Setup does not launch the application or enable startup. Extract the portable archive in full to a writable folder. Check SHA256SUMS.txt. The unsigned preview may trigger a Windows publisher warning; do not disable protection.
 
-**FFmpeg is not included.** Provide a compatible `ffmpeg.exe` in `tools`; see `tools/README.txt`. Without it, automatic recording is blocked; explicitly choose WAV-only recording from the tray menu. Long WAV recordings remain multiple parts. Choose a save folder in Settings; old files are not moved. Before updating, stop, wait for final verification and exit. Keep `Recordings`, `State` and backups; re-enable startup after moving the app folder. Administrator rights are not required.
+Launching SoundLeaf starts recording automatically after folder, free-space and selected-profile checks. Capture uses the default Windows output device, not the microphone. Only record permitted content with required consent. Left-click the tray to open the panel; right-click for the fallback menu. Pause excludes paused time. Escape or clicking outside hides only the panel.
 
-[User guide](docs/Guide-en.html) · [Rights](RIGHTS.md) · [Third-party components](THIRD_PARTY_NOTICES.md)
+Strictly a learning project, not a professional recording solution. Tested on one Windows computer; screen/DPI matrices include modeled tests, not a claim of testing every display or a clean machine. Below 256 MiB free recording is blocked; low/unknown space warns. This is not a capacity guarantee. The quiet threshold changes only the level display, never captured audio. After changing output device start a new session. Before updates stop, wait, exit and back up Recordings and State. Uninstall retains user files; upgrades and automatic migration are not implemented.
 
-## Checksums / Prüfsummen / Контрольные суммы
+[User guide](docs/Guide-en.html) · [Rights](RIGHTS.md)
 
-Compare the archive SHA-256 with its accompanying `.sha256` file before extracting. Windows PowerShell: `Get-FileHash -Algorithm SHA256 -LiteralPath .\SoundLeaf-3.0.4-win-x64-no-ffmpeg.zip`. A matching hash detects a changed download; it does not constitute code signing. The EXE is unsigned and Windows may warn about an unknown publisher. Do not disable Windows protection.
+## Deutsch
+
+Lernprojekt zur Aufnahme von Windows-Systemaudio. Windows 11 x64 · .NET Framework 4.8. Offline-Setup oder portables ZIP von der Versionsseite laden. Setup installiert nur für den aktuellen Benutzer ohne Administratorrechte; FFmpeg 9.0.2, passende Quellen und Lizenzen sind enthalten. Kein Internet während der Installation nötig. Setup startet weder App noch Autostart. Portables ZIP vollständig in einen beschreibbaren Ordner entpacken. SHA256SUMS.txt vergleichen. Unsignierte Vorschau: Windows kann vor unbekanntem Herausgeber warnen; Schutz nicht deaktivieren.
+
+Beim Start beginnt die Aufnahme nach Prüfung von Ordner, freiem Platz und Audio-Profil automatisch. Quelle ist das Standard-Ausgabegerät von Windows, nicht das Mikrofon. Nur erlaubte Inhalte mit notwendiger Zustimmung aufnehmen. Linksklick öffnet die Tray-Oberfläche, Rechtsklick das Menü. Pausenzeiten fehlen im Ergebnis. Escape oder Klick außerhalb versteckt nur die Oberfläche.
+
+Reines Lernprojekt, keine professionelle Aufnahmelösung. Auf einem Windows-Rechner getestet; Bildschirm-/DPI-Matrizen enthalten Simulationen, keine Zusage für alle Displays oder Neuinstallationen. Unter 256 MiB frei wird blockiert, bei wenig/unbekanntem Platz gewarnt. Keine Platzgarantie. Ruhe-Schwelle betrifft nur die Pegelanzeige, niemals aufgenommenes Audio. Nach Gerätewechsel neue Sitzung beginnen. Vor Updates stoppen, warten, beenden und Recordings/State sichern. Deinstallation behält Benutzerdaten; automatische Updates und Migration sind nicht implementiert.
+
+[Anleitung](docs/Guide-de.html) · [Rechte](RIGHTS.md)
+
+## Русский
+
+Учебное приложение для записи системного звука Windows. Windows 11 x64 · .NET Framework 4.8. Скачайте автономный Setup или portable ZIP со страницы выпуска. Setup устанавливает программу для текущего пользователя без администратора; FFmpeg 9.0.2, соответствующие исходники и лицензии вложены. Интернет при установке не нужен. Установщик не запускает приложение и не включает автозапуск. Portable ZIP распакуйте целиком в доступную для записи папку. Сверьте SHA256SUMS.txt. Версия не подписана: Windows может предупредить о неизвестном издателе; не отключайте защиту.
+
+При запуске SoundLeaf запись начинается автоматически после проверки папки, свободного места и выбранного профиля. Источник — устройство вывода Windows по умолчанию, не микрофон. Записывайте только разрешённые материалы с необходимым согласием. Левый щелчок открывает панель, правый — меню. Время паузы исключается из результата. Escape или щелчок снаружи скрывает только панель.
+
+Сугубо учебный проект, не профессиональное средство записи. Проверен на одном компьютере Windows; матрицы экранов/DPI включают моделирование, а не проверку всех мониторов и чистой системы. Ниже 256 МиБ свободного места запись запрещена, при малом или неизвестном месте есть предупреждение. Это не гарантия места на всю запись. Порог тишины влияет только на индикатор, не на звук в файле. После смены устройства начните новую сессию. Перед обновлением остановите запись, дождитесь сохранения, выйдите и сделайте копию Recordings и State. Удаление оставляет пользовательские данные; автоматическое обновление и перенос не реализованы.
+
+[Руководство](docs/Guide-ru.html) · [Права](RIGHTS.md)
+
+## SHA-256
+
+PowerShell: `Get-FileHash -Algorithm SHA256 -LiteralPath .\SoundLeaf-3.0.5-win-x64.zip`. Compare with SHA256SUMS.txt on the release page. A hash is not a code signature.

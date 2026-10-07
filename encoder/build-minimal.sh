@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# Copyright (c) 2026 popovantondev.
+# This script alone may be used, modified and redistributed under LGPL 2.1 or later.
+# No warranty. See licenses/ffmpeg/COPYING.LGPLv2.1 in the corresponding-source kit.
+# This permission does not apply to SoundLeaf's application source.
 set -euo pipefail
 # Run in an isolated MSYS2 UCRT64 login shell. Never install into the runtime app.
 work="$(cygpath -u "${1:?Dedicated build folder required}")"

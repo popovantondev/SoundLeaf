@@ -1,6 +1,6 @@
 # SoundLeaf
 
-[Benutzer-Setup und Deinstallation](SETUP.md). Der lokale Online-Installer bietet einen geprüften FFmpeg-9.0.1-Download. Setup startet keine Aufnahme; der spätere App-Start nimmt nach Prüfungen auf. Noch kein veröffentlichter Download.
+[Version 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5) · [Anleitung](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Setup und Deinstallation](SETUP.md). Offline-Setup ohne Administratorrechte enthält FFmpeg 9.0.2, passende Quellen und Lizenzen. Setup startet die App nicht; beim späteren App-Start beginnt die Aufnahme nach erfolgreichen Prüfungen. Unsignierte Lernprojekt-Vorschau, keine professionelle Aufnahmelösung.
 
 Deutsch · [Русский](README.ru.md) · [English](../README.md)
 

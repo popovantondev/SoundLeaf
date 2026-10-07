@@ -6,6 +6,7 @@ if(Test-Path -LiteralPath $OutputDirectory){throw 'Pages output exists; overwrit
 [void][IO.Directory]::CreateDirectory((Join-Path $OutputDirectory 'assets'))
 [IO.File]::Copy((Join-Path $root 'assets\SoundLeaf.ico'),(Join-Path $OutputDirectory 'assets\SoundLeaf.ico'),$false)
 [IO.File]::Copy((Join-Path $root 'assets\tray-preview.png'),(Join-Path $OutputDirectory 'assets\tray-preview.png'),$false)
+Copy-Item -LiteralPath (Join-Path $root 'assets\screenshots') -Destination (Join-Path $OutputDirectory 'assets\screenshots') -Recurse
 [IO.File]::Copy((Join-Path $root 'docs\guide.css'),(Join-Path $OutputDirectory 'guide.css'),$false)
 $utf8=New-Object Text.UTF8Encoding($false)
 foreach($lang in @('ru','de','en')){
@@ -24,7 +25,7 @@ foreach($lang in @('ru','de','en')){
         if(!$target.StartsWith([IO.Path]::GetFullPath($OutputDirectory)+'\',[StringComparison]::OrdinalIgnoreCase) -or !(Test-Path -LiteralPath $target)){throw "Invalid Pages link: $url"}
     }
 }
-[IO.File]::WriteAllText((Join-Path $OutputDirectory 'index.html'),'<!doctype html><meta charset="utf-8"><title>SoundLeaf</title><h1>SoundLeaf</h1><p><a href="Guide-de.html">Deutsch</a> · <a href="Guide-ru.html">Русский</a> · <a href="Guide-en.html">English</a></p>',$utf8)
+[IO.File]::Copy((Join-Path $OutputDirectory 'Guide-en.html'),(Join-Path $OutputDirectory 'index.html'),$false)
 Add-Type -TypeDefinition ([IO.File]::ReadAllText((Join-Path $root 'src\SoundLeafIcons.cs'),[Text.Encoding]::UTF8)) -ReferencedAssemblies System.Drawing
 $leaf=[SoundLeaf.SoundLeafIcons]::Brand(256)
 try{$leaf.Save((Join-Path $OutputDirectory 'assets\SoundLeaf.png'),[Drawing.Imaging.ImageFormat]::Png)}finally{$leaf.Dispose()}
