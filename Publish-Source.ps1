@@ -6,7 +6,8 @@ if (!$OutputDirectory) { $OutputDirectory = Join-Path $folder 'artifacts' }
 $dirty = & git -C $folder status --porcelain
 if ($LASTEXITCODE -ne 0 -or $dirty) { throw 'Commit verified changes before exporting source.' }
 $commit = (& git -C $folder rev-parse --short HEAD).Trim()
-$name = 'SoundLeaf-3.0.4-preview-source-' + $commit
+$releaseMetadata = Get-Content -LiteralPath (Join-Path $folder 'public-release.json') -Raw | ConvertFrom-Json
+$name = 'SoundLeaf-' + $releaseMetadata.version + '-source-' + $commit
 [void](New-Item -ItemType Directory -Path $OutputDirectory -Force)
 $zip = Join-Path $OutputDirectory ($name + '.zip')
 $bundle = Join-Path $OutputDirectory ($name + '.bundle')
