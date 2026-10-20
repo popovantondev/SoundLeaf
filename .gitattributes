@@ -9,3 +9,14 @@
 *.png binary
 licenses/** -text
 website/licenses/** -text
+
+# Canonical website content is documentation, including its authored HTML/CSS/JS.
+/website/** linguist-documentation
+# Root website files are published copies made by Build-Pages.ps1 -SyncRoot.
+/Guide-*.html linguist-generated
+/index*.html linguist-generated
+/rights-*.html linguist-generated
+/notices-*.html linguist-generated
+/licenses-*.html linguist-generated
+/site.css linguist-generated
+/site.js linguist-generated
