@@ -1486,3 +1486,7 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--green);outline-offs
 .guide-shot{max-width:100%;min-width:0}.guide-shot .app-frame,.guide-shot .screen-stack{width:100%;max-width:100%;min-width:0}.guide-panel{min-width:0}.hero-actions>a{white-space:normal;max-width:100%;height:auto;min-height:48px}.hero-meta>span{overflow-wrap:anywhere}.header-actions>*{flex-shrink:0}
 
 .hero>div,.product-stage{min-width:0}.product-stage{max-width:100%}.hero h1{overflow-wrap:anywhere}@media(min-width:701px) and (max-width:1000px){.hero{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}}
+
+/* Expanded text must not impose an intrinsic minimum width on the showcase. */
+.showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.showcase-copy,.detail-list,.detail,.detail>div{min-width:0;max-width:100%}.showcase-copy strong{overflow-wrap:anywhere}
+@media(max-width:1000px){.showcase{grid-template-columns:minmax(0,1fr)}.showcase-copy{width:100%}}
