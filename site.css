@@ -1490,3 +1490,5 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--green);outline-offs
 /* Expanded text must not impose an intrinsic minimum width on the showcase. */
 .showcase{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.showcase-copy,.detail-list,.detail,.detail>div{min-width:0;max-width:100%}.showcase-copy strong{overflow-wrap:anywhere}
 @media(max-width:1000px){.showcase{grid-template-columns:minmax(0,1fr)}.showcase-copy{width:100%}}
+
+.reliability-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.reliability-card{min-width:0;max-width:100%;overflow-wrap:anywhere}@media(max-width:700px){.reliability-grid{grid-template-columns:minmax(0,1fr)}}
