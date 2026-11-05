@@ -55,7 +55,7 @@ foreach ($pair in $pairs) {
 foreach ($language in @('ru','de','en')) {
     $guide = Join-Path $stage ('docs\Guide-'+$language+'.html')
     $text = [IO.File]::ReadAllText($guide,[Text.Encoding]::UTF8)
-    $text = $text.Replace('href="README.ru.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/docs/README.ru.md"').Replace('href="README.de.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/docs/README.de.md"').Replace('href="README.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/README.md"').Replace('href="../README.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/README.md"').Replace('href="VERIFICATION.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/docs/VERIFICATION.md"')
+    $text = $text.Replace('href="README.ru.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/README.ru.md"').Replace('href="README.de.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/README.md"').Replace('href="README.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/README.en.md"').Replace('href="../README.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/README.en.md"').Replace('href="VERIFICATION.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/docs/VERIFICATION.md"')
     [IO.File]::WriteAllText($guide,$text,(New-Object Text.UTF8Encoding($false)))
 }
 $portableZip = Join-Path $directory 'SoundLeaf-3.0.4-win-x64-no-ffmpeg.zip'

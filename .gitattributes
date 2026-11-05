@@ -20,3 +20,5 @@ website/licenses/** -text
 /licenses-*.html linguist-generated
 /site.css linguist-generated
 /site.js linguist-generated
+assets/kit/* text eol=lf
+website/assets/kit/* text eol=lf

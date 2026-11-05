@@ -73,7 +73,7 @@ namespace SoundLeaf
             {
                 string folder = Path.GetFullPath(args[1]);
                 string installedRoot = Directory.GetParent(Directory.GetParent(folder).FullName).FullName;
-                if (!string.Equals(installedRoot, @"C:\Users\Public\Player", StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(installedRoot, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "SoundLeaf"), StringComparison.OrdinalIgnoreCase))
                     throw new InvalidDataException("Unexpected installation folder.");
                 var pending = SessionRecovery.Find(folder);
                 foreach (var item in pending)
@@ -100,7 +100,7 @@ namespace SoundLeaf
                 }
                 if (wavs.Count < 2) throw new InvalidDataException("Recording parts missing.");
                 string installedRoot = Directory.GetParent(Directory.GetParent(folder).FullName).FullName;
-                if (!string.Equals(installedRoot, @"C:\Users\Public\Player", StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(installedRoot, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "SoundLeaf"), StringComparison.OrdinalIgnoreCase))
                     throw new InvalidDataException("Unexpected Player installation folder.");
                 string output = MediaExport.ConcatParts(wavs, Path.Combine(installedRoot, "tools", "ffmpeg.exe"));
                 string archive = MediaExport.ArchiveParts(wavs, installedRoot, true);

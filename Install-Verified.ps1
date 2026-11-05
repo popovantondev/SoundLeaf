@@ -1,6 +1,6 @@
 param([string]$EncoderBundle)
 $ErrorActionPreference = 'Stop'
-$installRoot = 'C:\Users\Public\Player'
+$installRoot = Join-Path $env:LOCALAPPDATA 'Programs\SoundLeaf'
 $projectRoot = $PSScriptRoot
 . (Join-Path $projectRoot 'File-Hash.ps1')
 $receiptPath = Join-Path $projectRoot 'artifacts\checked-candidate.json'
@@ -38,8 +38,8 @@ try {
         @{Source=$candidate; Relative='SoundLeaf.exe'},
         @{Source=(Join-Path $projectRoot 'assets\SoundLeaf.ico'); Relative='SoundLeaf.ico'},
         @{Source=(Join-Path $projectRoot 'docs\VERIFICATION.md'); Relative='VERIFIED.md'},
-        @{Source=(Join-Path $projectRoot 'docs\README.ru.md'); Relative='README.ru.md'},
-        @{Source=(Join-Path $projectRoot 'README.md'); Relative='README.md'},
+        @{Source=(Join-Path $projectRoot 'README.ru.md'); Relative='README.ru.md'},
+        @{Source=(Join-Path $projectRoot 'README.en.md'); Relative='README.md'},
         @{Source=(Join-Path $projectRoot 'CHANGELOG.md'); Relative='CHANGELOG.md'},
         @{Source=(Join-Path $projectRoot 'RIGHTS.md'); Relative='RIGHTS.md'},
         @{Source=(Join-Path $projectRoot 'THIRD_PARTY_NOTICES.md'); Relative='THIRD_PARTY_NOTICES.md'}

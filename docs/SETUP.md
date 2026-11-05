@@ -26,7 +26,7 @@ Windows 11 x64 · .NET Framework 4.8. Скачайте автономный Setu
 
 ## Installation safety
 
-Default: `%LOCALAPPDATA%\Programs\SoundLeaf`. Nonempty folders and an existing registered installation are refused. Stop the previous installation and back up its data before reinstalling. No existing Public/Player installation or recording is migrated. Per-user Start menu and installed-app integration use HKCU, not HKLM.
+Default: `%LOCALAPPDATA%\Programs\SoundLeaf`. Nonempty folders and an existing registered installation are refused. Stop the previous installation and back up its data before reinstalling. No installation or recording from an older location is migrated. Per-user Start menu and installed-app integration use HKCU, not HKLM.
 
 Uninstall checks running/locked files and removes only unchanged installation-owned files. Recordings, settings, logs and modified files remain. Only an exactly matching owned startup entry is removed. The uninstaller and receipt can remain; the destination is never recursively deleted.
 

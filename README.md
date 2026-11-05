@@ -1,116 +1,89 @@
 # SoundLeaf
 
-[Deutsch](docs/README.de.md) · [Русский](docs/README.ru.md) · [English](README.md)
+[Deutsch](README.md) · [English](README.en.md) · [Русский](README.ru.md)
 
-Educational Windows system-audio recording application with tray controls, WAV backup and checks before files are marked complete.
+Lernprojekt zur Aufnahme von Windows-Systemaudio mit Tray-Steuerung, WAV-Sicherung und Prüfung fertiger Dateien.
 
-**Windows 11 · x64 · Preview 3.0.5**
+**Windows 11 · x64 · Vorabversion 3.0.5**
 
-**[Download 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Website](https://popovantondev.github.io/SoundLeaf/index-en.html)** · **[User guide](https://popovantondev.github.io/SoundLeaf/Guide-en.html)**
+**[3.0.5 herunterladen](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Website](https://popovantondev.github.io/SoundLeaf/index.html)** · **[Anleitung](https://popovantondev.github.io/SoundLeaf/Guide-de.html)**
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/en-control-dark.png">
-  <img src="assets/screenshots/en-control-light.png" width="360" alt="SoundLeaf">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/de-control-dark.png">
+  <img src="assets/screenshots/de-control-light.png" width="360" alt="SoundLeaf">
 </picture>
 
-*Actual interface with demonstration data; no recordings of real conversations.*
+*Echte Oberfläche mit Demonstrationsdaten; keine Aufnahmen realer Gespräche.*
 
-## First steps
+## Erste Schritte
 
-Verify SHA-256. Install Setup or extract the complete portable folder: FFmpeg, corresponding sources and notices are included. No administrator rights needed. Setup does not start capture; launching the application later begins recording after checks. Capture uses the default Windows output device, not the microphone.
+SHA-256 prüfen. Setup installieren oder Portable vollständig entpacken: FFmpeg, passende Quellen und Lizenzen sind enthalten. Keine Administratorrechte nötig. Setup startet keine Aufnahme; der spätere App-Start beginnt sie nach Prüfungen. Aufgenommen wird das Windows-Standardausgabegerät, nicht das Mikrofon.
 
-[Rights](https://popovantondev.github.io/SoundLeaf/rights-en.html) · [Components](https://popovantondev.github.io/SoundLeaf/notices-en.html) · [Report a problem](https://github.com/popovantondev/SoundLeaf/issues/new/choose)
+[Rechte](https://popovantondev.github.io/SoundLeaf/rights-de.html) · [Komponenten](https://popovantondev.github.io/SoundLeaf/notices-de.html) · [Fehler melden](https://github.com/popovantondev/SoundLeaf/issues/new/choose)
 
-**Limitations:** unsigned educational Preview; practical testing is limited to one Windows computer. This is not a professional recording product. Original application rights and third-party licenses are separate.
+**Grenzen:** unsignierte Lernprojekt-Vorabversion; praktische Prüfung bisher auf einem Windows-PC. Keine professionelle Aufnahmelösung. App-Rechte und Drittanbieter-Lizenzen gelten getrennt.
+
+## Rechtliches
+
+SoundLeaf nimmt auf, was Windows über das Standard-Ausgabegerät wiedergibt. Dazu gehören auch die Stimmen anderer Personen in Telefonaten, Videokonferenzen und Online-Meetings (zum Beispiel Microsoft Teams oder Zoom). Das Mikrofon wird nicht aufgenommen.
+
+Zustimmung aller Beteiligten: Nehmen Sie Gespräche nur auf, wenn alle Beteiligten vorher informiert zugestimmt haben. Nennen Sie Zweck, Umfang und Speicherort. Bei Ablehnung oder Widerruf beenden Sie die Aufnahme und löschen die Datei auf Anfrage.
+
+§ 201 StGB: In Deutschland kann das unbefugte Aufnehmen des nichtöffentlich gesprochenen Wortes strafbar sein, ebenso die Weitergabe einer solchen Aufnahme. Ein Lernzweck ändert daran nichts.
+
+DSGVO: Stimmen sind personenbezogene Daten. Außerhalb rein persönlicher oder familiärer Zwecke gelten die Vorgaben der DSGVO, zum Beispiel Rechtsgrundlage, Information der Betroffenen, Zweckbindung und Löschung. SoundLeaf speichert Aufnahmen lokal und lädt nichts hoch; Speicherort und Weitergabe liegen bei Ihnen.
+
+Beachten Sie außerdem Urheberrechte und die Bedingungen der Dienste, deren Ton Sie aufnehmen. Dieses Projekt ersetzt keine Rechtsberatung und garantiert keine Rechtskonformität.
+
+[§ 201 StGB](https://www.gesetze-im-internet.de/stgb/__201.html) · [DSGVO (Verordnung (EU) 2016/679)](https://eur-lex.europa.eu/legal-content/DE/TXT/?uri=CELEX:32016R0679)
 
 <details>
-<summary>Technical details</summary>
+<summary>Technische Details</summary>
 
-## Download and installation
+## Speicherung und Wiederherstellung
 
-[Release 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5) · [English guide](https://popovantondev.github.io/SoundLeaf/Guide-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Русский](https://popovantondev.github.io/SoundLeaf/Guide-ru.html)
+Zunächst wird eine WAV-Sicherung mit regelmäßiger Aktualisierung und Datenträger-Flush geschrieben. Parallel entsteht AAC mit 192 kbit/s. Interne Teile werden nach dem Stoppen zu einer MKV zusammengeführt; vor dem Entfernen der WAV-Sicherung werden Dekodierung und Dauer geprüft. Die Oberfläche zeigt Verarbeitungsschritte und den geprüften Ausgabepfad. Frühere offene Sitzungen werden separat gezählt.
 
-[Website — English](https://popovantondev.github.io/SoundLeaf/index-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/index-de.html) · [Русский](https://popovantondev.github.io/SoundLeaf/index-ru.html). Homepages and guides share light and dark leaf-inspired themes with matching localized application screenshots and a remembered theme choice.
+Bei fehlgeschlagener FFmpeg-Prüfung startet keine automatische Aufnahme. Der Menüpunkt „WAV-Aufnahme starten“ bietet ausdrücklich WAV ohne Encoder an. Menü und Tooltip kennzeichnen diesen Modus. Nach dem Stoppen werden geprüfte Pfade und der Ordnerbefehl angezeigt: WAV gespeichert, keine MKV erstellt. Lange Aufnahmen bleiben Teile bis 256 MiB, keine unbegrenzt große WAV. Ein atomarer Abschlussvermerk in `State/Sessions` verhindert die Einstufung abgeschlossener WAV-Sitzungen als Absturz. Bei Vermerkfehler bleibt Audio erhalten und der Status meldet einen Fehler. `State` beim Umzug mitnehmen.
 
-The offline `SoundLeaf-3.0.5-Setup.exe` installs for the current user under `%LOCALAPPDATA%\Programs\SoundLeaf` without administrator rights. FFmpeg 9.0.2, corresponding sources and notices are included; installation does not need a download. The portable ZIP includes the same runtime. Setup does not launch the application or enable startup. Launching SoundLeaf later starts recording after successful checks. [Setup and removal](docs/SETUP.md). This is an unsigned educational preview, not a professional recording product. Check `SHA256SUMS.txt`; a checksum is not code signing.
+Die Wiederherstellung nutzt vollständige und unvollständige WAV-Teile derselben Sitzung. Fehlende/mehrdeutige Teile, aktive Schreiber, unterschiedliche Formate und vorhandene Zieldateien werden abgelehnt. Nach erfolgreicher Prüfung werden Originale nach `Backups/RecoveredSessions` verschoben; die automatische 24-Stunden-Bereinigung betrifft diesen Ordner nicht. Bei Fehlern bleiben Originale erhalten, Arbeitsdateien können in `RecoveryWork` verbleiben.
 
-## Features
+## Profile, Panel und Aufnahmen
 
-- Capture the default Windows output device through WASAPI loopback; microphone capture is not implemented.
-- Start, pause, resume and stop from the tray. Interface, notifications and documentation support German, Russian and English; language changes apply immediately.
-- Green play: recording. Yellow bars: paused. Black square: stopped. A thicker rotating ring around a fixed, centered green triangle: saving. Red: failure or unfinished previous sessions while stopped.
-- Durable WAV backup with live AAC encoding and one verified final MKV per session.
-- Saving stages and an explicit final-file path; open the last verified output from the menu.
-- Detect unfinished sessions and rebuild them from finalized or partial WAV parts. Originals are archived only after full verification.
-- User-level startup option without administrator rights.
-- Background checks before capture: durable folder write/rename, free space, and a short selected-profile encode/decode with a three-second limit per FFmpeg process.
-- Explicit WAV-only recording when FFmpeg is unavailable; verified WAV parts and an atomic completion marker prevent deliberate WAV results being mistaken for crashes.
+Das Panel erscheint sofort über dem tatsächlichen Tray-Symbol und wird sofort ausgeblendet. Die Animation mit einem zwischengespeicherten Fensterbild wurde entfernt: Sie verursachte Ruckeln und einen verspäteten Schatten. Die übliche Größe ist 430 × 520 logische Pixel. Es bleibt innerhalb der Monitor-Arbeitsfläche und berücksichtigt Per-Monitor-DPI. Bei fehlenden Symbolkoordinaten dient der gespeicherte Klickpunkt als Ersatz. Erneuter Klick, Escape und Fokusverlust verbergen nur das Panel, nicht die Aufnahme.
 
-Recording starts automatically when SoundLeaf is launched only after its checks pass. Below 256 MiB free, capture is blocked. From 256 MiB to 1 GiB, or when space cannot be measured, the menu warns; these initial checks cannot guarantee enough space for the entire session. An FFmpeg failure offers “Start WAV-only recording” but never switches modes automatically. Only capture audio you are entitled to record, with any required participant consent. Silence is normal and is not treated as a fault.
+Über Start/Pause/Stopp zeigt ein zentriertes Histogramm aus 21 getrennten abgerundeten Säulen echte PCM-Pegel mit 95% visueller Ausprägung. Die laufende Aufnahme hat fünf kompakte Balken; ihre Ruhelinie ist nur 31 logische Pixel breit. Beide Anzeigen besitzen eigene zeitbasierte Glättung; neue Daten lassen die sichtbaren Höhen nicht springen. Stille blendet kurz und weich zur ruhenden Linie über; Pause/Stopp beenden die Bewegung sofort. Daten kommen alle 50 ms und verfallen nach 150 ms; die restliche Darstellung klingt kurz ab (bis 200 ms modellierte Hüllkurvenzeit, keine Windows-Zeitgarantie). Es sind Pegelanzeigen, keine Wellenform oder Frequenzspektren. Die aktuelle Anzeige schaltet bei etwa −48 dBFS RMS ein und unter −54 dBFS aus: Schwaches Rauschen und einzelne Spitzen aktivieren sie nicht. Sehr leiser echter Ton kann als Stille angezeigt werden. Aufgenommener Ton bleibt unverändert. „Ton erkannt“ bleibt während Sprechpausen bestätigt; Geräteverfügbarkeit beweist keine bestimmte hörbare Anwendung. Aufnahme, PCM, Codecs, Tray-Zustände und natürliches Blatt bleiben unverändert.
 
-## Profiles, panel and recording library
+Keine Seiten-Scrollleisten: Unter 450 logischen Pixeln Höhe gliedern sich Einstellungen in Audio / Dateien / Design. Ordnerpfad und Codec-Details stehen vollständig im Tooltip. Aufnahmen werden seitenweise angezeigt. Abgerundete Auswahlfelder unterstützen Tab, Pfeile, Enter, Leertaste und Escape; Escape schließt zuerst die Liste, dann das Panel. Formatnamen werden kleingeschrieben; Audioeinstellungen bleiben unverändert.
 
-The default remains **MKV / AAC 192 kbit/s**, with the source sample rate and channels. In Settings, choose one output format: MKV/AAC, OGG/Opus (initially 24 kbit/s, mono), MP3, M4A/AAC or AAC/ADTS. Opus uses 48 kHz, speech-oriented VBR and a target bitrate; file size is not guaranteed. MP3 uses CBR. Additional AAC/MP3 profiles use 48 kHz and retain mono/stereo; multichannel input is downmixed to stereo. Backup WAV retains original PCM.
+Standard bleibt **MKV / AAC 192 kbit/s**, mit ursprünglicher Abtastrate und Kanalzahl. Einstellungen wählen ein Ausgabeformat: MKV/AAC, OGG/Opus (anfangs 24 kbit/s, mono), MP3, M4A/AAC oder AAC/ADTS. Opus nutzt 48 kHz, Sprachprofil und VBR-Zielbitrate, keine feste Dateigröße. MP3 nutzt CBR. Weitere AAC/MP3-Profile nutzen 48 kHz, behalten mono/stereo und mischen Mehrkanalton zu stereo. WAV sichert unverändertes PCM.
 
-Opus bitrates: 16/24/32/48/64/96/128. AAC and MP3: 64/96/128/160/192/256/320 kbit/s. Each format remembers its bitrate. Format and save folder can change only while stopped; a session keeps its immutable profile. Language and the light/dark/system theme change immediately, including during recording.
+Opus: 16/24/32/48/64/96/128; AAC und MP3: 64/96/128/160/192/256/320 kbit/s. Bitraten werden pro Format gespeichert. Format und Speicherordner ändern sich nur im gestoppten Zustand; das Sitzungsprofil bleibt unveränderlich. Sprache Deutsch / Русский / English und helles/dunkles/systemabhängiges Design wechseln sofort, auch während einer Aufnahme.
 
-Left click toggles a compact leaf-themed panel: Controls, Recordings and Settings. Right click opens the fallback menu. Escape or clicking outside hides the panel, not the recording. There is no main window or taskbar button.
+Linksklick öffnet das kompakte Laub-Panel mit Steuerung, Aufnahmen und Einstellungen; Rechtsklick das Ersatzmenü. Escape oder ein Klick außerhalb blendet es aus, ohne die Aufnahme zu stoppen. Kein Hauptfenster und keine Taskleisten-Schaltfläche.
 
-The panel appears immediately above the actual tray icon and hides immediately. Snapshot-based opening/closing was removed to avoid stutter and the late appearance of a native shadow. Its usual size is 430 × 520 logical pixels; it stays inside the monitor's work area with per-monitor DPI scaling. A missing icon rectangle uses the saved click position. Settings use compact rows, a one-line folder path with a full-path tooltip, and an audio-information tooltip. Below 450 logical pixels of available height, Settings splits into Audio / Files / Appearance. Recordings use height-dependent pages instead of scrollbars. Custom rounded selectors support Tab, arrows, Enter, Space and Escape; Escape closes a dropdown before hiding the panel. Displayed format names are lowercase; codec settings and audio behavior are unchanged.
+Der Speicherordner ist wählbar. Vorhandene Dateien werden nicht verschoben; vorher gewählte Ordner bleiben in der Bibliothek. Standard bleibt `Recordings` neben der EXE. Eigene Ziele enthalten auch `State/Sessions`, Sicherungen und Wiederherstellungsdateien; Metadaten mitnehmen. Programmeinstellungen bleiben neben der EXE.
 
-Controls show a centered histogram of 21 separated rounded PCM-level columns above play/pause/stop, with 95% visual expressiveness. The live card uses a compact group of five bars; its quiet line is only 31 logical pixels wide. Each display has its own elapsed-time smoothing; input updates never snap the visible heights. Quiet input crossfades briefly to a stationary line; pause/stop immediately stop motion. Updates arrive every 50 ms and packets expire after 150 ms; the remaining drawing fades briefly (up to 200 ms of modeled envelope time, not a wall-clock guarantee). These are level indicators, not a waveform or frequency spectrum. Current indication turns on at approximately −48 dBFS RMS and off below −54 dBFS, suppressing weak noise and isolated peaks without altering recorded audio. Very quiet playback can remain visually quiet. “Audio detected” retains historical confirmation during breaks; device availability does not prove a particular application is audible. Capture, PCM, codecs, tray states and the natural leaf are unchanged.
+Aufnahmen laden im Hintergrund, neueste zuerst, mit Format, Größe und bekannter Dauer. Abgeschlossene WAV-Teile sind gruppiert; temporäre Dateien ausgeschlossen. Alte Dateien ohne gültige Metadaten gelten als vorhanden, nicht geprüft; unbekannte Dauer wird nicht erfunden. Keine Massendekodierung beim Öffnen. Öffnen, im Ordner zeigen und in anderem Format speichern sind möglich; Löschen und Momentmarken fehlen bewusst.
 
-Settings can select a writable save folder. Existing files are not moved; previously selected folders remain in the library. The default remains the existing application folder's `Recordings`. Custom destinations store their own `State/Sessions`, backups and recovery work alongside dated recording folders; retain that metadata when moving audio. Settings themselves stay beside the EXE.
+Konvertieren erzeugt eine neue geprüfte Datei mit gewähltem Format, Bitrate und Ziel; das Original bleibt unverändert. Erneutes Kodieren erhöht die Qualität nicht. Bestehende Ziele und falsche Dateiendungen werden abgelehnt; WAV-Teile werden als ein PCM-Strom gelesen.
 
-The library loads in the background, newest first, with size, format and known duration. Its first page includes the active session, elapsed captured audio, PCM byte count and a small real-level display. Recording/paused/saving entries are explicitly unfinished and cannot be opened or converted as completed outputs. Verified WAV parts are grouped. Temporary outputs are excluded; old files without valid metadata are shown as existing, not verified, with unknown duration. Opening the list does not decode every recording. Open/reveal commands are available; deletion and moment markers are not implemented.
+Zusatzformate verwenden einen Encoder über WAV-Grenzen hinweg und eine begrenzte Warteschlange. Fehler führen zur Neuerstellung aus geprüftem WAV-PCM. Vollständige Dekodierung, maximal 250 ms Dauerabweichung, Flush und Umbenennen ohne Überschreiben erfolgen vor WAV-Löschung. Sitzungsprofile werden vor Aufnahmebeginn atomar festgehalten; alte Sitzungen ohne Profil bleiben MKV/AAC 192.
 
-“Save in another format” creates a separate verified file from a selected recording, retaining the original. Choose its format, bitrate and destination. Re-encoding compressed audio cannot restore quality. Existing target names and wrong extensions are refused. A completed WAV session is read as one PCM stream.
+## Build und Prüfungen
 
-The legacy local update helper `Install-Verified.ps1` is not the public Setup. Public Setup performs a fresh per-user installation only; nonempty destinations are refused. Partial checks cannot authorize a changed runtime. Existing recordings are never migrated or deleted; the current recorder is not replaced during release preparation.
+Version 3.0.5 ist auf GitHub veröffentlicht. Die lokale Vorbereitung erstellt Quelltext- und portable x64-ZIPs mit SHA-256; Das veröffentlichte 3.0.5-Paket enthält FFmpeg 9.0.2. Das portable ZIP vollständig entpacken und dessen README lesen. Für Quelltext-Builds erzeugt `Build-Launcher.ps1` unter Windows PowerShell 5.1 die `SoundLeaf.next.exe`. Für MKV muss ein kompatibles `tools/ffmpeg.exe` neben der EXE liegen; ausdrücklich gewähltes WAV benötigt keinen Encoder. Einen beschreibbaren Ordner verwenden; beim Umzug den gesamten Ordner mitnehmen und Autostart neu aktivieren.
 
-Additional formats use one live encoder across WAV boundaries, with a bounded queue. If it fails, the final output is rebuilt directly from verified WAV PCM. Full decoding and a maximum 250 ms duration mismatch precede durable, no-overwrite publication and backup deletion. Each new session commits its profile before capture; recovery uses that profile, or MKV/AAC 192 for older sessions without one.
+`Run-Checks.ps1` führt Build, synthetische Tests, Symbolprüfungen und echte MKV-/WAV-Loopback-Tests aus. Die letzten Tests zeichnen Systemaudio im separaten Ordner `Verification` auf. Für SoundLeaf-Builds sind Python und ein separates SDK nicht erforderlich.
 
-## Running the source build
+Praktisch nur auf einem Windows-Rechner geprüft. Der Autor bestätigt normalen Ton der letzten Aufnahme und funktionierende lange Sitzungen; dies ist kein eigenständiger instrumentierter Lasttest. Stromausfall und voller echter Datenträger wurden nicht getestet. Keine absolute Datensicherheitsgarantie. Bei Wechsel/Trennung des Ausgabegeräts eine neue Sitzung beginnen. Private Aufnahmen und persönliche Pfade nicht öffentlich teilen.
 
-Release 3.0.5 is published on GitHub. Local release preparation produces source and portable x64 archives with SHA-256 files; the published 3.0.5 portable package includes FFmpeg. Extract the whole portable ZIP and follow its three-language README. For a source build, create `SoundLeaf.next.exe`, provide compatible FFmpeg at `tools/ffmpeg.exe` beside it, then launch from a writable folder. FFmpeg must provide AAC, libopus and libmp3lame for the respective profiles. For normal use, rename the tested candidate to `SoundLeaf.exe`.
+## Bilder und Release
 
-## Screenshots
+![Steuerung](assets/screenshots/de-control-light.png)
 
-Demonstration panel renders with synthetic level data, not recordings of real people. German and Russian screenshots are linked from the corresponding README files.
+Testpanel mit Beispielsitzungen und synthetischen Pegeln, keine echten Gespräche. [Release-Vorbereitung](docs/RELEASE.md). Aktuell: `Prepare-OfflineRelease.ps1` mit vollständig geprüftem Lauf, unveränderten Eingaben und App-/Encoder-Hashes. `Test-Setup.ps1` prüft Offline-Setup, `Test-OfflineRelease.ps1` Archive und Prüfsummen. Der Windows-Workflow prüft Quelltext, Build und Symbole, nicht vollständige Aufnahme. App-Rechte bleiben unverändert; die LGPL-Ausnahme betrifft nur das FFmpeg-Buildskript.
 
-![SoundLeaf control panel](assets/screenshots/en-control-light.png)
-
-## Release preparation
-
-See [release preparation](docs/RELEASE.md). `Prepare-OfflineRelease.ps1` requires a clean committed tree, unchanged runtime inputs, exact encoder hashes and complete runtime evidence. `Test-Setup.ps1` exercises isolated offline installation/removal and the actual asynchronous wizard handler; `Test-OfflineRelease.ps1` checks archive contents and hashes. Legacy online 3.0.4 scripts are not the current release path. Repository preparation scripts do not publish or launch recording. Windows CI performs limited source/build/icon smoke checks, not full capture verification. Application rights remain unchanged; only the encoder build script has the approved LGPL exception.
-
-Files are stored beside the executable: `Recordings`, `logs`, `Backups`, `State/Sessions`, and temporary `RecoveryWork`. Keep the entire application folder together, including WAV completion markers. Re-enable startup after moving the folder so the saved path is updated. WAV-only mode does not run FFmpeg: long recordings remain multiple verified parts of up to 256 MiB, not one unlimited WAV. After stopping, the result lists all paths and provides a folder-opening command; MKV was not created. A completion-marker failure keeps the audio and reports an error.
-
-## Build and verify
-
-Use Windows PowerShell 5.1 and the Windows .NET Framework compiler. No Python, Node.js or separate .NET SDK is needed to build SoundLeaf.
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Build-Launcher.ps1
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Run-Checks.ps1
-```
-
-The full check requires `tools/ffmpeg.exe` and a working output device: its MKV and explicit WAV-fallback integration tests genuinely record system output in a private `Verification` folder. Other tests use synthetic data. Build and icon checks can be run separately without FFmpeg. The build script never replaces an installed EXE.
-
-## Limitations and privacy
-
-Practical testing is currently limited to the owner's Windows computer. Physical power loss, a full real disk and multi-hour endurance have not been tested. Periodic flushing reduces but cannot eliminate loss on hardware failure. Changing or disconnecting the output device requires a new session. A spinning icon is not a percentage indicator.
-
-Unfinished older sessions are tracked separately from the latest successful result. Recovery refuses missing/duplicate parts, active writers, incompatible formats and existing output names. A failed attempt leaves originals intact and may retain work files. Recovery archives in `Backups/RecoveredSessions` are not removed by the existing 24-hour cleanup of `Backups/RecordingParts`.
-
-No cloud upload or telemetry is implemented. Recordings, logs and local paths are private: do not attach them to public reports without review. Screenshots must use demonstration data.
-
-## Documentation
-
-- User guide: [English](https://popovantondev.github.io/SoundLeaf/Guide-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Русский](https://popovantondev.github.io/SoundLeaf/Guide-ru.html)
-- [Architecture](docs/ARCHITECTURE.md) · [Verification](docs/VERIFICATION.md) · [Changelog](CHANGELOG.md)
-- [Catalog integration](docs/CATALOG.md) · [Rights](https://popovantondev.github.io/SoundLeaf/rights-en.html) · [Third-party components](https://popovantondev.github.io/SoundLeaf/notices-en.html)
-
-Public source visibility is for educational/portfolio inspection, not an open-source license. Original code rights and third-party component terms are separate. The published 3.0.5 release includes FFmpeg and its corresponding sources and notices.
+[Anleitung](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Architektur](docs/ARCHITECTURE.md) · [Prüfungen](docs/VERIFICATION.md) · [Änderungen](CHANGELOG.md) · [Rechte](https://popovantondev.github.io/SoundLeaf/rights-de.html) · [Drittanbieter](https://popovantondev.github.io/SoundLeaf/notices-de.html)
 
 </details>

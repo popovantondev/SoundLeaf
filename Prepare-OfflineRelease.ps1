@@ -32,8 +32,9 @@ Copy-Item -LiteralPath (Join-Path $EncoderBundle 'Runtime\tools') -Destination (
 Copy-Item -LiteralPath $source -Destination (Join-Path $release 'ffmpeg-9.0.2-corresponding-source.zip')
 foreach($language in @('de','ru','en')){
     $guide=Join-Path $portable ('docs\Guide-'+$language+'.html');$html=[IO.File]::ReadAllText($guide,[Text.Encoding]::UTF8)
-    foreach($name in @('README.ru.md','README.de.md','VERIFICATION.md')){$html=$html.Replace('href="'+$name+'"','href="https://github.com/popovantondev/SoundLeaf/blob/main/docs/'+$name+'"')}
-    $html=$html.Replace('href="../README.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/README.md"')
+    foreach($name in @('README.ru.md','README.en.md')){$html=$html.Replace('href="'+$name+'"','href="https://github.com/popovantondev/SoundLeaf/blob/main/'+$name+'"')}
+    $html=$html.Replace('href="README.de.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/README.md"').Replace('href="VERIFICATION.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/docs/VERIFICATION.md"')
+    $html=$html.Replace('href="../README.md"','href="https://github.com/popovantondev/SoundLeaf/blob/main/README.en.md"')
     [IO.File]::WriteAllText($guide,$html,(New-Object Text.UTF8Encoding($false)))
 }
 Add-Type -AssemblyName System.IO.Compression,System.IO.Compression.FileSystem

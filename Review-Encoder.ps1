@@ -3,7 +3,7 @@ $ErrorActionPreference='Stop'
 $root=$PSScriptRoot
 . (Join-Path $root 'File-Hash.ps1')
 if(!$VendorZip){$VendorZip=Join-Path $root 'artifacts\installer-toolchain\ffmpeg-9.0.1-essentials_build.zip'}
-if(!$Encoder){$Encoder='C:\Users\Public\Player\tools\ffmpeg.exe'}
+if(!$Encoder){$Encoder=(Join-Path $env:LOCALAPPDATA 'Programs\SoundLeaf\tools\ffmpeg.exe')}
 $zipHash=Get-SoundLeafSha256 $VendorZip
 $exeHash=Get-SoundLeafSha256 $Encoder
 if($zipHash -ne 'FEC81AE03971D9DD4BE3EBE02E263BD2EC1D789483F931BDBA5F5715E65DA2E9' -or $exeHash -ne '72A489ECCD008C2EC2C0A5856C5C75BC3D8BBFA90166C4566865C246445E6AA3'){throw 'Unreviewed encoder input; refusing to run it.'}

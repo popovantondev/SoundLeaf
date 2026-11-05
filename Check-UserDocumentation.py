@@ -6,7 +6,7 @@ import re
 root = Path(__file__).resolve().parent
 base = 'https://popovantondev.github.io/SoundLeaf/'
 errors = []
-for name in ('README.md', 'docs/README.de.md', 'docs/README.ru.md', 'distribution/README.md'):
+for name in ('README.md', 'README.en.md', 'README.ru.md', 'distribution/README.md'):
     path = root / name
     text = path.read_text(encoding='utf-8')
     for label, url in re.findall(r'\[([^\]]+)\]\(([^)]+)\)', text):
@@ -30,6 +30,12 @@ for lang in ('de', 'ru', 'en'):
             errors.append(name + ': website source differs from published copy')
         if 'lang="' + lang + '"' not in source.read_text(encoding='utf-8'):
             errors.append(name + ': language mismatch')
+for name in ('index.html', 'site.css', 'site.js', 'guide-polish.css'):
+    if (root/name).read_bytes() != (root/'website'/name).read_bytes():
+        errors.append(name + ': website source differs from published copy')
+for kit in sorted((root/'website'/'assets'/'kit').glob('*')):
+    if not (root/'assets'/'kit'/kit.name).is_file() or kit.read_bytes() != (root/'assets'/'kit'/kit.name).read_bytes():
+        errors.append('assets/kit/' + kit.name + ': website kit differs from published copy')
 for name in ('RIGHTS.md', 'THIRD_PARTY_NOTICES.md'):
     if (root/name).read_bytes() != (root/'website'/name).read_bytes():
         errors.append(name + ': canonical website copy differs')

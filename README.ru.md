@@ -1,6 +1,6 @@
 # SoundLeaf
 
-[Deutsch](../docs/README.de.md) · [Русский](../docs/README.ru.md) · [English](../README.md)
+[Deutsch](README.md) · [English](README.en.md) · [Русский](README.ru.md)
 
 Учебное приложение для записи системного звука Windows. Управление из трея, резервный WAV и проверка готовых файлов.
 
@@ -9,8 +9,8 @@
 **[Скачать 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Сайт](https://popovantondev.github.io/SoundLeaf/index-ru.html)** · **[Руководство](https://popovantondev.github.io/SoundLeaf/Guide-ru.html)**
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="../assets/screenshots/ru-control-dark.png">
-  <img src="../assets/screenshots/ru-control-light.png" width="360" alt="SoundLeaf">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/ru-control-dark.png">
+  <img src="assets/screenshots/ru-control-light.png" width="360" alt="SoundLeaf">
 </picture>
 
 *Настоящий интерфейс с демонстрационными данными; это не записи реальных разговоров.*
@@ -22,6 +22,20 @@
 [Права](https://popovantondev.github.io/SoundLeaf/rights-ru.html) · [Компоненты](https://popovantondev.github.io/SoundLeaf/notices-ru.html) · [Сообщить об ошибке](https://github.com/popovantondev/SoundLeaf/issues/new/choose)
 
 **Ограничения:** неподписанная учебная предварительная версия; практическая проверка выполнена на одном Windows-компьютере. Это не профессиональное средство записи. Права приложения и лицензии компонентов действуют отдельно.
+
+## Правовая информация
+
+SoundLeaf записывает всё, что Windows воспроизводит через устройство вывода по умолчанию. Сюда относятся и голоса других людей в телефонных разговорах, видеоконференциях и онлайн-встречах (например, Microsoft Teams или Zoom). Микрофон не записывается.
+
+Согласие всех участников: записывайте разговоры только если все участники заранее были проинформированы и согласились. Назовите цель, объём и место хранения. При отказе или отзыве согласия остановите запись и по запросу удалите файл.
+
+§ 201 StGB (Уголовный кодекс Германии): в Германии неправомерная запись непубличной речи может быть преступлением, как и передача такой записи другим лицам. Учебная цель этого не меняет.
+
+GDPR (DSGVO): голос — персональные данные. За пределами чисто личных или семейных целей действует GDPR: правовое основание, информирование людей, целевое использование и удаление. SoundLeaf хранит записи локально и ничего не отправляет; место хранения и передача записей остаются на вашей ответственности.
+
+Соблюдайте также авторские права и условия сервисов, звук которых вы записываете. Проект не заменяет юридическую консультацию и не гарантирует соблюдения закона.
+
+[§ 201 StGB](https://www.gesetze-im-internet.de/stgb/__201.html) · [GDPR (Регламент (ЕС) 2016/679)](https://eur-lex.europa.eu/legal-content/DE/TXT/?uri=CELEX:32016R0679)
 
 <details>
 <summary>Технические подробности</summary>
@@ -88,12 +102,12 @@ Opus: 16/24/32/48/64/96/128; AAC и MP3: 64/96/128/160/192/256/320 кбит/с. 
 
 ## Снимки и выпуск
 
-![Панель управления](../assets/screenshots/ru-control-light.png)
+![Панель управления](assets/screenshots/ru-control-light.png)
 
-![Тёмная тема и список записей](../assets/screenshots/ru-recordings-dark.png)
+![Тёмная тема и список записей](assets/screenshots/ru-recordings-dark.png)
 
-Это рендеры тестовой панели с демонстрационными сессиями и искусственным уровнем, не реальные разговоры. [Подготовка выпуска](RELEASE.md). Текущий путь — `Prepare-OfflineRelease.ps1`, проверенный полный результат прямого прогона, неизменность входов и хешей приложения/кодировщика. `Test-Setup.ps1` проверяет автономный установщик, `Test-OfflineRelease.ps1` — архивы и контрольные суммы. GitHub workflow проверяет только исходники, сборку и значки, не всю запись. Права приложения не меняются; LGPL-исключение относится только к скрипту сборки FFmpeg.
+Это рендеры тестовой панели с демонстрационными сессиями и искусственным уровнем, не реальные разговоры. [Подготовка выпуска](docs/RELEASE.md). Текущий путь — `Prepare-OfflineRelease.ps1`, проверенный полный результат прямого прогона, неизменность входов и хешей приложения/кодировщика. `Test-Setup.ps1` проверяет автономный установщик, `Test-OfflineRelease.ps1` — архивы и контрольные суммы. GitHub workflow проверяет только исходники, сборку и значки, не всю запись. Права приложения не меняются; LGPL-исключение относится только к скрипту сборки FFmpeg.
 
-[Руководство](https://popovantondev.github.io/SoundLeaf/Guide-ru.html) · [Архитектура](ARCHITECTURE.md) · [Проверки](VERIFICATION.md) · [Изменения](../CHANGELOG.md) · [Права](https://popovantondev.github.io/SoundLeaf/rights-ru.html) · [Сторонние компоненты](https://popovantondev.github.io/SoundLeaf/notices-ru.html)
+[Руководство](https://popovantondev.github.io/SoundLeaf/Guide-ru.html) · [Архитектура](docs/ARCHITECTURE.md) · [Проверки](docs/VERIFICATION.md) · [Изменения](CHANGELOG.md) · [Права](https://popovantondev.github.io/SoundLeaf/rights-ru.html) · [Сторонние компоненты](https://popovantondev.github.io/SoundLeaf/notices-ru.html)
 
 </details>

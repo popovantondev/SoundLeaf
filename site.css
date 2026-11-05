@@ -1492,3 +1492,39 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--green);outline-offs
 @media(max-width:1000px){.showcase{grid-template-columns:minmax(0,1fr)}.showcase-copy{width:100%}}
 
 .reliability-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.reliability-card{min-width:0;max-width:100%;overflow-wrap:anywhere}@media(max-width:700px){.reliability-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------------------------------------------------------------
+   Shared kit (assets/kit): tokens in the forest palette, kit components in the leaf style.
+   The kit's own tokens have zero specificity, so these rules decide.
+   --------------------------------------------------------------- */
+:root{--ppk-bg:#edf3ee;--ppk-panel:#f8fbf8;--ppk-ink:#15291c;--ppk-muted:#52665a;--ppk-line:rgba(42,94,62,.24);
+  --ppk-accent:#236e43;--ppk-accent-ink:#fff;--ppk-tint:#d3ead9;--ppk-hero:#173b27;--ppk-hero-end:#315c40;
+  --ppk-glass:rgba(238,245,239,.8);--ppk-term:#0e1d15;--ppk-term-ink:#dcebe0;--ppk-term-ps:#8fd9a6;--ppk-term-ok:#7fe39a;--ppk-term-dim:#9fb5a7;
+  --ppk-ok:#1b7a43;--ppk-focus:#1a5fd0;--ppk-shadow:0 22px 50px -30px rgba(38,72,49,.4);--ppk-shell:1160px}
+:root[data-theme="dark"]{--ppk-bg:#0b1712;--ppk-panel:#13241c;--ppk-ink:#eff6f0;--ppk-muted:#aec0b4;--ppk-line:rgba(153,214,170,.2);
+  --ppk-accent:#88d49d;--ppk-accent-ink:#08210f;--ppk-tint:#183f29;--ppk-hero:#0d2b1c;--ppk-hero-end:#1d4a31;
+  --ppk-glass:rgba(9,25,18,.8);--ppk-term:#07120c;--ppk-ok:#6fe19b;--ppk-focus:#9bd2ff}
+@media (prefers-color-scheme:dark){:root:not([data-theme]){--ppk-bg:#0b1712;--ppk-panel:#13241c;--ppk-ink:#eff6f0;--ppk-muted:#aec0b4;--ppk-line:rgba(153,214,170,.2);
+  --ppk-accent:#88d49d;--ppk-accent-ink:#08210f;--ppk-tint:#183f29;--ppk-hero:#0d2b1c;--ppk-hero-end:#1d4a31;
+  --ppk-glass:rgba(9,25,18,.8);--ppk-term:#07120c;--ppk-ok:#6fe19b;--ppk-focus:#9bd2ff}}
+body.ppk-page{margin:0;min-width:320px;overflow-x:hidden;background:radial-gradient(circle at 50% -10%,var(--green-glow),transparent 34rem),linear-gradient(180deg,var(--bg),var(--bg-deep));background-attachment:scroll;color:var(--text);font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.ppk-nav-wrap{padding-top:10px}
+.ppk-nav{max-width:1160px}
+.ppk-floating .ppk-nav{border-color:var(--line)}
+.ppk-footer{margin-top:40px;max-width:1160px;position:relative;z-index:1}
+.ppk-footer a{color:var(--muted)}
+.hero .ppk-pill{margin:0 0 18px;background:var(--surface);backdrop-filter:blur(8px)}
+.hero-actions .button.ppk-btn{border-color:var(--line);min-height:52px}
+.hero-actions .button .ppk-chip{font-size:12px;background:var(--surface-soft);color:var(--muted)}
+.ppk-bento-section{margin:0}
+.ppk-bento-section h2{margin:0 0 6px;font-size:clamp(26px,3vw,36px);letter-spacing:-.02em}
+.ppk-bento-section .ppk-sub{color:var(--muted);margin-bottom:22px}
+.ppk-tile{background:var(--surface);backdrop-filter:blur(8px);border-color:var(--line);box-shadow:var(--shadow)}
+.ppk-tile h3{font-size:17px}
+.ppk-chips span{background:var(--surface-soft)}
+.ppk-term{border-radius:12px}
+.legal-note{display:flex;gap:18px;align-items:flex-start;padding:24px 28px;border:1px solid var(--line);border-left:4px solid var(--green);border-radius:16px;background:var(--surface);backdrop-filter:blur(8px)}
+.legal-note h2{margin:0 0 6px;font-size:22px}.legal-note p{margin:0 0 8px;color:var(--muted)}.legal-note p:last-child{margin:0}.legal-note a{color:var(--green);font-weight:600}
+.legal-icon{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--green-soft);color:var(--green);font:700 18px/1 Georgia,serif}
+.reference-links{margin-top:6px}.reference-links a{color:var(--green);font-weight:600}
+@media(max-width:640px){.legal-note{padding:20px;flex-direction:column;gap:10px}.ppk-footer{margin-top:28px}}

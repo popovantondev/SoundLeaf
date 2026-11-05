@@ -128,7 +128,7 @@ namespace SoundLeaf
             });
             check("startup ownership matches only this installation without extra arguments", delegate
             {
-                string path = @"C:\Users\Public\Player\Player.exe";
+                string path = @"C:\Example\SoundLeaf\SoundLeaf.exe";
                 Assert(StartupOwnership.Matches(path, path) && StartupOwnership.Matches("\"" + path + "\"", path), "Own startup not matched.");
                 Assert(!StartupOwnership.Matches(path + " --other", path) && !StartupOwnership.Matches(@"C:\Other\Player.exe", path) && !StartupOwnership.Matches(null, path), "Foreign startup matched.");
             });
