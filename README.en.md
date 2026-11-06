@@ -1,12 +1,16 @@
+<div align="center">
+  <img src="docs/images/app-icon.png" width="128" alt="SoundLeaf icon">
+</div>
+
 # SoundLeaf
 
-[Deutsch](README.md) · [English](README.en.md) · [Русский](README.ru.md)
+[Русский](README.ru.md) · [Deutsch](README.md) · **English**
 
 Educational Windows system-audio recording application with tray controls, WAV backup and checks before files are marked complete.
 
 **Windows 11 · x64 · Preview 3.0.5**
 
-**[Download 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Website](https://popovantondev.github.io/SoundLeaf/index-en.html)** · **[User guide](https://popovantondev.github.io/SoundLeaf/Guide-en.html)**
+**[Download 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Website](https://popovantondev.github.io/SoundLeaf/index-en.html)** · **[User guide](https://popovantondev.github.io/SoundLeaf/Guide-en.html)** · **[Report a problem](https://github.com/popovantondev/SoundLeaf/issues/new/choose)**
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/en-control-dark.png">
@@ -15,13 +19,17 @@ Educational Windows system-audio recording application with tray controls, WAV b
 
 *Actual interface with demonstration data; no recordings of real conversations.*
 
+**Limitations:** unsigned educational Preview; practical testing is limited to one Windows computer. This is not a professional recording product. Original application rights and third-party licenses are separate.
+
 ## First steps
 
 Verify SHA-256. Install Setup or extract the complete portable folder: FFmpeg, corresponding sources and notices are included. No administrator rights needed. Setup does not start capture; launching the application later begins recording after checks. Capture uses the default Windows output device, not the microphone.
 
-[Rights](https://popovantondev.github.io/SoundLeaf/rights-en.html) · [Components](https://popovantondev.github.io/SoundLeaf/notices-en.html) · [Report a problem](https://github.com/popovantondev/SoundLeaf/issues/new/choose)
+[Release 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5) · [English guide](https://popovantondev.github.io/SoundLeaf/Guide-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Русский](https://popovantondev.github.io/SoundLeaf/Guide-ru.html)
 
-**Limitations:** unsigned educational Preview; practical testing is limited to one Windows computer. This is not a professional recording product. Original application rights and third-party licenses are separate.
+[Website — English](https://popovantondev.github.io/SoundLeaf/index-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/index.html) · [Русский](https://popovantondev.github.io/SoundLeaf/index-ru.html). Homepages and guides share light and dark leaf-inspired themes with matching localized application screenshots and a remembered theme choice.
+
+The offline `SoundLeaf-3.0.5-Setup.exe` installs for the current user under `%LOCALAPPDATA%\Programs\SoundLeaf` without administrator rights. FFmpeg 9.0.2, corresponding sources and notices are included; installation does not need a download. The portable ZIP includes the same runtime. Setup does not launch the application or enable startup. Launching SoundLeaf later starts recording after successful checks. [Setup and removal](docs/SETUP.md). This is an unsigned educational preview, not a professional recording product. Check `SHA256SUMS.txt`; a checksum is not code signing.
 
 ## Legal notes
 
@@ -40,15 +48,7 @@ Also respect copyright and the terms of the services whose sound you record. Thi
 <details>
 <summary>Technical details</summary>
 
-## Download and installation
-
-[Release 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5) · [English guide](https://popovantondev.github.io/SoundLeaf/Guide-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Русский](https://popovantondev.github.io/SoundLeaf/Guide-ru.html)
-
-[Website — English](https://popovantondev.github.io/SoundLeaf/index-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/index.html) · [Русский](https://popovantondev.github.io/SoundLeaf/index-ru.html). Homepages and guides share light and dark leaf-inspired themes with matching localized application screenshots and a remembered theme choice.
-
-The offline `SoundLeaf-3.0.5-Setup.exe` installs for the current user under `%LOCALAPPDATA%\Programs\SoundLeaf` without administrator rights. FFmpeg 9.0.2, corresponding sources and notices are included; installation does not need a download. The portable ZIP includes the same runtime. Setup does not launch the application or enable startup. Launching SoundLeaf later starts recording after successful checks. [Setup and removal](docs/SETUP.md). This is an unsigned educational preview, not a professional recording product. Check `SHA256SUMS.txt`; a checksum is not code signing.
-
-## Features
+## Storage and recovery
 
 - Capture the default Windows output device through WASAPI loopback; microphone capture is not implemented.
 - Start, pause, resume and stop from the tray. Interface, notifications and documentation support German, Russian and English; language changes apply immediately.
@@ -62,7 +62,9 @@ The offline `SoundLeaf-3.0.5-Setup.exe` installs for the current user under `%LO
 
 Recording starts automatically when SoundLeaf is launched only after its checks pass. Below 256 MiB free, capture is blocked. From 256 MiB to 1 GiB, or when space cannot be measured, the menu warns; these initial checks cannot guarantee enough space for the entire session. An FFmpeg failure offers “Start WAV-only recording” but never switches modes automatically. Only capture audio you are entitled to record, with any required participant consent. Silence is normal and is not treated as a fault.
 
-## Profiles, panel and recording library
+Unfinished older sessions are tracked separately from the latest successful result. Recovery refuses missing/duplicate parts, active writers, incompatible formats and existing output names. A failed attempt leaves originals intact and may retain work files. Recovery archives in `Backups/RecoveredSessions` are not removed by the existing 24-hour cleanup of `Backups/RecordingParts`.
+
+## Profiles, panel and recordings
 
 The default remains **MKV / AAC 192 kbit/s**, with the source sample rate and channels. In Settings, choose one output format: MKV/AAC, OGG/Opus (initially 24 kbit/s, mono), MP3, M4A/AAC or AAC/ADTS. Opus uses 48 kHz, speech-oriented VBR and a target bitrate; file size is not guaranteed. MP3 uses CBR. Additional AAC/MP3 profiles use 48 kHz and retain mono/stereo; multichannel input is downmixed to stereo. Backup WAV retains original PCM.
 
@@ -84,23 +86,9 @@ The legacy local update helper `Install-Verified.ps1` is not the public Setup. P
 
 Additional formats use one live encoder across WAV boundaries, with a bounded queue. If it fails, the final output is rebuilt directly from verified WAV PCM. Full decoding and a maximum 250 ms duration mismatch precede durable, no-overwrite publication and backup deletion. Each new session commits its profile before capture; recovery uses that profile, or MKV/AAC 192 for older sessions without one.
 
-## Running the source build
+## Build and verification
 
 Release 3.0.5 is published on GitHub. Local release preparation produces source and portable x64 archives with SHA-256 files; the published 3.0.5 portable package includes FFmpeg. Extract the whole portable ZIP and follow its three-language README. For a source build, create `SoundLeaf.next.exe`, provide compatible FFmpeg at `tools/ffmpeg.exe` beside it, then launch from a writable folder. FFmpeg must provide AAC, libopus and libmp3lame for the respective profiles. For normal use, rename the tested candidate to `SoundLeaf.exe`.
-
-## Screenshots
-
-Demonstration panel renders with synthetic level data, not recordings of real people. German and Russian screenshots are linked from the corresponding README files.
-
-![SoundLeaf control panel](assets/screenshots/en-control-light.png)
-
-## Release preparation
-
-See [release preparation](docs/RELEASE.md). `Prepare-OfflineRelease.ps1` requires a clean committed tree, unchanged runtime inputs, exact encoder hashes and complete runtime evidence. `Test-Setup.ps1` exercises isolated offline installation/removal and the actual asynchronous wizard handler; `Test-OfflineRelease.ps1` checks archive contents and hashes. Legacy online 3.0.4 scripts are not the current release path. Repository preparation scripts do not publish or launch recording. Windows CI performs limited source/build/icon smoke checks, not full capture verification. Application rights remain unchanged; only the encoder build script has the approved LGPL exception.
-
-Files are stored beside the executable: `Recordings`, `logs`, `Backups`, `State/Sessions`, and temporary `RecoveryWork`. Keep the entire application folder together, including WAV completion markers. Re-enable startup after moving the folder so the saved path is updated. WAV-only mode does not run FFmpeg: long recordings remain multiple verified parts of up to 256 MiB, not one unlimited WAV. After stopping, the result lists all paths and provides a folder-opening command; MKV was not created. A completion-marker failure keeps the audio and reports an error.
-
-## Build and verify
 
 Use Windows PowerShell 5.1 and the Windows .NET Framework compiler. No Python, Node.js or separate .NET SDK is needed to build SoundLeaf.
 
@@ -111,15 +99,17 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Run-Checks.ps1
 
 The full check requires `tools/ffmpeg.exe` and a working output device: its MKV and explicit WAV-fallback integration tests genuinely record system output in a private `Verification` folder. Other tests use synthetic data. Build and icon checks can be run separately without FFmpeg. The build script never replaces an installed EXE.
 
-## Limitations and privacy
-
 Practical testing is currently limited to the author's Windows computer. Physical power loss, a full real disk and multi-hour endurance have not been tested. Periodic flushing reduces but cannot eliminate loss on hardware failure. Changing or disconnecting the output device requires a new session. A spinning icon is not a percentage indicator.
-
-Unfinished older sessions are tracked separately from the latest successful result. Recovery refuses missing/duplicate parts, active writers, incompatible formats and existing output names. A failed attempt leaves originals intact and may retain work files. Recovery archives in `Backups/RecoveredSessions` are not removed by the existing 24-hour cleanup of `Backups/RecordingParts`.
 
 No cloud upload or telemetry is implemented. Recordings, logs and local paths are private: do not attach them to public reports without review. Screenshots must use demonstration data.
 
-## Documentation
+## Screenshots, release and rights
+
+Demonstration panel renders with synthetic level data, not recordings of real people. German and Russian screenshots are linked from the corresponding README files.
+
+See [release preparation](docs/RELEASE.md). `Prepare-OfflineRelease.ps1` requires a clean committed tree, unchanged runtime inputs, exact encoder hashes and complete runtime evidence. `Test-Setup.ps1` exercises isolated offline installation/removal and the actual asynchronous wizard handler; `Test-OfflineRelease.ps1` checks archive contents and hashes. Legacy online 3.0.4 scripts are not the current release path. Repository preparation scripts do not publish or launch recording. Windows CI performs limited source/build/icon smoke checks, not full capture verification. Application rights remain unchanged; only the encoder build script has the approved LGPL exception.
+
+Files are stored beside the executable: `Recordings`, `logs`, `Backups`, `State/Sessions`, and temporary `RecoveryWork`. Keep the entire application folder together, including WAV completion markers. Re-enable startup after moving the folder so the saved path is updated. WAV-only mode does not run FFmpeg: long recordings remain multiple verified parts of up to 256 MiB, not one unlimited WAV. After stopping, the result lists all paths and provides a folder-opening command; MKV was not created. A completion-marker failure keeps the audio and reports an error.
 
 - User guide: [English](https://popovantondev.github.io/SoundLeaf/Guide-en.html) · [Deutsch](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Русский](https://popovantondev.github.io/SoundLeaf/Guide-ru.html)
 - [Architecture](docs/ARCHITECTURE.md) · [Verification](docs/VERIFICATION.md) · [Changelog](CHANGELOG.md)

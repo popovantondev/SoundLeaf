@@ -1,12 +1,16 @@
+<div align="center">
+  <img src="docs/images/app-icon.png" width="128" alt="SoundLeaf Symbol">
+</div>
+
 # SoundLeaf
 
-[Deutsch](README.md) · [English](README.en.md) · [Русский](README.ru.md)
+[Русский](README.ru.md) · **Deutsch** · [English](README.en.md)
 
 Lernprojekt zur Aufnahme von Windows-Systemaudio mit Tray-Steuerung, WAV-Sicherung und Prüfung fertiger Dateien.
 
 **Windows 11 · x64 · Vorabversion 3.0.5**
 
-**[3.0.5 herunterladen](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Website](https://popovantondev.github.io/SoundLeaf/index.html)** · **[Anleitung](https://popovantondev.github.io/SoundLeaf/Guide-de.html)**
+**[3.0.5 herunterladen](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Webseite](https://popovantondev.github.io/SoundLeaf/)** · **[Anleitung](https://popovantondev.github.io/SoundLeaf/Guide-de.html)** · **[Fehler melden](https://github.com/popovantondev/SoundLeaf/issues/new/choose)**
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/de-control-dark.png">
@@ -15,13 +19,11 @@ Lernprojekt zur Aufnahme von Windows-Systemaudio mit Tray-Steuerung, WAV-Sicheru
 
 *Echte Oberfläche mit Demonstrationsdaten; keine Aufnahmen realer Gespräche.*
 
+**Grenzen:** unsignierte Lernprojekt-Vorabversion; praktische Prüfung bisher auf einem Windows-PC. Keine professionelle Aufnahmelösung. App-Rechte und Drittanbieter-Lizenzen gelten getrennt.
+
 ## Erste Schritte
 
 SHA-256 prüfen. Setup installieren oder Portable vollständig entpacken: FFmpeg, passende Quellen und Lizenzen sind enthalten. Keine Administratorrechte nötig. Setup startet keine Aufnahme; der spätere App-Start beginnt sie nach Prüfungen. Aufgenommen wird das Windows-Standardausgabegerät, nicht das Mikrofon.
-
-[Rechte](https://popovantondev.github.io/SoundLeaf/rights-de.html) · [Komponenten](https://popovantondev.github.io/SoundLeaf/notices-de.html) · [Fehler melden](https://github.com/popovantondev/SoundLeaf/issues/new/choose)
-
-**Grenzen:** unsignierte Lernprojekt-Vorabversion; praktische Prüfung bisher auf einem Windows-PC. Keine professionelle Aufnahmelösung. App-Rechte und Drittanbieter-Lizenzen gelten getrennt.
 
 ## Rechtliches
 
@@ -78,12 +80,12 @@ Version 3.0.5 ist auf GitHub veröffentlicht. Die lokale Vorbereitung erstellt Q
 
 Praktisch nur auf einem Windows-Rechner geprüft. Der Autor bestätigt normalen Ton der letzten Aufnahme und funktionierende lange Sitzungen; dies ist kein eigenständiger instrumentierter Lasttest. Stromausfall und voller echter Datenträger wurden nicht getestet. Keine absolute Datensicherheitsgarantie. Bei Wechsel/Trennung des Ausgabegeräts eine neue Sitzung beginnen. Private Aufnahmen und persönliche Pfade nicht öffentlich teilen.
 
-## Bilder und Release
-
-![Steuerung](assets/screenshots/de-control-light.png)
+## Bilder, Release und Rechte
 
 Testpanel mit Beispielsitzungen und synthetischen Pegeln, keine echten Gespräche. [Release-Vorbereitung](docs/RELEASE.md). Aktuell: `Prepare-OfflineRelease.ps1` mit vollständig geprüftem Lauf, unveränderten Eingaben und App-/Encoder-Hashes. `Test-Setup.ps1` prüft Offline-Setup, `Test-OfflineRelease.ps1` Archive und Prüfsummen. Der Windows-Workflow prüft Quelltext, Build und Symbole, nicht vollständige Aufnahme. App-Rechte bleiben unverändert; die LGPL-Ausnahme betrifft nur das FFmpeg-Buildskript.
 
 [Anleitung](https://popovantondev.github.io/SoundLeaf/Guide-de.html) · [Architektur](docs/ARCHITECTURE.md) · [Prüfungen](docs/VERIFICATION.md) · [Änderungen](CHANGELOG.md) · [Rechte](https://popovantondev.github.io/SoundLeaf/rights-de.html) · [Drittanbieter](https://popovantondev.github.io/SoundLeaf/notices-de.html)
+
+[Rechte](https://popovantondev.github.io/SoundLeaf/rights-de.html) · [Komponenten](https://popovantondev.github.io/SoundLeaf/notices-de.html)
 
 </details>
