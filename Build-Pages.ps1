@@ -29,7 +29,7 @@ foreach ($file in $files | Where-Object { $_.Extension -in @('.html', '.css', '.
 }
 foreach ($file in $files) {
     $relative = $file.FullName.Substring($source.Length + 1).Replace('\', '/')
-    if ($relative -notmatch '^(\.nojekyll|(?:index(?:-(?:ru|de|en))?|(?:Guide|rights|notices|licenses)-(?:ru|de|en))\.html|site\.(?:css|js)|guide-polish\.css|assets/kit/[^/]+|RIGHTS\.md|THIRD_PARTY_NOTICES\.md|assets/.+\.(?:png|ico)|licenses/.+)$') { throw "Unapproved published path: $relative" }
+    if ($relative -notmatch '^(\.nojekyll|(?:index(?:-(?:ru|de|en))?|(?:Guide|rights|notices|licenses)-(?:ru|de|en))\.html|site\.(?:css|js)|guide-polish\.css|assets/kit/[^/]+|RIGHTS\.md|THIRD_PARTY_NOTICES\.md|assets/.+\.(?:png|webp|ico)|licenses/.+)$') { throw "Unapproved published path: $relative" }
     $destination = Join-Path $output $relative
     [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($destination))
     [IO.File]::Copy($file.FullName, $destination, $false)

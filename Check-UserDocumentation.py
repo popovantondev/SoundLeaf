@@ -45,6 +45,20 @@ for kit in sorted((root/'website'/'assets'/'kit').glob('*')):
 for name in ('RIGHTS.md', 'THIRD_PARTY_NOTICES.md'):
     if (root/name).read_bytes() != (root/'website'/name).read_bytes():
         errors.append(name + ': canonical website copy differs')
+css = (root/'site.css').read_text(encoding='utf-8')
+for theme in ('light', 'dark'):
+    for folder in (root, root/'website'):
+        webp = folder/'assets'/('forest-' + theme + '.webp')
+        if not webp.is_file() or webp.stat().st_size > 400_000:
+            errors.append(str(webp.relative_to(root)) + ': missing or over 400 KB')
+if '.png' in ''.join(re.findall(r'url\(([^)]*forest[^)]*)\)', css)):
+    errors.append('site.css: forest background must be WebP')
+if not re.search(r'forest-night\s*\{[^}]*\}', css) or re.search(r'(?m)^\s*\.forest-night\s*\{[^}]*background-image', css):
+    errors.append('site.css: the night photo must load only in the dark theme')
+for page in sorted(root.glob('*.html')) + sorted((root/'website').glob('*.html')):
+    text = page.read_text(encoding='utf-8')
+    if 'site.css' in text and 'href="site.css?v=' not in text:
+        errors.append(str(page.relative_to(root)) + ': site.css without ?v=')
 if errors:
     raise SystemExit('\n'.join(errors))
 print('User documentation links, localized pages and screenshots verified.')

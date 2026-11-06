@@ -1425,10 +1425,10 @@
 :root[data-theme="dark"] {--text:#f5faf4;--muted:#c1d4c9;--surface:rgba(13,32,25,.82);--surface-soft:rgba(16,39,29,.77);--line:rgba(163,220,166,.35);--green:#98dca5;--header-bg:rgba(10,27,20,.20)}
 .forest {z-index:-1;background:#dae7d9}
 .forest-photo{position:absolute;inset:-20px;background-position:center top;background-size:cover;transition:opacity .5s}
-.forest-day{background-image:url('assets/forest-light.png')}
-.forest-night{background-image:url('assets/forest-dark.png');opacity:0}
-:root[data-theme="dark"] .forest-day{opacity:0}
-:root[data-theme="dark"] .forest-night{opacity:1}
+.forest-day{background-image:url('assets/forest-light.webp')}
+.forest-night{opacity:0}
+:root[data-theme="dark"] .forest-day{background-image:none;opacity:0}
+:root[data-theme="dark"] .forest-night{background-image:url('assets/forest-dark.webp');opacity:1}
 .forest-wash{position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(244,248,237,.18) 30%,rgba(244,248,237,.12) 70%,transparent)}
 :root[data-theme="dark"] .forest-wash{background:linear-gradient(90deg,transparent,rgba(4,19,13,.16),transparent)}
 .shell{width:min(1160px,calc(100% - 64px))}
