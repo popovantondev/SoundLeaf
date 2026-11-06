@@ -8,3 +8,6 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{o
 .guide-full-image{display:block;max-width:100%;text-align:center}.guide-full-image img{object-fit:contain}
 @media(max-width:760px){.guide-tools{margin:12px 14px;padding:10px 14px}.guide-tools ol{grid-template-columns:1fr}body .top{flex-wrap:wrap}body .hero figure{display:block!important}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*:before,*:after{animation:none!important;transition:none!important}}
+.guide-home{margin:0 0 20px}
+.guide-home .button{min-height:44px;padding:0 20px;border:1px solid var(--green);border-radius:999px;background:var(--surface-solid);color:var(--green);font-size:15px;font-weight:700;box-shadow:0 6px 18px -12px var(--green-glow)}
+.guide-home .button:hover{background:var(--green);color:var(--surface-solid)}

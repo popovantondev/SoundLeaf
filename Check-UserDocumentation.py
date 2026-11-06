@@ -21,6 +21,12 @@ for name in ('README.md', 'README.en.md', 'README.ru.md', 'distribution/README.m
             errors.append(name + ': missing screenshot: ' + url)
     if '3.0.5' not in text:
         errors.append(name + ': release version missing')
+HOME = {'ru':'← На страницу программы', 'de':'← Zur Programmseite', 'en':'← Program page'}
+LAND = {'de': 'index.html', 'en': 'index-en.html', 'ru': 'index-ru.html'}
+for lang in HOME:
+    guide = (root / 'website' / ('Guide-' + lang + '.html')).read_text(encoding='utf-8')
+    if not re.search(r'<a\b[^>]*href="' + LAND[lang] + r'"[^>]*>\s*' + HOME[lang] + r'\s*</a>', guide):
+        errors.append('Guide-' + lang + '.html: no button to the program page')
 for lang in ('de', 'ru', 'en'):
     for kind in ('Guide', 'index', 'rights', 'notices', 'licenses'):
         name = kind + '-' + lang + '.html'
