@@ -1,21 +1,28 @@
-<div align="center">
-  <img src="docs/images/app-icon.png" width="128" alt="SoundLeaf icon">
-</div>
+<!-- ppk-readme:head:start -->
+<a href="https://popovantondev.github.io/SoundLeaf/index-en.html"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/header-en-dark.f4107c90.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/header-en-light.24a432bb.svg" width="880" height="188" alt="SoundLeaf — Records Windows system audio from the tray. Windows 11 · x64, Preview 3.0.5"></picture></a>
+<!-- ppk-readme:head:end -->
 
 # SoundLeaf
 
 [Русский](README.ru.md) · [Deutsch](README.md) · **English**
 
+<!-- ppk-readme:body:start -->
+<p>
+<a href="https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-download-en-dark.75bd785c.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-download-en-light.ec4bbd6b.svg" width="136" height="36" alt="Download"></picture></a>
+<a href="https://popovantondev.github.io/SoundLeaf/index-en.html"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-website-en-dark.5c2d27f6.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-website-en-light.3c1c823f.svg" width="120" height="36" alt="Website"></picture></a>
+<a href="https://popovantondev.github.io/SoundLeaf/Guide-en.html"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-guide-en-dark.919f1892.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-guide-en-light.ebf45f96.svg" width="141" height="36" alt="User guide"></picture></a>
+<a href="https://github.com/popovantondev/SoundLeaf/issues/new/choose"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-bug-en-dark.9a5fb8f3.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-bug-en-light.1e86da51.svg" width="196" height="36" alt="Report a problem"></picture></a>
+</p>
+
+<p><a href="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/assets/screenshots/en-control-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/preview-en-dark.1e142af3.webp"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/preview-en-light.4f2d744b.webp" width="880" height="516" alt="SoundLeaf interface"></picture></a><br>
+<sub><a href="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/assets/screenshots/en-control-light.png">Full screenshot</a></sub></p>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/divider-dark.077d240f.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/divider-light.395d98ce.svg" width="880" height="6" alt="Divider"></picture>
+<!-- ppk-readme:body:end -->
+
 Educational Windows system-audio recording application with tray controls, WAV backup and checks before files are marked complete.
 
 **Windows 11 · x64 · Preview 3.0.5**
-
-**[Download 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Website](https://popovantondev.github.io/SoundLeaf/index-en.html)** · **[User guide](https://popovantondev.github.io/SoundLeaf/Guide-en.html)** · **[Report a problem](https://github.com/popovantondev/SoundLeaf/issues/new/choose)**
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/en-control-dark.png">
-  <img src="assets/screenshots/en-control-light.png" width="360" alt="SoundLeaf">
-</picture>
 
 *Actual interface with demonstration data; no recordings of real conversations.*
 
@@ -88,6 +95,9 @@ Additional formats use one live encoder across WAV boundaries, with a bounded qu
 
 ## Build and verification
 
+<details>
+<summary>Show build and verification</summary>
+
 Release 3.0.5 is published on GitHub. Local release preparation produces source and portable x64 archives with SHA-256 files; the published 3.0.5 portable package includes FFmpeg. Extract the whole portable ZIP and follow its three-language README. For a source build, create `SoundLeaf.next.exe`, provide compatible FFmpeg at `tools/ffmpeg.exe` beside it, then launch from a writable folder. FFmpeg must provide AAC, libopus and libmp3lame for the respective profiles. For normal use, rename the tested candidate to `SoundLeaf.exe`.
 
 Use Windows PowerShell 5.1 and the Windows .NET Framework compiler. No Python, Node.js or separate .NET SDK is needed to build SoundLeaf.
@@ -102,6 +112,8 @@ The full check requires `tools/ffmpeg.exe` and a working output device: its MKV 
 Practical testing is currently limited to the author's Windows computer. Physical power loss, a full real disk and multi-hour endurance have not been tested. Periodic flushing reduces but cannot eliminate loss on hardware failure. Changing or disconnecting the output device requires a new session. A spinning icon is not a percentage indicator.
 
 No cloud upload or telemetry is implemented. Recordings, logs and local paths are private: do not attach them to public reports without review. Screenshots must use demonstration data.
+
+</details>
 
 ## Screenshots, release and rights
 

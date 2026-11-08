@@ -1,21 +1,28 @@
-<div align="center">
-  <img src="docs/images/app-icon.png" width="128" alt="SoundLeaf Symbol">
-</div>
+<!-- ppk-readme:head:start -->
+<a href="https://popovantondev.github.io/SoundLeaf/index.html"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/header-de-dark.16ae2a11.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/header-de-light.2d9ccc51.svg" width="880" height="188" alt="SoundLeaf — Nimmt Windows-Systemaudio auf, gesteuert aus dem Tray. Windows 11 · x64, Vorabversion 3.0.5"></picture></a>
+<!-- ppk-readme:head:end -->
 
 # SoundLeaf
 
 [Русский](README.ru.md) · **Deutsch** · [English](README.en.md)
 
+<!-- ppk-readme:body:start -->
+<p>
+<a href="https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-download-de-dark.9eb71a60.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-download-de-light.024b89e8.svg" width="171" height="36" alt="Herunterladen"></picture></a>
+<a href="https://popovantondev.github.io/SoundLeaf/index.html"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-website-de-dark.843bda15.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-website-de-light.8881118f.svg" width="129" height="36" alt="Webseite"></picture></a>
+<a href="https://popovantondev.github.io/SoundLeaf/Guide-de.html"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-guide-de-dark.bc06784e.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-guide-de-light.7a6b8a12.svg" width="134" height="36" alt="Anleitung"></picture></a>
+<a href="https://github.com/popovantondev/SoundLeaf/issues/new/choose"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-bug-de-dark.e5780464.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-bug-de-light.1b058291.svg" width="168" height="36" alt="Fehler melden"></picture></a>
+</p>
+
+<p><a href="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/assets/screenshots/de-control-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/preview-de-dark.04f68e72.webp"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/preview-de-light.45be2a94.webp" width="880" height="516" alt="Oberfläche von SoundLeaf"></picture></a><br>
+<sub><a href="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/assets/screenshots/de-control-light.png">Ganzer Screenshot</a></sub></p>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/divider-dark.077d240f.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/divider-light.395d98ce.svg" width="880" height="6" alt="Trennlinie"></picture>
+<!-- ppk-readme:body:end -->
+
 Lernprojekt zur Aufnahme von Windows-Systemaudio mit Tray-Steuerung, WAV-Sicherung und Prüfung fertiger Dateien.
 
 **Windows 11 · x64 · Vorabversion 3.0.5**
-
-**[3.0.5 herunterladen](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Webseite](https://popovantondev.github.io/SoundLeaf/)** · **[Anleitung](https://popovantondev.github.io/SoundLeaf/Guide-de.html)** · **[Fehler melden](https://github.com/popovantondev/SoundLeaf/issues/new/choose)**
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/de-control-dark.png">
-  <img src="assets/screenshots/de-control-light.png" width="360" alt="SoundLeaf">
-</picture>
 
 *Echte Oberfläche mit Demonstrationsdaten; keine Aufnahmen realer Gespräche.*
 

@@ -1,21 +1,28 @@
-<div align="center">
-  <img src="docs/images/app-icon.png" width="128" alt="Значок SoundLeaf">
-</div>
+<!-- ppk-readme:head:start -->
+<a href="https://popovantondev.github.io/SoundLeaf/index-ru.html"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/header-ru-dark.176ac813.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/header-ru-light.dbf6eb26.svg" width="880" height="188" alt="SoundLeaf — Записывает системный звук Windows из трея. Windows 11 · x64, Предварительный выпуск 3.0.5"></picture></a>
+<!-- ppk-readme:head:end -->
 
 # SoundLeaf
 
 **Русский** · [Deutsch](README.md) · [English](README.en.md)
 
+<!-- ppk-readme:body:start -->
+<p>
+<a href="https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-download-ru-dark.d39715ec.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-download-ru-light.df64724b.svg" width="120" height="36" alt="Скачать"></picture></a>
+<a href="https://popovantondev.github.io/SoundLeaf/index-ru.html"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-website-ru-dark.4fbe281c.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-website-ru-light.a063f47b.svg" width="92" height="36" alt="Сайт"></picture></a>
+<a href="https://popovantondev.github.io/SoundLeaf/Guide-ru.html"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-guide-ru-dark.360ff5ec.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-guide-ru-light.4d57182b.svg" width="161" height="36" alt="Руководство"></picture></a>
+<a href="https://github.com/popovantondev/SoundLeaf/issues/new/choose"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-bug-ru-dark.c92287a4.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/btn-bug-ru-light.294760c9.svg" width="234" height="36" alt="Сообщить об ошибке"></picture></a>
+</p>
+
+<p><a href="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/assets/screenshots/ru-control-light.png"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/preview-ru-dark.555e929b.webp"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/preview-ru-light.e3a83feb.webp" width="880" height="516" alt="Интерфейс программы SoundLeaf"></picture></a><br>
+<sub><a href="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/assets/screenshots/ru-control-light.png">Снимок целиком</a></sub></p>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/divider-dark.077d240f.svg"><img src="https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/docs/readme/divider-light.395d98ce.svg" width="880" height="6" alt="Разделитель"></picture>
+<!-- ppk-readme:body:end -->
+
 Учебное приложение для записи системного звука Windows. Управление из трея, резервный WAV и проверка готовых файлов.
 
 **Windows 11 · x64 · Предварительная версия 3.0.5**
-
-**[Скачать 3.0.5](https://github.com/popovantondev/SoundLeaf/releases/tag/v3.0.5)** · **[Сайт](https://popovantondev.github.io/SoundLeaf/index-ru.html)** · **[Руководство](https://popovantondev.github.io/SoundLeaf/Guide-ru.html)** · **[Сообщить об ошибке](https://github.com/popovantondev/SoundLeaf/issues/new/choose)**
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/ru-control-dark.png">
-  <img src="assets/screenshots/ru-control-light.png" width="360" alt="SoundLeaf">
-</picture>
 
 *Настоящий интерфейс с демонстрационными данными; это не записи реальных разговоров.*
 
@@ -100,7 +107,7 @@ Opus: 16/24/32/48/64/96/128; AAC и MP3: 64/96/128/160/192/256/320 кбит/с. 
 
 ## Снимки, выпуск и права
 
-![Тёмная тема и список записей](assets/screenshots/ru-recordings-dark.png)
+[Тёмная тема и список записей](https://raw.githubusercontent.com/popovantondev/SoundLeaf/main/assets/screenshots/ru-recordings-dark.png)
 
 Это рендеры тестовой панели с демонстрационными сессиями и искусственным уровнем, не реальные разговоры. [Подготовка выпуска](docs/RELEASE.md). Текущий путь — `Prepare-OfflineRelease.ps1`, проверенный полный результат прямого прогона, неизменность входов и хешей приложения/кодировщика. `Test-Setup.ps1` проверяет автономный установщик, `Test-OfflineRelease.ps1` — архивы и контрольные суммы. GitHub workflow проверяет только исходники, сборку и значки, не всю запись. Права приложения не меняются; LGPL-исключение относится только к скрипту сборки FFmpeg.
 
